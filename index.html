@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affectation Examens</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 5px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .semester-selection {
+            margin-bottom: 20px;
+        }
+
+        .exam-table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .exam-table th, .exam-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .exam-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+
+    <!-- Semestre Selection -->
+    <div class="semester-selection">
+        <label for="semester">Choisir un semestre :</label>
+        <select id="semester">
+            <option value="s1">Semestre 1</option>
+            <option value="s2">Semestre 2</option>
+            <option value="r1">Rattrapage 1</option>
+            <option value="r2">Rattrapage 2</option>
+        </select>
+    </div>
+
+    <!-- Button to Open Modal -->
+    <button id="openModalBtn">+</button>
+
+    <!-- Modal for Adding Exam -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Affecter une Examen</h2>
+
+            <label for="palier">Palier :</label>
+            <select id="palier">
+                <option value="">Sélectionner</option>
+                <option value="ing">Ingénieur</option>
+                <option value="lmd">LMD</option>
+            </select>
+
+            <label for="specialite">Spécialité :</label>
+            <select id="specialite" disabled>
+                <option value="">Sélectionner</option>
+            </select>
+
+            <label for="section">Section :</label>
+            <select id="section" disabled>
+                <option value="">Sélectionner</option>
+            </select>
+
+            <label for="module">Module :</label>
+            <select id="module" disabled>
+                <option value="">Sélectionner</option>
+            </select>
+
+            <label for="date">Date :</label>
+            <input type="date" id="date">
+
+            <label for="heure">Heure :</label>
+            <input type="time" id="heure">
+
+            <label for="salle">Salle :</label>
+            <input type="text" id="salle" placeholder="Ex: A12">
+
+            <button id="ajouter">Ajouter</button>
+        </div>
+    </div>
+
+    <!-- Exam Table -->
+    <table id="examTable" class="exam-table">
+        <thead>
+            <tr>
+                <th>Semestre</th>
+                <th>Palier</th>
+                <th>Spécialité</th>
+                <th>Section</th>
+                <th>Module</th>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Salle</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Les données des examens ajoutés seront affichées ici -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const modal = document.getElementById("modal");
+            const openModalBtn = document.getElementById("openModalBtn");
+            const closeModal = document.querySelector(".close");
+            const palierSelect = document.getElementById("palier");
+            const specialiteSelect = document.getElementById("specialite");
+            const sectionSelect = document.getElementById("section");
+            const moduleSelect = document.getElementById("module");
+            const semesterSelect = document.getElementById("semester");
+    
+            const specialites = {
+                "ing": ["Cyber Security", "AI", "Software Engineering"],
+                "lmd": ["Acad", "ISIL"]
+            };
+    
+            const sections = {
+                "Cyber Security": ["Section A", "Section B"],
+                "AI": ["Section C"],
+                "Software Engineering": ["Section D", "Section E"],
+                "Acad": ["Section F"],
+                "ISIL": ["Section G", "Section H"]
+            };
+    
+            const modules = {
+                "Section A": ["Sécurité Informatique", "Cryptographie"],
+                "Section B": ["Sécurité Réseau"],
+                "Section C": ["Machine Learning"],
+                "Section D": ["Développement Web"],
+                "Section E": ["Génie Logiciel"],
+                "Section F": ["Mathématiques Discrètes"],
+                "Section G": ["Base de Données"],
+                "Section H": ["Programmation Avancée"]
+            };
+    
+            let addedExams = [];
+    
+            // Ouvrir la modale
+            openModalBtn.onclick = function () {
+                modal.style.display = "flex";
+            };
+    
+            // Fermer la modale
+            closeModal.onclick = function () {
+                modal.style.display = "none";
+            };
+    
+            // Mettre à jour les spécialités
+            palierSelect.onchange = function () {
+                specialiteSelect.innerHTML = "<option value=''>Sélectionner</option>";
+                sectionSelect.innerHTML = "<option value=''>Sélectionner</option>";
+                moduleSelect.innerHTML = "<option value=''>Sélectionner</option>";
+                specialiteSelect.disabled = true;
+                sectionSelect.disabled = true;
+                moduleSelect.disabled = true;
+    
+                if (palierSelect.value) {
+                    specialites[palierSelect.value].forEach(specialite => {
+                        let option = new Option(specialite, specialite);
+                        specialiteSelect.appendChild(option);
+                    });
+                    specialiteSelect.disabled = false;
+                }
+            };
+    
+            // Mettre à jour les sections
+            specialiteSelect.onchange = function () {
+                sectionSelect.innerHTML = "<option value=''>Sélectionner</option>";
+                moduleSelect.innerHTML = "<option value=''>Sélectionner</option>";
+                sectionSelect.disabled = true;
+                moduleSelect.disabled = true;
+    
+                if (specialiteSelect.value) {
+                    sections[specialiteSelect.value].forEach(section => {
+                        let option = new Option(section, section);
+                        sectionSelect.appendChild(option);
+                    });
+                    sectionSelect.disabled = false;
+                }
+            };
+    
+            // Mettre à jour les modules
+            sectionSelect.onchange = function () {
+                moduleSelect.innerHTML = "<option value=''>Sélectionner</option>";
+                moduleSelect.disabled = true;
+    
+                if (sectionSelect.value) {
+                    modules[sectionSelect.value].forEach(module => {
+                        let option = new Option(module, module);
+                        moduleSelect.appendChild(option);
+                    });
+                    moduleSelect.disabled = false;
+                }
+            };
+    
+            // Ajouter un examen
+            document.getElementById("ajouter").onclick = function () {
+                const semestre = semesterSelect.value;
+                const palier = palierSelect.value;
+                const specialite = specialiteSelect.value;
+                const section = sectionSelect.value;
+                const module = moduleSelect.value;
+                const date = document.getElementById("date").value;
+                const heure = document.getElementById("heure").value;
+                const salle = document.getElementById("salle").value;
+    
+                if (!palier || !specialite || !section || !module || !date || !heure || !salle || !semestre) {
+                    alert('Veuillez remplir tous les champs.');
+                    return;
+                }
+    
+                // Ajouter l'examen aux données
+                const examen = { semestre, palier, specialite, section, module, date, heure, salle };
+                addedExams.push(examen);
+    
+                // Afficher l'examen dans la table
+                const tbody = document.getElementById("examTable").getElementsByTagName("tbody")[0];
+                const newRow = tbody.insertRow();
+                newRow.insertCell(0).textContent = semestre;
+                newRow.insertCell(1).textContent = palier;
+                newRow.insertCell(2).textContent = specialite;
+                newRow.insertCell(3).textContent = section;
+                newRow.insertCell(4).textContent = module;
+                newRow.insertCell(5).textContent = date;
+                newRow.insertCell(6).textContent = heure;
+                newRow.insertCell(7).textContent = salle;
+    
+                // Envoyer les données au backend
+                fetch('http://localhost:3000/ajouter-examen', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        palier,
+                        specialite,
+                        section,
+                        module,
+                        date,
+                        heure,
+                        salle,
+                        semestre
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Réinitialiser les champs du formulaire après ajout
+                        document.getElementById("palier").value = '';
+                        document.getElementById("specialite").value = '';
+                        document.getElementById("section").value = '';
+                        document.getElementById("module").value = '';
+                        document.getElementById("date").value = '';
+                        document.getElementById("heure").value = '';
+                        document.getElementById("salle").value = '';
+                        document.getElementById("semestre").value = ''; // Réinitialiser aussi le semestre
+                    } else {
+                        alert('Erreur : ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors de l\'ajout de l\'examen. Détails : ' + error.message);
+                });
+
+    
+                // Fermer la modale après ajout
+                modal.style.display = "none";
+            };
+        });
+    </script>
+    
+</body>
+</html>
