@@ -213,6 +213,16 @@ app.get('/total-surveillants', async (req, res) => {
 });
 
 
+app.get('/envoyer-formation', async (req, res) => {
+    try {
+        const [formations] = await pool.query("SELECT * FROM formation");
+        console.log(formations);  // Affiche les données dans la console
+        res.json(formations);     // Envoie les données des formations au frontend
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erreur serveur');
+    }
+});
 
 
 
