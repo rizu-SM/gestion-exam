@@ -21,6 +21,35 @@
             margin: 5px 0;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            margin: 2px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .btn-supprimer {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+        }
+        .btn-modifier {
+            background-color: #33b5e5;
+            color: white;
+            border: none;
+        }
+
+
         /* Modal */
         .modal {
             display: none;
@@ -33,6 +62,11 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+        }
+
+                /* Ajoutez ceci si vous voulez styliser différemment la modale d'édition */
+        #editModal .modal-content {
+            background: #fff8e1;
         }
 
         .modal-content {
@@ -83,6 +117,15 @@
         select:disabled {
             background-color: #f5f5f5;
         }
+        .action-cell {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    }
+
+    #examTable button {
+        min-width: 80px;
+    }
     </style>
 </head>
 <body>
@@ -124,9 +167,18 @@
                 <option value="">Sélectionner</option>
             </select>
 
-            
             <label for="section">Section :</label>
-            <input type="text" id="section" placeholder="Ex: B">
+            <select id="section">
+                <option value="">Sélectionner</option>
+                <option value="Section A">Section A</option>
+                <option value="Section B">Section B</option>
+                <option value="Section C">Section C</option>
+                <option value="Section D">Section D</option>
+                <option value="Section E">Section E</option>
+                <option value="Section F">Section F</option>
+                <option value="Section G">Section G</option>
+                <option value="Section H">Section H</option>
+            </select>
 
             <label for="date">Date :</label>
             <input type="date" id="date">
@@ -138,6 +190,63 @@
             <input type="text" id="salle" placeholder="Ex: A12">
 
             <button id="ajouter">Ajouter</button>
+        </div>
+    </div>
+
+    <!-- Modal d'édition -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Modifier l'Examen</h2>
+
+            <input type="hidden" id="edit-id">
+
+            <label for="edit-semester">Semestre :</label>
+            <select id="edit-semester">
+                <option value="s1">Semestre 1</option>
+                <option value="s2">Semestre 2</option>
+                <option value="r1">Rattrapage 1</option>
+                <option value="r2">Rattrapage 2</option>
+            </select>
+
+            <label for="edit-palier">Palier :</label>
+            <select id="edit-palier">
+                <option value="">Sélectionner</option>
+            </select>
+
+            <label for="edit-specialite">Spécialité :</label>
+            <select id="edit-specialite" disabled>
+                <option value="">Sélectionner un palier d'abord</option>
+            </select>
+
+            <label for="edit-module">Module :</label>
+            <select id="edit-module" disabled>
+                <option value="">Sélectionner</option>
+            </select>
+
+            <label for="edit-section">Section :</label>
+            <select id="edit-section">
+                <option value="">Sélectionner</option>
+                <option value="Section A">Section A</option>
+                <option value="Section B">Section B</option>
+                <option value="Section C">Section C</option>
+                <option value="Section D">Section D</option>
+                <option value="Section E">Section E</option>
+                <option value="Section F">Section F</option>
+                <option value="Section G">Section G</option>
+                <option value="Section H">Section H</option>
+            </select>
+
+            <label for="edit-date">Date :</label>
+            <input type="date" id="edit-date">
+
+            <label for="edit-heure">Heure :</label>
+            <input type="time" id="edit-heure">
+
+            <label for="edit-salle">Salle :</label>
+            <input type="text" id="edit-salle" placeholder="Ex: A12">
+
+            <button id="saveEditBtn">Enregistrer</button>
         </div>
     </div>
 
@@ -153,6 +262,7 @@
                 <th>Date</th>
                 <th>Heure</th>
                 <th>Salle</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -160,261 +270,222 @@
         </tbody>
     </table>
 
-
-
-
-
-
-
-
-
-
-    
     <script>
-
-        let formationsData = [];  // Variable globale pour stocker les formations
-
-        window.onload = function() {
-        fetch('http://localhost:3000/envoyer-formation')
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                formationsData = data;
-
-                // Afficher les paliers
-                const palierSelect = document.getElementById('palier');
-                const paliers = new Set(data.map(formation => formation.palier));
-
-                palierSelect.innerHTML = '<option value="">Sélectionner</option>';
-                paliers.forEach(palier => {
-                    const option = new Option(palier, palier);
-                    palierSelect.add(option);
-                });
-
-                // Gérer le changement de palier
-                palierSelect.addEventListener('change', function() {
-                    const selectedPalier = this.value;
-                    const specialiteSelect = document.getElementById('specialite');
-                    
-                    specialiteSelect.innerHTML = '<option value="">Sélectionner</option>';
-                    specialiteSelect.disabled = true;
-
-                    if (selectedPalier) {
-                        const specialites = new Set(
-                            formationsData
-                                .filter(formation => formation.palier === selectedPalier)
-                                .map(formation => formation.specialite)
-                        );
-
-                        specialites.forEach(specialite => {
-                            const option = new Option(specialite, specialite);
-                            specialiteSelect.add(option);
-                        });
-
-                        specialiteSelect.disabled = false;
-                    }
-                });
-
-                // Gérer le changement de spécialité
-                document.getElementById('specialite').addEventListener('change', function() {
-                    const selectedPalier = document.getElementById('palier').value;
-                    const selectedSpecialite = this.value;
-                    const selectedSession = document.getElementById('semester').value;
-                    const moduleSelect = document.getElementById('module');
-                    
-                    moduleSelect.innerHTML = '<option value="">Sélectionner</option>';
-                    moduleSelect.disabled = true;
-
-                    if (selectedPalier && selectedSpecialite) {
-                        // Déterminer le groupe de session
-                        const sessionGroup = selectedSession.startsWith('s') 
-                            ? ['S1', 'R1'] 
-                            : ['S2', 'R2'];
-
-                        // Filtrer les modules
-                        const modules = new Set(
-                            formationsData
-                                .filter(formation => 
-                                    formation.palier === selectedPalier &&
-                                    formation.specialite === selectedSpecialite &&
-                                    sessionGroup.includes(formation.session)
-                                )
-                                .map(formation => formation.module)
-                        );
-
-                        // Remplir les modules
-                        modules.forEach(module => {
-                            const option = new Option(module, module);
-                            moduleSelect.add(option);
-                        });
-
-                        moduleSelect.disabled = modules.size === 0;
-                    }
-                });
-
-                // Gérer le changement de session
-                document.getElementById('semester').addEventListener('change', function() {
-                    // Si une spécialité est déjà sélectionnée, rafraîchir les modules
-                    if (document.getElementById('specialite').value) {
-                        document.getElementById('specialite').dispatchEvent(new Event('change'));
-                    }
-                });
-            })
-            .catch(error => {
+        let formationsData = [];
+        let currentExams = [];
+    
+        // Charger les données au démarrage
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFormations();
+            loadExamens();
+            setupModal();
+            setupSemesterFilter();
+            setupEditModal();
+        });
+    
+        // Charger les formations depuis le backend
+        async function loadFormations() {
+            try {
+                const response = await fetch('http://localhost:3000/envoyer-formation');
+                formationsData = await response.json();
+                setupPalierDropdown();
+                setupEditPalierDropdown();
+            } catch (error) {
                 console.error('Erreur:', error);
-            });
-    };
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const modal = document.getElementById("modal");
-        const openModalBtn = document.getElementById("openModalBtn");
-        const closeModal = document.querySelector(".close");
-
-        // Ouvrir la modale
-        openModalBtn.onclick = function() {
-            modal.style.display = "flex";
-        };
-
-        // Fermer la modale
-        closeModal.onclick = function() {
-            modal.style.display = "none";
-        };
-
-        // Ajouter un examen
-        document.getElementById("ajouter").onclick = function() {
-            const semestre = document.getElementById("semester").value;
-            const palier = document.getElementById("palier").value;
-            const specialite = document.getElementById("specialite").value;
-            const module = document.getElementById("module").value;
-            const section = document.getElementById("section").value;
-            const date = document.getElementById("date").value;
-            const heure = document.getElementById("heure").value;
-            const salle = document.getElementById("salle").value;
-
-            if (!palier || !specialite || !module || !date || !heure || !salle || !semestre) {
-                alert('Veuillez remplir tous les champs obligatoires.');
+                alert('Erreur lors du chargement des formations');
+            }
+        }
+    
+        // Charger les examens depuis le backend
+        async function loadExamens() {
+            try {
+                const response = await fetch('http://localhost:3000/examens');
+                currentExams = await response.json();
+                displayExamens(currentExams);
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors du chargement des examens');
+            }
+        }
+    
+        // Afficher les examens dans le tableau principal
+        function displayExamens(examens) {
+            const tbody = document.querySelector("#examTable tbody");
+            tbody.innerHTML = '';
+            
+            if (examens.length === 0) {
+                const row = tbody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 9;
+                cell.textContent = 'Aucun examen à afficher';
                 return;
             }
-
-            fetch('http://localhost:3000/ajouter-examen', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    palier,
-                    specialite,
-                    section,
-                    module,
-                    date,
-                    heure,
-                    salle,
-                    semestre
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Ajouter à la table
-                    const tbody = document.getElementById("examTable").getElementsByTagName("tbody")[0];
-                    const newRow = tbody.insertRow();
-                    newRow.insertCell(0).textContent = semestre;
-                    newRow.insertCell(1).textContent = palier;
-                    newRow.insertCell(2).textContent = specialite;
-                    newRow.insertCell(3).textContent = module;
-                    newRow.insertCell(4).textContent = section;
-                    newRow.insertCell(5).textContent = date;
-                    newRow.insertCell(6).textContent = heure;
-                    newRow.insertCell(7).textContent = salle;
-
-                    // Réinitialiser le formulaire
-                    modal.style.display = "none";
-                    document.getElementById("date").value = "";
-                    document.getElementById("heure").value = "";
-                    document.getElementById("salle").value = "";
-                    document.getElementById("palier").value = "";
-                    document.getElementById("specialite").innerHTML = "<option value=''>Sélectionner</option>";
-                    document.getElementById("module").innerHTML = "<option value=''>Sélectionner</option>";
-                    document.getElementById("specialite").disabled = true;
-                    document.getElementById("module").disabled = true;
-                    document.getElementById("section").value = "";
-                } else {
-                    alert(data.message || "Erreur lors de l'ajout");
-                }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                alert("Erreur lors de l'envoi des données");
-            });
-        };
-    });
-
-
-
-
-
     
-
-        document.addEventListener("DOMContentLoaded", function () {
+            examens.forEach(examen => {
+                const row = tbody.insertRow();
+                
+                // Formater la date pour l'affichage
+                const dateExam = examen.date_exam.split('T')[0];
+                
+                // Ajouter les cellules avec les données
+                const cells = [
+                    examen.semestre,
+                    examen.palier,
+                    examen.specialite,
+                    examen.module,
+                    examen.section,
+                    dateExam,
+                    examen.horaire,
+                    examen.salle
+                ];
+                
+                cells.forEach(text => {
+                    const cell = row.insertCell();
+                    cell.textContent = text;
+                });
+    
+                // Cellule d'actions
+                const actionCell = row.insertCell();
+                actionCell.className = 'action-cell';
+    
+                // Bouton Modifier
+                const modifyBtn = document.createElement("button");
+                modifyBtn.textContent = "Modifier";
+                modifyBtn.className = "btn-modifier";
+                modifyBtn.onclick = () => editExam(examen.id);
+    
+                // Bouton Supprimer
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "Supprimer";
+                deleteBtn.className = "btn-supprimer";
+                deleteBtn.onclick = async () => {
+                    if (confirm("Voulez-vous vraiment supprimer cet examen ?")) {
+                        try {
+                            const response = await fetch(`http://localhost:3000/supprimer-examen/${examen.id}`, {
+                                method: 'DELETE'
+                            });
+                            const result = await response.json();
+                            alert(result.message);
+                            loadExamens(); // Recharger la liste
+                        } catch (error) {
+                            console.error('Erreur:', error);
+                            alert('Erreur lors de la suppression');
+                        }
+                    }
+                };
+    
+                actionCell.appendChild(modifyBtn);
+                actionCell.appendChild(deleteBtn);
+            });
+        }
+    
+        // Configurer les dropdowns de palier/spécialité/module pour l'ajout
+        function setupPalierDropdown() {
+            const palierSelect = document.getElementById('palier');
+            const paliers = new Set(formationsData.map(formation => formation.palier));
+            palierSelect.innerHTML = '<option value="">Sélectionner</option>';
+            paliers.forEach(palier => {
+                const option = new Option(palier, palier);
+                palierSelect.add(option);
+            });
+        }
+        
+        // Configurer les dropdowns de palier/spécialité/module pour l'édition
+        function setupEditPalierDropdown() {
+            const palierSelect = document.getElementById('edit-palier');
+            const paliers = new Set(formationsData.map(formation => formation.palier));
+            palierSelect.innerHTML = '<option value="">Sélectionner</option>';
+            paliers.forEach(palier => {
+                const option = new Option(palier, palier);
+                palierSelect.add(option);
+            });
+        }
+    
+        // Configurer le filtre par semestre
+        function setupSemesterFilter() {
+            document.getElementById('semester').addEventListener('change', function() {
+                const selectedSemester = this.value;
+                const filteredExams = selectedSemester === 'all' 
+                    ? currentExams 
+                    : currentExams.filter(exam => exam.semestre.toLowerCase() === selectedSemester);
+                displayExamens(filteredExams);
+            });
+        }
+    
+        // Configurer la modale d'ajout
+        function setupModal() {
             const modal = document.getElementById("modal");
             const openModalBtn = document.getElementById("openModalBtn");
-            const closeModal = document.querySelector(".close");
-            const palierSelect = document.getElementById("palier");
-            const specialiteSelect = document.getElementById("specialite");
-            const moduleSelect = document.getElementById("module");
-            const sectionSelect = document.getElementById("section");
-            const semesterSelect = document.getElementById("semester");
-
+            const closeModal = document.querySelector("#modal .close");
     
-            let addedExams = [];
+            // Gestion de l'ouverture/fermeture
+            openModalBtn.onclick = () => modal.style.display = "flex";
+            closeModal.onclick = () => modal.style.display = "none";
     
-            // Ouvrir la modale
-            openModalBtn.onclick = function () {
-                modal.style.display = "flex";
-            };
-    
-            // Fermer la modale
-            closeModal.onclick = function () {
-                modal.style.display = "none";
-            };
-    
-            // Mettre à jour les spécialités
-            palierSelect.onchange = function () {
-                specialiteSelect.innerHTML = "<option value=''>Sélectionner</option>";
-                moduleSelect.innerHTML = "<option value=''>Sélectionner</option>";
+            // Gestion des dépendances entre dropdowns
+            document.getElementById('palier').addEventListener('change', function() {
+                const selectedPalier = this.value;
+                const specialiteSelect = document.getElementById('specialite');
+                
+                specialiteSelect.innerHTML = '<option value="">Sélectionner</option>';
                 specialiteSelect.disabled = true;
-                moduleSelect.disabled = true;
     
-                if (palierSelect.value) {
-                    specialites[palierSelect.value].forEach(specialite => {
-                        let option = new Option(specialite, specialite);
-                        specialiteSelect.appendChild(option);
+                if (selectedPalier) {
+                    const specialites = new Set(
+                        formationsData
+                            .filter(formation => formation.palier === selectedPalier)
+                            .map(formation => formation.specialite)
+                    );
+    
+                    specialites.forEach(specialite => {
+                        const option = new Option(specialite, specialite);
+                        specialiteSelect.add(option);
                     });
+    
                     specialiteSelect.disabled = false;
                 }
-            };
+            });
     
-            // Mettre à jour les modules
-            specialiteSelect.onchange = function () {
-                moduleSelect.innerHTML = "<option value=''>Sélectionner</option>";
+            document.getElementById('specialite').addEventListener('change', function() {
+                const selectedPalier = document.getElementById('palier').value;
+                const selectedSpecialite = this.value;
+                const selectedSession = document.getElementById('semester').value;
+                const moduleSelect = document.getElementById('module');
+                
+                moduleSelect.innerHTML = '<option value="">Sélectionner</option>';
                 moduleSelect.disabled = true;
     
-                if (specialiteSelect.value) {
-                    modulesParSpecialite[specialiteSelect.value].forEach(module => {
-                        let option = new Option(module, module);
-                        moduleSelect.appendChild(option);
-                    });
-                    moduleSelect.disabled = false;
-                }
-            };
+                if (selectedPalier && selectedSpecialite) {
+                    const sessionGroup = selectedSession.startsWith('s') 
+                        ? ['S1', 'R1'] 
+                        : ['S2', 'R2'];
     
-            // Ajouter un examen
-            document.getElementById("ajouter").onclick = function () {
-                const semestre = semesterSelect.value;
-                const palier = palierSelect.value;
-                const specialite = specialiteSelect.value;
-                const module = moduleSelect.value;
-                const section = sectionSelect.value;
+                    const modules = new Set(
+                        formationsData
+                            .filter(formation => 
+                                formation.palier === selectedPalier &&
+                                formation.specialite === selectedSpecialite &&
+                                sessionGroup.includes(formation.session)
+                            )
+                            .map(formation => formation.module)
+                    );
+    
+                    modules.forEach(module => {
+                        const option = new Option(module, module);
+                        moduleSelect.add(option);
+                    });
+    
+                    moduleSelect.disabled = modules.size === 0;
+                }
+            });
+    
+            // Gestion de l'ajout d'un examen
+            document.getElementById("ajouter").onclick = async function() {
+                const semestre = document.getElementById("semester").value;
+                const palier = document.getElementById("palier").value;
+                const specialite = document.getElementById("specialite").value;
+                const module = document.getElementById("module").value;
+                const section = document.getElementById("section").value;
                 const date = document.getElementById("date").value;
                 const heure = document.getElementById("heure").value;
                 const salle = document.getElementById("salle").value;
@@ -424,65 +495,210 @@
                     return;
                 }
     
-                // Envoyer les données au backend
-                fetch('http://localhost:3000/ajouter-examen', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        palier,
-                        specialite,
-                        section,
-                        module,
-                        date,
-                        heure,
-                        salle,
-                        semestre
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error("Erreur réseau");
-                    return response.json();
-                })
-                .then(data => {
+                try {
+                    const response = await fetch('http://localhost:3000/ajouter-examen', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            palier,
+                            specialite,
+                            section,
+                            module,
+                            date,
+                            heure,
+                            salle,
+                            semestre
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
                     if (data.success) {
-                        alert(data.message);
+                        // Recharger tous les examens
+                        await loadExamens();
                         
-                        // Ajouter la ligne dans le tableau
-                        const tbody = document.getElementById("examTable").getElementsByTagName("tbody")[0];
-                        const newRow = tbody.insertRow();
-                        newRow.insertCell(0).textContent = semestre;
-                        newRow.insertCell(1).textContent = palier;
-                        newRow.insertCell(2).textContent = specialite;
-                        newRow.insertCell(3).textContent = module;
-                        newRow.insertCell(4).textContent = section;
-                        newRow.insertCell(5).textContent = date;
-                        newRow.insertCell(6).textContent = heure;
-                        newRow.insertCell(7).textContent = salle;
-
-                        // Fermer la modale et réinitialiser les champs
+                        // Réinitialiser le formulaire
                         modal.style.display = "none";
-                        document.getElementById("date").value = "";
-                        document.getElementById("heure").value = "";
-                        document.getElementById("salle").value = "";
-                        palierSelect.value = "";
-                        specialiteSelect.innerHTML = "<option value=''>Sélectionner</option>";
-                        moduleSelect.innerHTML = "<option value=''>Sélectionner</option>";
-                        specialiteSelect.disabled = true;
-                        moduleSelect.disabled = true;
-                        sectionSelect.value = "";
+                        resetForm();
                     } else {
-                        alert(data.message || "Une erreur est survenue.");
+                        alert(data.message || "Erreur lors de l'ajout");
                     }
-                })
-                .catch(error => {
+                } catch (error) {
                     console.error('Erreur:', error);
-                    alert("Erreur lors de l'envoi des données.");
-                });
+                    alert("Erreur lors de l'envoi des données");
+                }
             };
-        });
-
+        }
+    
+        // Configurer la modale d'édition
+        function setupEditModal() {
+            const editModal = document.getElementById("editModal");
+            
+            // Gestion des dépendances entre dropdowns
+            document.getElementById('edit-palier').addEventListener('change', function() {
+                const selectedPalier = this.value;
+                const specialiteSelect = document.getElementById('edit-specialite');
+                
+                specialiteSelect.innerHTML = '<option value="">Sélectionner</option>';
+                specialiteSelect.disabled = true;
+    
+                if (selectedPalier) {
+                    const specialites = new Set(
+                        formationsData
+                            .filter(formation => formation.palier === selectedPalier)
+                            .map(formation => formation.specialite)
+                    );
+    
+                    specialites.forEach(specialite => {
+                        const option = new Option(specialite, specialite);
+                        specialiteSelect.add(option);
+                    });
+    
+                    specialiteSelect.disabled = false;
+                }
+            });
+    
+            document.getElementById('edit-specialite').addEventListener('change', function() {
+                const selectedPalier = document.getElementById('edit-palier').value;
+                const selectedSpecialite = this.value;
+                const selectedSession = document.getElementById('edit-semester').value;
+                const moduleSelect = document.getElementById('edit-module');
+                
+                moduleSelect.innerHTML = '<option value="">Sélectionner</option>';
+                moduleSelect.disabled = true;
+    
+                if (selectedPalier && selectedSpecialite) {
+                    const sessionGroup = selectedSession.startsWith('s') 
+                        ? ['S1', 'R1'] 
+                        : ['S2', 'R2'];
+    
+                    const modules = new Set(
+                        formationsData
+                            .filter(formation => 
+                                formation.palier === selectedPalier &&
+                                formation.specialite === selectedSpecialite &&
+                                sessionGroup.includes(formation.session)
+                            )
+                            .map(formation => formation.module)
+                    );
+    
+                    modules.forEach(module => {
+                        const option = new Option(module, module);
+                        moduleSelect.add(option);
+                    });
+    
+                    moduleSelect.disabled = modules.size === 0;
+                }
+            });
+    
+            // Gestion de l'enregistrement des modifications
+            document.getElementById("saveEditBtn").onclick = async function() {
+                const id = document.getElementById("edit-id").value;
+                const semestre = document.getElementById("edit-semester").value;
+                const palier = document.getElementById("edit-palier").value;
+                const specialite = document.getElementById("edit-specialite").value;
+                const module = document.getElementById("edit-module").value;
+                const section = document.getElementById("edit-section").value;
+                const date = document.getElementById("edit-date").value;
+                const heure = document.getElementById("edit-heure").value;
+                const salle = document.getElementById("edit-salle").value;
+    
+                if (!palier || !specialite || !module || !date || !heure || !salle || !semestre) {
+                    alert('Veuillez remplir tous les champs obligatoires.');
+                    return;
+                }
+    
+                try {
+                    const response = await fetch(`http://localhost:3000/modifier-examen/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            palier,
+                            specialite,
+                            section,
+                            module,
+                            date,
+                            heure,
+                            salle,
+                            semestre
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Recharger tous les examens
+                        await loadExamens();
+                        
+                        // Fermer la modale
+                        closeEditModal();
+                    } else {
+                        alert(data.message || "Erreur lors de la modification");
+                    }
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    alert("Erreur lors de l'envoi des données");
+                }
+            };
+        }
+    
+        // Réinitialiser le formulaire d'ajout
+        function resetForm() {
+            document.getElementById("date").value = "";
+            document.getElementById("heure").value = "";
+            document.getElementById("salle").value = "";
+            document.getElementById("palier").value = "";
+            document.getElementById("specialite").innerHTML = "<option value=''>Sélectionner</option>";
+            document.getElementById("module").innerHTML = "<option value=''>Sélectionner</option>";
+            document.getElementById("specialite").disabled = true;
+            document.getElementById("module").disabled = true;
+            document.getElementById("section").value = "";
+        }
+    
+        // Fonction pour ouvrir la modale de modification
+        function openEditModal(examen) {
+            const modal = document.getElementById("editModal");
+            
+            // Pré-remplir les champs
+            document.getElementById("edit-id").value = examen.id;
+            document.getElementById("edit-semester").value = examen.semestre.toLowerCase();
+            document.getElementById("edit-palier").value = examen.palier;
+            
+            // Remplir spécialité
+            const specialiteSelect = document.getElementById("edit-specialite");
+            specialiteSelect.innerHTML = `<option value="${examen.specialite}">${examen.specialite}</option>`;
+            specialiteSelect.disabled = false;
+            
+            // Remplir module
+            const moduleSelect = document.getElementById("edit-module");
+            moduleSelect.innerHTML = `<option value="${examen.module}">${examen.module}</option>`;
+            moduleSelect.disabled = false;
+            
+            document.getElementById("edit-section").value = examen.section;
+            document.getElementById("edit-date").value = examen.date_exam.split('T')[0];
+            document.getElementById("edit-heure").value = examen.horaire;
+            document.getElementById("edit-salle").value = examen.salle;
+            
+            // Ouvrir la modale
+            modal.style.display = "flex";
+        }
+    
+        // Fonction pour fermer la modale de modification
+        function closeEditModal() {
+            document.getElementById("editModal").style.display = "none";
+        }
+    
+        // Fonction pour modifier un examen
+        async function editExam(id) {
+            const examen = currentExams.find(e => e.id == id);
+            if (examen) {
+                openEditModal(examen);
+            }
+        }
     </script>
 </body>
 </html>
