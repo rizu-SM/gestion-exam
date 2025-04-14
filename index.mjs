@@ -27,14 +27,14 @@ app.post('/gestion-surveillances', async (req, res) => {
          * ÉTAPE 1: Assignation des professeurs de cours comme surveillants
          * (anciennement route '/assignerProfDeCour')
          *****************************************************************/
-        const { semestre, pourcentagePermanent } = req.body;
+        const { semestre, pourcentagePermanent, annee_universitaire } = req.body;
 
         // Vérification de l'assignation existante
         const [existe] = await pool.query(
-            "SELECT * FROM base_surveillance WHERE semestre = ?",
-            [semestre]
+            "SELECT * FROM base_surveillance WHERE semestre = ? AND annee_universitaire = ?",
+            [semestre, annee_universitaire]
         );
-
+        
         if (existe.length > 0) {
             return res.status(400).json({
                 success: false,
@@ -44,8 +44,8 @@ app.post('/gestion-surveillances', async (req, res) => {
 
         // Assignation des surveillants principaux
         const [examens] = await pool.query(
-            "SELECT * FROM exam WHERE semestre = ?",
-            [semestre]
+            "SELECT * FROM exam WHERE semestre = ? AND annee_universitaire = ?",
+            [semestre, annee_universitaire]
         );
 
         const resultatsAssignation = [];
@@ -77,11 +77,11 @@ app.post('/gestion-surveillances', async (req, res) => {
                 await pool.query(
                     `INSERT INTO base_surveillance 
                      (palier, specialite, semestre, section, date_exam, horaire, 
-                      module, salle, code_enseignant, ordre, nbrSE, nbrSS)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 0)`,
+                      module, salle, code_enseignant, ordre, nbrSE, nbrSS, annee_universitaire)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 0, ?)`,
                     [examen.palier, examen.specialite, semestre, examen.section, 
                      examen.date_exam, examen.horaire, examen.module, 
-                     examen.salle, enseignants[0].code_enseignant,nbrSE]
+                     examen.salle, enseignants[0].code_enseignant, nbrSE, annee_universitaire]
                 );
 
                 resultatsAssignation.push({
@@ -102,7 +102,10 @@ app.post('/gestion-surveillances', async (req, res) => {
          * ÉTAPE 2: Calcul du nombre total de surveillants nécessaires
          * (anciennement route '/total-surveillants')
          *****************************************************************/
-        const [sallesData] = await pool.query("SELECT salle FROM exam");
+        const [sallesData] = await pool.query(
+            "SELECT salle FROM exam WHERE semestre = ? AND annee_universitaire = ?", 
+            [semestre, annee_universitaire]
+        );
         let totalSalles = 0;
 
         for (let row of sallesData) {
@@ -175,8 +178,8 @@ app.post('/gestion-surveillances', async (req, res) => {
         //pour les prof de cour déja assigné on update leur avaibilité (surveillances) avec -1
 
         const [enseignantassigne] = await pool.query(
-            "SELECT code_enseignant FROM base_surveillance WHERE semestre = ?",
-            [semestre]
+            "SELECT code_enseignant FROM base_surveillance WHERE semestre = ? AND annee_universitaire = ?",
+            [semestre, annee_universitaire]
         );
 
         enseignantassigne.forEach((ens, index) => {
@@ -223,15 +226,16 @@ app.post('/gestion-surveillances', async (req, res) => {
     
                         await pool.query(
                             `INSERT INTO base_surveillance 
-                             (palier, specialite, semestre, section, date_exam, horaire, module, salle, code_enseignant, ordre, nbrSE, nbrSS)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                             (palier, specialite, semestre, section, date_exam, horaire, module, salle, 
+                              code_enseignant, ordre, nbrSE, nbrSS, annee_universitaire)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                             [
                                 examen.palier, examen.specialite, examen.semestre, examen.section,
                                 examen.date_exam, examen.horaire, examen.module,
-                                salle, enseignant.code_enseignant, ordre, salles.length * 2, 1
+                                salle, enseignant.code_enseignant, ordre, salles.length * 2, 1,
+                                annee_universitaire
                             ]
                         );
-    
                         await pool.query(
                             `UPDATE enseignants SET surveillances = surveillances - 1 WHERE code_enseignant = ?`,
                             [enseignant.code_enseignant]
@@ -241,8 +245,7 @@ app.post('/gestion-surveillances', async (req, res) => {
                     }
                 }
             }
-    
-            res.status(200).json({ message: 'Surveillants secondaires affectés avec succès.' });
+
         } catch (error) {
             console.error('Erreur lors de l\'affectation des surveillants secondaires :', error);
             res.status(500).json({ error: 'Erreur serveur' });
@@ -432,6 +435,29 @@ app.put('/modifier-examen/:id', async (req, res) => {
         res.status(500).json({ success: false, message: "Erreur serveur lors de la modification." });
     }
 });
+
+
+app.post('/ajouter-examen', async (req, res) => {
+    const { palier, specialite, section, module, date, heure, salle, semestre, annee_universitaire } = req.body;
+
+    if (!palier || !specialite || !section || !module || !date || !heure || !salle || !semestre || !annee_universitaire) {
+        return res.status(400).json({ success: false, message: 'Tous les champs sont obligatoires.' });
+    }
+
+    try {
+        await pool.query(
+            `INSERT INTO exam_temp (palier, specialite, section, module, date_exam, horaire, salle, semestre, annee_universitaire)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [palier, specialite, section, module, date, heure, salle, semestre, annee_universitaire]
+        );
+
+        res.json({ success: true, message: 'Examen ajouté avec succès dans exam_temp.' });
+    } catch (error) {
+        console.error('Erreur lors de l\'insertion dans exam_temp:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur lors de l\'ajout de l\'examen.' });
+    }
+});
+
 
 // Démarrer le serveur
 app.listen(3000, () => {
