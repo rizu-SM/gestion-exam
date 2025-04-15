@@ -14,9 +14,11 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
+    "docx": "^9.3.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mysql2": "^3.14.0",
+    "nodemailer": "^6.10.1",
     "nodemon": "^3.1.9"
   }
 }
