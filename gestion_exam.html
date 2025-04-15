@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Examens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="gestion_exam.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Gestion Examens</h2>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-title">Principal</div>
+            <a href="index.html" class="menu-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Tableau de bord</span>
+            </a>
+            
+            <div class="menu-title">Gestion</div>
+            <a href="gestion_exam.html" class="menu-item active">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Gestion Examens</span>
+            </a>
+            <a href="gestion_surveillants.html" class="menu-item">
+                <i class="fas fa-user-shield"></i>
+                <span>Gestion Surveillants</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <h1>Gestion des Examens</h1>
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <span>Administrateur</span>
+            </div>
+        </header>
+
+        <!-- Planifier un nouvel examen -->
+        <div class="exam-form-section">
+            <h2 class="section-title">
+                <i class="fas fa-calendar-plus"></i>
+                Planifier un Nouvel Examen
+            </h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="palier" >Palier</label>
+                    <select id="palier" class="form-control">
+                        <option value="">Sélectionner</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="specialite">Spécialité</label>
+                    <select id="specialite" class="form-control" disabled>
+                        <option value="">Sélectionner un palier d'abord</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="module">Module :</label>
+                    <select id="module" class="form-control" disabled>
+                        <option value="">Sélectionner</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="section">section</label>
+                    <input type="text" id="section" class="form-control" placeholder="A">
+                </div>
+                
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="heure">Heure</label>
+                    <input type="time" id="heure" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="salle">Salle</label>
+                    <input type="text" id="salle" class="form-control" placeholder="Numéro de salle">
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button id="ajouter" class="btn btn-primary">Ajouter l'Examen</button>
+                <button class="btn btn-outline">Annuler</button>
+            </div>
+        </div>
+
+        <!-- Sélecteur de session -->
+        <div class="session-selector">
+            <button class="session-btn active" data-semestre="S1">Session S1</button>
+            <button class="session-btn" data-semestre="S2">Session S2</button>
+            <button class="session-btn" data-semestre="R1">Rattrapage S1</button>
+            <button class="session-btn" data-semestre="R2">Rattrapage S2</button>
+        </div>
+
+        <!-- Dernière mise à jour -->
+        <div class="last-update">
+            <i class="fas fa-clock"></i> Dernière Mise à Jour: 05/05/2025 - 10:30
+        </div>
+
+        <!-- Tableau des examens -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Salle</th>
+                        <th>Module</th>
+                        <th>Section</th>
+                        <th>Filière</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>05/05/2025</td>
+                        <td>13:00</td>
+                        <td>C5</td>
+                        <td>Algorithmes</td>
+                        <td>A</td>
+                        <td>Informatique</td>
+                        <td>
+                            <button class="action-btn edit" title="Modifier" onclick="openEditModal()">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>05/05/2025</td>
+                        <td>09:00</td>
+                        <td>B12</td>
+                        <td>Systèmes de Gestion de Base de Données</td>
+                        <td>B</td>
+                        <td>Informatique</td>
+                        <td>
+                            <button class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>06/05/2025</td>
+                        <td>10:00</td>
+                        <td>A8</td>
+                        <td>Calcul II</td>
+                        <td>C</td>
+                        <td>Mathématiques</td>
+                        <td>
+                            <button class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>07/05/2025</td>
+                        <td>14:00</td>
+                        <td>D3</td>
+                        <td>Physique I</td>
+                        <td>A</td>
+                        <td>Physique</td>
+                        <td>
+                            <button class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Vérification -->
+        <div class="verification-section">
+            <h2 class="section-title">
+                <i class="fas fa-check-circle"></i>
+                Vérification
+            </h2>
+            <p>Veuillez vérifier les informations avant de soumettre les changements.</p>
+            
+            <div class="verification-actions">
+                <button class="btn btn-outline" id="verifyBtn">
+                    <i class="fas fa-check"></i> Vérifier
+                </button>
+                <button class="btn btn-primary" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i> Soumettre
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de modification -->
+    <div class="modal-overlay" id="editModal">
+        <div class="exam-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Modifier l'Examen</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-palier">Palier</label>
+                        <select id="edit-palier" class="form-control">
+                            <option value="L1">Licence 1</option>
+                            <option value="L2">Licence 2</option>
+                            <option value="L3">Licence 3</option>
+                            <option value="M1">Master 1</option>
+                            <option value="M2">Master 2</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-specialite">Spécialité</label>
+                        <select id="edit-specialite" class="form-control">
+                            <option value="informatique">Informatique</option>
+                            <option value="mathematiques">Mathématiques</option>
+                            <option value="physique">Physique</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-module">Module</label>
+                        <input type="text" id="edit-module" class="form-control" value="Algorithmes">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-section">Section</label>
+                        <select id="edit-section" class="form-control">
+                            <option value="A">Section A</option>
+                            <option value="B">Section B</option>
+                            <option value="C">Section C</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-date">Date</label>
+                        <input type="date" id="edit-date" class="form-control" value="2025-05-05">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-heure">Heure</label>
+                        <input type="time" id="edit-heure" class="form-control" value="13:00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-salle">Salle</label>
+                        <input type="text" id="edit-salle" class="form-control" value="C5">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeEditModal()">Annuler</button>
+                <button class="btn btn-primary">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="gestion_exam.js" defer></script>
+</body>
+</html>

@@ -1,14 +1,8 @@
 let formationsData = [];
         let currentExams = [];
-        const anneeSelect = document.getElementById("annee-universitaire");
-const currentYear = new Date().getFullYear();
 
-for (let y = 2020; y <= currentYear + 1; y++) {
-    const option = document.createElement("option");
-    option.value = `${y}-${y + 1}`;
-    option.textContent = `${y}-${y + 1}`;
-    anneeSelect.appendChild(option);
-}
+
+
 
     
         // Charger les données au démarrage
@@ -226,7 +220,6 @@ for (let y = 2020; y <= currentYear + 1; y++) {
                 const date = document.getElementById("date").value;
                 const heure = document.getElementById("heure").value;
                 const salle = document.getElementById("salle").value;
-                const annee_universitaire=document.getElementById("annee-universitaire").value;
     
                 if (!palier || !specialite || !module || !date || !heure || !salle || !semestre) {
                     alert('Veuillez remplir tous les champs obligatoires.');
@@ -247,8 +240,7 @@ for (let y = 2020; y <= currentYear + 1; y++) {
                             date,
                             heure,
                             salle,
-                            semestre,
-                            annee_universitaire
+                            semestre
                         })
                     });
                     

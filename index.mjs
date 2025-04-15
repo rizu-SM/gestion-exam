@@ -436,15 +436,27 @@ app.put('/modifier-examen/:id', async (req, res) => {
     }
 });
 
-
 app.post('/ajouter-examen', async (req, res) => {
-    const { palier, specialite, section, module, date, heure, salle, semestre, annee_universitaire } = req.body;
+    const { palier, specialite, section, module, date, heure, salle, semestre } = req.body;
 
-    if (!palier || !specialite || !section || !module || !date || !heure || !salle || !semestre || !annee_universitaire) {
+    // Vérification des champs obligatoires (sans annee_universitaire)
+    if (!palier || !specialite || !section || !module || !date || !heure || !salle || !semestre) {
         return res.status(400).json({ success: false, message: 'Tous les champs sont obligatoires.' });
     }
 
     try {
+        // Calcul de l'année universitaire automatique
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // Les mois sont 0-indexés (0-11)
+        
+        let annee_universitaire;
+        if (currentMonth >= 9) { // Si nous sommes à partir de septembre
+            annee_universitaire = `${currentYear}-${currentYear + 1}`;
+        } else {
+            annee_universitaire = `${currentYear - 1}-${currentYear}`;
+        }
+
         await pool.query(
             `INSERT INTO exam_temp (palier, specialite, section, module, date_exam, horaire, salle, semestre, annee_universitaire)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
