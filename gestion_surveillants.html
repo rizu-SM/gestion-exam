@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Surveillants</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="gestion_surveillants.css">
+    <style>
+        
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Gestion Examens</h2>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-title">Navigation</div>
+            <a href="#" class="menu-item">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            
+            <div class="menu-title">Gestion</div>
+            <a href="#" class="menu-item">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Examens</span>
+            </a>
+            <a href="#" class="menu-item active">
+                <i class="fas fa-user-shield"></i>
+                <span>Surveillants</span>
+            </a>
+            
+            <div class="menu-title">Notifications</div>
+            <a href="#" class="menu-item">
+                <i class="fas fa-bell"></i>
+                <span>Alertes</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <h1>Gestion des Surveillants</h1>
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <span>Administrateur</span>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Surveillants Totaux</span>
+                    <div class="stat-icon total">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-value">48</div>
+                <span class="stat-change">+5 ce mois</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Disponibles</span>
+                    <div class="stat-icon available">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                </div>
+                <div class="stat-value">32</div>
+                <span class="stat-change">86% de disponibilité</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Assignés</span>
+                    <div class="stat-icon assigned">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                </div>
+                <div class="stat-value">16</div>
+                <span class="stat-change">4 nouvelles affectations</span>
+            </div>
+        </div>
+
+        <!-- Search and Action Bar -->
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Rechercher un surveillant...">
+            <select class="filter-select">
+                <option value="">Tous les grades</option>
+                <option value="professor">Professeur</option>
+                <option value="doctor">Docteur</option>
+                <option value="assistant">Maître Assistant</option>
+                <option value="other">Autre</option>
+            </select>
+            <select class="filter-select">
+                <option value="">Tous les départements</option>
+                <option value="iasd">IASD</option>
+                <option value="siq">SIQ</option>
+                <option value="math">Mathématiques</option>
+                <option value="physics">Physique</option>
+            </select>
+            <button class="btn btn-primary" id="addProctorBtn">
+                <i class="fas fa-plus"></i> Ajouter un Surveillant
+            </button>
+        </div>
+
+        <!-- Proctors Table -->
+        <!-- <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Surveillant</th>
+                        <th>Département</th>
+                        <th>Grade</th>
+                        <th>Statut</th>
+                        <th>Affectations</th>
+                        <th>Disponibilité</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PROF001</td>
+                        <td>
+                            <div class="proctor-info">
+                                <div class="proctor-avatar"></div>
+                                <div>
+                                    <div class="proctor-name">Mohamed Lahrech</div>
+                                    <div class="proctor-email">m.lahrech@univ.edu</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>IASD</td>
+                        <td><span class="grade-badge grade-professor">Professeur</span></td>
+                        <td><span class="status-badge status-assigned">Assigné</span></td>
+                        <td>3 examens</td>
+                        <td>Lundi, Mercredi</td>
+                        <td>
+                            <button class="action-btn assign" title="Affecter">
+                                <i class="fas fa-calendar-plus"></i>
+                            </button>
+                            <button class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>DOC002</td>
+                        <td>
+                            <div class="proctor-info">
+                                <div class="proctor-avatar"></div>
+                                <div>
+                                    <div class="proctor-name">Amina Saidi</div>
+                                    <div class="proctor-email">a.saidi@univ.edu</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>SIQ</td>
+                        <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                        <td><span class="status-badge status-available">Disponible</span></td>
+                        <td>1 examen</td>
+                        <td>Tous les jours</td>
+                        <td>
+                            <button class="action-btn assign" title="Affecter">
+                                <i class="fas fa-calendar-plus"></i>
+                            </button>
+                            <button class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>AST003</td>
+                        <td>
+                            <div class="proctor-info">
+                                <div class="proctor-avatar"></div>
+                                <div>
+                                    <div class="proctor-name">Karim Belhaj</div>
+                                    <div class="proctor-email">k.belhaj@univ.edu</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Mathématiques</td>
+                        <td><span class="grade-badge grade-assistant">Maître Assistant</span></td>
+                        <td><span class="status-badge status-unavailable">Indisponible</span></td>
+                        <td>0 examens</td>
+                        <td>Non disponible</td>
+                        <td>
+                            <button class="action-btn assign" title="Affecter">
+                                <i class="fas fa-calendar-plus"></i>
+                            </button>
+                            <button class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>DOC004</td>
+                        <td>
+                            <div class="proctor-info">
+                                <div class="proctor-avatar"></div>
+                                <div>
+                                    <div class="proctor-name">Nadia Zari</div>
+                                    <div class="proctor-email">n.zari@univ.edu</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>IASD</td>
+                        <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                        <td><span class="status-badge status-available">Disponible</span></td>
+                        <td>2 examens</td>
+                        <td>Mardi, Jeudi</td>
+                        <td>
+                            <button class="action-btn assign" title="Affecter">
+                                <i class="fas fa-calendar-plus"></i>
+                            </button>
+                            <button class="action-btn edit" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div> -->
+
+
+
+
+
+
+        <!-- Proctors Table - Version simplifiée -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Surveillant</th>
+                    <th>Département</th>
+                    <th>Grade</th>
+                    <th>Affectations</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Exemple de ligne - à remplacer par vos données dynamiques -->
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Mohamed Lahrech</div>
+                                <div class="proctor-email">m.lahrech@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>IASD</td>
+                    <td><span class="grade-badge grade-professor">Professeur</span></td>
+                    <td><span class="status-badge status-assigned">3 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                
+                <!-- Ajoutez ici d'autres lignes dynamiquement -->
+                <!-- Exemple avec 20 lignes supplémentaires (à remplacer par vos données réelles) -->
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+
+
+
+                <tr>
+                    <td>
+                        <div class="proctor-info">
+                            <div class="proctor-avatar"></div>
+                            <div>
+                                <div class="proctor-name">Amina Saidi</div>
+                                <div class="proctor-email">a.saidi@univ.edu</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>SIQ</td>
+                    <td><span class="grade-badge grade-doctor">Docteur</span></td>
+                    <td><span class="status-badge status-available">2 Examens</span></td>
+                    <td>
+                        <button class="action-btn assign" title="Affecter">
+                            <i class="fas fa-calendar-plus"></i>
+                        </button>
+                        <button class="action-btn edit" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                
+                <!-- Vous pouvez ajouter autant de lignes que nécessaire -->
+                <!-- Le tableau gérera le défilement vertical automatiquement -->
+                
+            </tbody>
+        </table>
+    </div>
+
+        <!-- Add Proctor Modal -->
+        <div class="modal" id="addProctorModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Ajouter un Nouveau Surveillant</h3>
+                    <button class="close-btn" id="closeModalBtn">&times;</button>
+                </div>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">ID Surveillant</label>
+                        <input type="text" class="form-control" placeholder="ID unique">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nom Complet</label>
+                        <input type="text" class="form-control" placeholder="Nom et Prénom">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" placeholder="Adresse email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Département</label>
+                        <select class="form-control">
+                            <option value="">Sélectionner un département</option>
+                            <option value="iasd">IASD</option>
+                            <option value="siq">SIQ</option>
+                            <option value="math">Mathématiques</option>
+                            <option value="physics">Physique</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Grade</label>
+                        <select class="form-control">
+                            <option value="professor">Professeur</option>
+                            <option value="doctor">Docteur</option>
+                            <option value="assistant">Maître Assistant</option>
+                            <option value="other">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Statut</label>
+                        <select class="form-control">
+                            <option value="available">Disponible</option>
+                            <option value="unavailable">Indisponible</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline" id="cancelAddBtn">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="gestion_surveillants.js" defer></script>
+    </main>
+</body>
+</html>

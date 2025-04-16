@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - Gestion des Examens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <style>
+        
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Gestion Examens</h2>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-title">Principal</div>
+            <a href="dashboard.html" class="menu-item active">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Tableau de bord</span>
+            </a>
+            
+            <div class="menu-title">Gestion</div>
+            <a href="gestion_exam.html" class="menu-item">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Gestion Examens</span>
+            </a>
+            <a href="gestion_surveillants.html" class="menu-item">
+                <i class="fas fa-user-shield"></i>
+                <span>Gestion Surveillants</span>
+            </a>
+            
+            <div class="menu-title">Notifications</div>
+            <a href="#" class="menu-item">
+                <i class="fas fa-bell"></i>
+                <span>Alertes</span>
+                <span class="badge">3</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <h1>Aperçu du Tableau de bord</h1>
+            <div class="user-profile">
+                <div class="user-avatar">AD</div>
+                <span>Administrateur</span>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Examens Programmés</span>
+                    <div class="stat-icon exams">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+                <div class="stat-value">12</div>
+                <span class="stat-change">&lt; 2 depuis la semaine dernière</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Surveillances Assignées</span>
+                    <div class="stat-icon surveillance">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                </div>
+                <div class="stat-value">200</div>
+                <span class="stat-change">&lt; 15 depuis hier</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-title">Modifications Récentes</span>
+                    <div class="stat-icon modifications">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                </div>
+                <div class="stat-value">20</div>
+                <span class="stat-change">3 en attente de revue</span>
+            </div>
+        </div>
+
+        <!-- Upcoming Surveillances -->
+        <div class="table-responsive-container">
+            <h2 class="section-title">Surveillances à Venir</h2>
+            
+            <div class="table-container">
+                <table id="proctoringTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Salle</th>
+                            <th>Module</th>
+                            <th>Département</th>
+                            <th>Responsable</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-exam-id="1">
+                            <td>05/05/2025</td>
+                            <td>13:00 - 15:00</td>
+                            <td>C6</td>
+                            <td>Algorithmes</td>
+                            <td>Informatique</td>
+                            <td>Prof. Lahrech</td>
+                            <td>
+                                <button class="action-btn view" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-exam-id="2">
+                            <td>05/05/2025</td>
+                            <td>09:00 - 11:00</td>
+                            <td>B12</td>
+                            <td>Systèmes de Bases de Données</td>
+                            <td>Informatique</td>
+                            <td>Dr. Smith</td>
+                            <td>
+                                <button class="action-btn view" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-exam-id="3">
+                            <td>06/05/2025</td>
+                            <td>10:00 - 12:00</td>
+                            <td>A8</td>
+                            <td>Calcul II</td>
+                            <td>Mathématiques</td>
+                            <td>Prof. Johnson</td>
+                            <td>
+                                <button class="action-btn view" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr data-exam-id="4">
+                            <td>07/05/2025</td>
+                            <td>14:00 - 16:00</td>
+                            <td>D3</td>
+                            <td>Physique I</td>
+                            <td>Physique</td>
+                            <td>Dr. Williams</td>
+                            <td>
+                                <button class="action-btn view" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-footer">
+                <div class="table-info">Affichage de 1 à 4 sur 24 entrées</div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="pagination-btn active">1</button>
+                    <button class="pagination-btn">2</button>
+                    <button class="pagination-btn">3</button>
+                    <button class="pagination-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Exam Details Modal (Hidden by default) -->
+    <div class="modal-overlay" id="examModal">
+        <div class="exam-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Détails de l'Examen</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="exam-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Informations de Base
+                    </h3>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Date</div>
+                            <div class="detail-value" id="exam-date">05/05/2025</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Heure</div>
+                            <div class="detail-value" id="exam-time">13:00 - 15:00</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Salle</div>
+                            <div class="detail-value" id="exam-room">C6</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Module</div>
+                            <div class="detail-value" id="exam-module">Algorithmes</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Département</div>
+                            <div class="detail-value" id="exam-department">Informatique</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Responsable</div>
+                            <div class="detail-value" id="exam-responsible">Prof. Lahrech</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="exam-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user-shield"></i>
+                        Surveillants Assignés
+                    </h3>
+                    <div class="proctors-list" id="proctors-list">
+                        <!-- Proctors will be added here dynamically -->
+                    </div>
+                </div>
+                
+                <div class="exam-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        Informations Supplémentaires
+                    </h3>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Étudiants Inscrits</div>
+                            <div class="detail-value" id="exam-students">48</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Exigences Spéciales</div>
+                            <div class="detail-value" id="exam-requirements">Projecteur nécessaire</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="modal-btn btn-outline" id="printBtn">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button class="modal-btn btn-primary" id="editExamBtn">
+                    <i class="fas fa-edit"></i> Modifier
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js" defer></script>
+
+</body>
+</html>
