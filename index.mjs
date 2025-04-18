@@ -22,7 +22,7 @@ app.use(cors());
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "supra_2006",
+  password: "2005",
   database: "try",
   waitForConnections: true,
   connectionLimit: 10,
@@ -437,30 +437,7 @@ app.delete("/supprimer-examen/:id", async (req, res) => {
   }
 });
 
-app.delete("/supprimer-examen/:id", async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [result] = await pool.query("DELETE FROM exam_temp WHERE id = ?", [
-      id,
-    ]);
 
-    if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Examen introuvable." });
-    }
-
-    res.json({ success: true, message: "Examen supprimé avec succès." });
-  } catch (error) {
-    console.error("Erreur lors de la suppression de l'examen :", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Erreur serveur lors de la suppression.",
-      });
-  }
-});
 
 // Endpoint pour récupérer tous les examens
 app.get("/examens", async (req, res) => {
@@ -475,19 +452,9 @@ app.get("/examens", async (req, res) => {
 
 app.put("/modifier-examen/:id", async (req, res) => {
   const id = req.params.id;
-  const { palier, specialite, section, module, date, heure, salle, semestre } =
-    req.body;
+  const { palier, specialite, section, module, date_exam, horaire, salle } = req.body;
 
-  if (
-    !palier ||
-    !specialite ||
-    !section ||
-    !module ||
-    !date ||
-    !heure ||
-    !salle ||
-    !semestre
-  ) {
+  if (!palier || !specialite || !section || !module || !date_exam || !horaire || !salle) {
     return res
       .status(400)
       .json({ success: false, message: "Tous les champs sont obligatoires." });
@@ -496,9 +463,9 @@ app.put("/modifier-examen/:id", async (req, res) => {
   try {
     const [result] = await pool.query(
       `UPDATE exam_temp 
-             SET palier = ?, specialite = ?, section = ?, module = ?, date_exam = ?, horaire = ?, salle = ?, semestre = ?
-             WHERE id = ?`,
-      [palier, specialite, section, module, date, heure, salle, semestre, id]
+       SET palier = ?, specialite = ?, section = ?, module = ?, date_exam = ?, horaire = ?, salle = ?
+       WHERE id = ?`,
+      [palier, specialite, section, module, date_exam, horaire, salle, id]
     );
 
     if (result.affectedRows === 0) {
@@ -581,6 +548,101 @@ app.post("/ajouter-examen", async (req, res) => {
         success: false,
         message: "Erreur serveur lors de l'ajout de l'examen.",
       });
+  }
+});
+
+app.get('/verifier-erreurs-examens', async (req, res) => {
+  try {
+      const [examens] = await pool.query("SELECT * FROM exam_temp");
+      const [planingV] = await pool.query("SELECT * FROM planingV");
+
+      const erreurs = [];
+
+      for (let i = 0; i < examens.length; i++) {
+          for (let j = i + 1; j < examens.length; j++) {
+              const exam1 = examens[i];
+              const exam2 = examens[j];
+
+              const date1 = new Date(exam1.date_exam).toISOString().split('T')[0];
+              const date2 = new Date(exam2.date_exam).toISOString().split('T')[0];
+
+              const heure1 = exam1.horaire.toString().trim();
+              const heure2 = exam2.horaire.toString().trim();
+
+              const salle1 = exam1.salle.toString().trim();
+              const salle2 = exam2.salle.toString().trim();
+
+              // 1. Conflit de salle
+              if (
+                  date1 === date2 &&
+                  heure1 === heure2 &&
+                  salle1 === salle2 &&
+                  exam1.section !== exam2.section
+              ) {
+                  erreurs.push({
+                      type: "Conflit de salle",
+                      message: `Conflit entre les sections ${exam1.section} et ${exam2.section} dans la salle ${salle1} à ${heure1} le ${date1}`,
+                      examens: [exam1.id, exam2.id]
+                  });
+              }
+
+              // 2. Doublon exact
+              if (
+                  exam1.section === exam2.section &&
+                  exam1.module === exam2.module &&
+                  date1 === date2 &&
+                  heure1 === heure2 &&
+                  salle1 === salle2
+              ) {
+                  erreurs.push({
+                      type: "Doublon exact",
+                      message: `Le module ${exam1.module} est dupliqué pour la section ${exam1.section} à la même date, heure et salle.`,
+                      examens: [exam1.id, exam2.id]
+                  });
+              }
+
+              // 3. Module incohérent
+              if (
+                  exam1.section === exam2.section &&
+                  exam1.module === exam2.module &&
+                  (date1 !== date2 || heure1 !== heure2 || salle1 !== salle2)
+              ) {
+                  erreurs.push({
+                      type: "Incohérence module",
+                      message: `Le module ${exam1.module} pour la section ${exam1.section} est planifié à des moments différents.`,
+                      examens: [exam1.id, exam2.id]
+                  });
+              }
+          }
+
+          // 4. Vérification de la disponibilité de la salle
+          const exam = examens[i];
+          const isSalleDisponible = planingV.some(
+              (plan) =>
+                  plan.salle === exam.salle &&
+                  plan.horaire === exam.horaire &&
+                  new Date(plan.date_exam).toISOString().split('T')[0] ===
+                      new Date(exam.date_exam).toISOString().split('T')[0]
+          );
+
+          if (!isSalleDisponible) {
+              erreurs.push({
+                  type: "Salle indisponible",
+                  message: `La salle ${exam.salle} n'est pas disponible à ${exam.horaire} le ${exam.date_exam}.`,
+                  examen: exam.id
+              });
+          }
+      }
+
+      res.json({ 
+          success: erreurs.length === 0,
+          erreurs,
+          message: erreurs.length > 0 ? `${erreurs.length} erreur(s) détectée(s).` : "Aucune erreur détectée."
+      });
+
+  } catch (error) {
+      console.error("Erreur de vérification :", error);
+      res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 });
 

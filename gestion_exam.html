@@ -116,80 +116,18 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Palier</th>
+                        <th>Spécialité</th>
+                        <th>Module</th>
+                        <th>Section</th>
                         <th>Date</th>
                         <th>Heure</th>
                         <th>Salle</th>
-                        <th>Module</th>
-                        <th>Section</th>
-                        <th>Filière</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>05/05/2025</td>
-                        <td>13:00</td>
-                        <td>C5</td>
-                        <td>Algorithmes</td>
-                        <td>A</td>
-                        <td>Informatique</td>
-                        <td>
-                            <button class="action-btn edit" title="Modifier" onclick="openEditModal()">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>05/05/2025</td>
-                        <td>09:00</td>
-                        <td>B12</td>
-                        <td>Systèmes de Gestion de Base de Données</td>
-                        <td>B</td>
-                        <td>Informatique</td>
-                        <td>
-                            <button class="action-btn edit" title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>06/05/2025</td>
-                        <td>10:00</td>
-                        <td>A8</td>
-                        <td>Calcul II</td>
-                        <td>C</td>
-                        <td>Mathématiques</td>
-                        <td>
-                            <button class="action-btn edit" title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>07/05/2025</td>
-                        <td>14:00</td>
-                        <td>D3</td>
-                        <td>Physique I</td>
-                        <td>A</td>
-                        <td>Physique</td>
-                        <td>
-                            <button class="action-btn edit" title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
+                    <!-- Rows will be dynamically inserted here -->
                 </tbody>
             </table>
         </div>
@@ -220,63 +158,41 @@
                 <h2 class="modal-title">Modifier l'Examen</h2>
                 <button class="close-btn" onclick="closeEditModal()">&times;</button>
             </div>
-            
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="edit-palier">Palier</label>
-                        <select id="edit-palier" class="form-control">
-                            <option value="L1">Licence 1</option>
-                            <option value="L2">Licence 2</option>
-                            <option value="L3">Licence 3</option>
-                            <option value="M1">Master 1</option>
-                            <option value="M2">Master 2</option>
-                        </select>
+                        <input type="text" id="edit-palier" class="form-control" disabled>
                     </div>
-                    
                     <div class="form-group">
                         <label for="edit-specialite">Spécialité</label>
-                        <select id="edit-specialite" class="form-control">
-                            <option value="informatique">Informatique</option>
-                            <option value="mathematiques">Mathématiques</option>
-                            <option value="physique">Physique</option>
-                        </select>
+                        <input type="text" id="edit-specialite" class="form-control" disabled>
                     </div>
-                    
                     <div class="form-group">
                         <label for="edit-module">Module</label>
-                        <input type="text" id="edit-module" class="form-control" value="Algorithmes">
+                        <input type="text" id="edit-module" class="form-control" disabled>
                     </div>
-                    
                     <div class="form-group">
                         <label for="edit-section">Section</label>
-                        <select id="edit-section" class="form-control">
-                            <option value="A">Section A</option>
-                            <option value="B">Section B</option>
-                            <option value="C">Section C</option>
-                        </select>
+                        <input type="text" id="edit-section" class="form-control" disabled>
                     </div>
-                    
                     <div class="form-group">
                         <label for="edit-date">Date</label>
-                        <input type="date" id="edit-date" class="form-control" value="2025-05-05">
+                        <input type="date" id="edit-date" class="form-control">
                     </div>
-                    
                     <div class="form-group">
                         <label for="edit-heure">Heure</label>
-                        <input type="time" id="edit-heure" class="form-control" value="13:00">
+                        <input type="time" id="edit-heure" class="form-control">
                     </div>
-                    
                     <div class="form-group">
                         <label for="edit-salle">Salle</label>
-                        <input type="text" id="edit-salle" class="form-control" value="C5">
+                        <input type="text" id="edit-salle" class="form-control">
                     </div>
                 </div>
             </div>
-            
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeEditModal()">Annuler</button>
-                <button class="btn btn-primary">Enregistrer</button>
+                <button class="btn btn-primary" id="saveEditBtn">Enregistrer</button>
             </div>
         </div>
     </div>
