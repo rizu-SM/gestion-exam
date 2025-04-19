@@ -308,9 +308,15 @@ tr:last-child td {
     border-bottom: none;
 }
 
-tr:hover {
-    background-color: var(--primary-light);
+tr{
+    transition: all 0.5s;
 }
+
+thead tr:hover {
+    background-color: #6077de;
+}
+
+
 
 .proctor-info {
     display: flex;
@@ -328,7 +334,6 @@ tr:hover {
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234361ee"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>');
     background-size: 60%;
     background-repeat: no-repeat;
     background-position: center;
@@ -425,75 +430,92 @@ tr:hover {
 }
 
 /* Add Proctor Modal */
+/* Modal backdrop */
 .modal {
-    display: none;
+    display: none; /* hidden by default */
     position: fixed;
-    top: 0;
+    z-index: 1000;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
     justify-content: center;
     align-items: center;
-}
-
-.modal-content {
-    background-color: white;
+  }
+  
+  /* Modal content */
+  .modal-content {
+    background-color: #ffffff;
+    margin: auto;
+    padding: 30px;
     border-radius: 12px;
-    width: 100%;
-    max-width: 500px;
-    padding: 2rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    position: relative;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.modal-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: button;
-    color: var(--gray);
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--gray);
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  /* Close icon */
+  .modal-content .close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #888;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .modal-content .close:hover {
+    color: #000;
+  }
+  
+  /* Form labels */
+  .modal-content label {
     font-weight: 500;
-}
-
-.form-control {
+    margin-bottom: 4px;
+    color: #333;
+  }
+  
+  /* Inputs and selects */
+  .modal-content select,
+  .modal-content input[type="date"],
+  .modal-content input[type="time"],
+  .modal-content input[type="text"] {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--gray-light);
-    border-radius: 8px;
-    font-size: 0.875rem;
-}
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  .modal-content select:focus,
+  .modal-content input:focus {
+    border-color: #0052cc;
+    outline: none;
+  }
+  
 
-.modal-footer {
+  
+  /* Modal footer (already has buttons, do not modify them) */
+  .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
-}
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  /* Extra close button in content (X button) */
+  .close-btn {
+    display: none;
+  }
+  
 
 @media (max-width: 768px) {
     .sidebar {
@@ -519,3 +541,126 @@ tr:hover {
         width: 100%;
     }
 }
+
+
+
+/* POUR STYLER  AMIIN.......................................................................................................................
+............................................................................................................................................
+...........................................................................................................................................*/
+
+/* Modal backdrop */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* fond noir semi-transparent */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #0052cc;
+    color: white;
+    border-bottom: 1px solid #ccc;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .modal-header h5 {
+    margin: 0;
+    font-size: 18px;
+  }
+  
+  .modal-body {
+    background-color: #fff;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    max-height: 90vh;
+    position: relative;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .modal-header h5 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .close-modal {
+    cursor: pointer;
+    font-size: 24px;
+    color: #333;
+    transition: color 0.2s;
+  }
+  
+  .close-modal:hover {
+    color: red;
+  }
+  
+  .surveillance-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .surveillance-table th,
+  .surveillance-table td {
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  
+  .surveillance-table th {
+    background-color: #4e71d1;
+    font-weight: bold;
+  }
+  
+  .surveillance-table tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+  
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin: 0 5px;
+    font-size: 16px;
+    color: #007bff;
+  }
+  
+  .action-btn:hover {
+    color: #0056b3;
+  }
+  
+  .total-surveillances {
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: right;
+  }
+  
+  .no-surveillance {
+    text-align: center;
+    font-style: italic;
+    padding: 20px 0;
+    color: #888;
+  }
+  

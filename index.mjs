@@ -2,16 +2,27 @@ import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
 import {
-    Document,
-    Packer,
-    Paragraph,
-    Table,
-    TableRow,
-    TableCell,
-    AlignmentType,
-  } from "docx";
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  AlignmentType,
+  BorderStyle,
+  WidthType,
+  HeightRule,
+  VerticalAlign,
+  ImageRun,
+  HorizontalPositionRelativeFrom
+} from "docx";
   import fs from "fs";
   import nodemailer from "nodemailer";
+  import path from "path";
+
+  //departement.informatique.usthb@gmail.com
+  //infoUSTHB
 
 
 const app = express();
@@ -648,148 +659,237 @@ app.get('/verifier-erreurs-examens', async (req, res) => {
 
 app.post("/envoyer-mail", async (req, res) => {
   try {
-    const [base_surveillance] = await pool.query(
-      "SELECT DISTINCT code_enseignant FROM base_surveillance"
-    );
+      // Créer le dossier files s'il n'existe pas
+      const filesDir = path.join(process.cwd(), "files");
+      if (!fs.existsSync(filesDir)) {
+          fs.mkdirSync(filesDir, { recursive: true });
+      }
 
-    if (base_surveillance.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Aucun enseignant trouvé dans base_surveillance.",
-      });
-    }
-    console.log("before creat file");
-    if (!fs.existsSync("files")) {
-      fs.mkdirSync("files");
-    }
+      // Créer le dossier assets s'il n'existe pas
+      const assetsDir = path.join(process.cwd(), "assets");
+      if (!fs.existsSync(assetsDir)) {
+          fs.mkdirSync(assetsDir, { recursive: true });
+      }
 
-    console.log("after creat file");
-
-    for (const { code_enseignant } of base_surveillance) {
-      const [examens] = await pool.query(
-        `SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre
-           FROM base_surveillance
-           WHERE code_enseignant = ?`,
-        [code_enseignant]
+      const [base_surveillance] = await pool.query(
+          "SELECT DISTINCT code_enseignant FROM base_surveillance"
       );
 
-      if (examens.length === 0) continue;
+      if (base_surveillance.length === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "Aucun enseignant trouvé dans base_surveillance.",
+          });
+      }
 
-      const [enseignant] = await pool.query(
-        `SELECT email1 FROM enseignants WHERE code_enseignant = ?`,
-        [code_enseignant]
-      );
+      for (const { code_enseignant } of base_surveillance) {
+          const [examens] = await pool.query(
+              `SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre
+               FROM base_surveillance
+               WHERE code_enseignant = ?`,
+              [code_enseignant]
+          );
 
-      if (enseignant.length === 0 || !enseignant[0].email1) continue;
+          if (examens.length === 0) continue;
 
-      const email = enseignant[0].email1;
+          const [enseignant] = await pool.query(
+              `SELECT email1 FROM enseignants WHERE code_enseignant = ?`,
+              [code_enseignant]
+          );
 
-      const doc = new Document({
-        creator: "Admin",
-        title: "Examens à surveiller",
-        description: "Liste des surveillances d'examens",
-        sections: [
-          {
-            properties: {},
-            children: [
-              // Add a Title
-              new Paragraph({
-                text: "Liste des Examens à Surveiller",
-                heading: "Heading1",
-                alignment: "center", // Center-align the title
-              }),
+          if (enseignant.length === 0 || !enseignant[0].email1) continue;
 
-              // Add a Table
-              new Table({
-                rows: [
-                  // Table Header
-                  new TableRow({
-                    children: [
-                      new TableCell({
-                        children: [
-                          new Paragraph({ text: "Module", bold: true }),
-                        ],
-                      }),
-                      new TableCell({
-                        children: [
-                          new Paragraph({ text: "Palier", bold: true }),
-                        ],
-                      }),
-                      new TableCell({
-                        children: [
-                          new Paragraph({ text: "Spécialité", bold: true }),
-                        ],
-                      }),
-                      new TableCell({
-                        children: [
-                          new Paragraph({ text: "Section", bold: true }),
-                        ],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph({ text: "Date", bold: true })],
-                      }),
-                      new TableCell({
-                        children: [
-                          new Paragraph({ text: "Horaire", bold: true }),
-                        ],
-                      }),
-                      new TableCell({
-                        children: [
-                          new Paragraph({ text: "Salle", bold: true }),
-                        ],
-                      }),
-                      new TableCell({
-                        children: [
-                          new Paragraph({ text: "Semestre", bold: true }),
-                        ],
-                      }),
-                    ],
-                  }),
+          const email = enseignant[0].email1;
 
-                  // Add Rows for Each Exam
-                  ...examens.map(
-                    (exam) =>
-                      new TableRow({
-                        children: [
-                          new TableCell({
-                            children: [new Paragraph({ text: exam.module })],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph({ text: exam.palier })],
-                          }),
-                          new TableCell({
-                            children: [
-                              new Paragraph({ text: exam.specialite }),
-                            ],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph({ text: exam.section })],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph({ text: exam.date_exam })],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph({ text: exam.horaire })],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph({ text: exam.salle })],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph({ text: exam.semestre })],
-                          }),
-                        ],
+          // Chemin absolu vers le logo
+          const logoPath = path.join(assetsDir, "logo.png");
+          
+          // Vérifier si le logo existe, sinon utiliser un placeholder
+          let logoImage;
+          if (fs.existsSync(logoPath)) {
+              logoImage = new ImageRun({
+                  data: fs.readFileSync(logoPath),
+                  transformation: {
+                      width: 100,
+                      height: 100
+                  },
+                  floating: {
+                      horizontalPosition: {
+                          relative: HorizontalPositionRelativeFrom.PAGE,
+                          offset: 400000
+                      }
+                  }
+              });
+          }
+
+          const doc = new Document({
+              creator: "Système de Gestion des Examens",
+              title: "Convocation de Surveillance",
+              description: "Détail des examens à surveiller",
+              styles: {
+                  paragraphStyles: [
+                      {
+                          id: "headerStyle",
+                          name: "En-tête",
+                          run: {
+                              size: 28,
+                              bold: true,
+                              color: "2d609b",
+                              font: "Arial"
+                          },
+                          paragraph: {
+                              spacing: { after: 200 },
+                              alignment: AlignmentType.CENTER
+                          }
+                      },
+                      {
+                          id: "subheaderStyle",
+                          name: "Sous-titre",
+                          run: {
+                              size: 22,
+                              bold: true,
+                              color: "444444",
+                              font: "Arial"
+                          },
+                          paragraph: {
+                              spacing: { after: 150 },
+                              alignment: AlignmentType.CENTER
+                          }
+                      },
+                      {
+                          id: "tableHeader",
+                          name: "En-tête tableau",
+                          run: {
+                              size: 12,
+                              bold: true,
+                              color: "FFFFFF",
+                              font: "Arial"
+                          }
+                      },
+                      {
+                          id: "tableCell",
+                          name: "Cellule tableau",
+                          run: {
+                              size: 11,
+                              font: "Arial"
+                          }
+                      }
+                  ]
+              },
+              sections: [{
+                  properties: {
+                      page: {
+                          margin: {
+                              top: 1000,
+                              right: 1000,
+                              bottom: 1000,
+                              left: 1000
+                          }
+                      }
+                  },
+                  children: [
+                      // En-tête avec logo et titre
+                      new Paragraph({
+                          children: [
+                              ...(logoImage ? [logoImage] : []),
+                              new TextRun({
+                                  text: "Université des Sciences et Technologies",
+                                  style: "headerStyle"
+                              })
+                          ],
+                          alignment: AlignmentType.CENTER
+                      }),
+
+                      // Sous-titre
+                      new Paragraph({
+                          text: "Détail de vos surveillances d'examens",
+                          style: "subheaderStyle"
+                      }),
+
+                      // Date de génération
+                      new Paragraph({
+                          text: `Généré le ${new Date().toLocaleDateString('fr-FR')}`,
+                          alignment: AlignmentType.RIGHT,
+                          spacing: { after: 300 }
+                      }),
+
+                      // Tableau des examens
+                      new Table({
+                          width: {
+                              size: 100,
+                              type: WidthType.PERCENTAGE
+                          },
+                          borders: {
+                              top: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
+                              bottom: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
+                              left: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
+                              right: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
+                              insideHorizontal: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" },
+                              insideVertical: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" }
+                          },
+                          rows: [
+                              // En-tête du tableau
+                              new TableRow({
+                                  height: { value: 500, rule: HeightRule.EXACT },
+                                  tableHeader: true,
+                                  children: [
+                                      "Module", "Niveau", "Spécialité", "Groupe", 
+                                      "Date", "Horaire", "Salle", "Session"
+                                  ].map(text => new TableCell({
+                                      shading: { fill: "2d609b" },
+                                      verticalAlign: VerticalAlign.CENTER,
+                                      children: [new Paragraph({
+                                          text,
+                                          style: "tableHeader",
+                                          alignment: AlignmentType.CENTER
+                                      })]
+                                  }))
+                              }),
+                              
+                              // Lignes des examens
+                              ...examens.map(exam => new TableRow({
+                                  children: [
+                                      exam.module,
+                                      exam.palier,
+                                      exam.specialite,
+                                      exam.section,
+                                      new Date(exam.date_exam).toLocaleDateString('fr-FR'),
+                                      exam.horaire,
+                                      exam.salle,
+                                      exam.semestre
+                                  ].map((text, index) => new TableCell({
+                                      verticalAlign: VerticalAlign.CENTER,
+                                      shading: index % 2 ? { fill: "f8f8f8" } : undefined,
+                                      children: [new Paragraph({
+                                          text: String(text),
+                                          style: "tableCell",
+                                          alignment: index === 0 ? AlignmentType.LEFT : AlignmentType.CENTER
+                                      })]
+                                  }))
+                              }))
+                          ]
+                      }),
+
+                      // Pied de page
+                      new Paragraph({
+                          text: "Merci pour votre collaboration",
+                          alignment: AlignmentType.CENTER,
+                          spacing: { before: 400 },
+                          style: "subheaderStyle"
+                      }),
+                      
+                      new Paragraph({
+                          text: "Service des Examens - Département Informatique",
+                          alignment: AlignmentType.CENTER,
+                          spacing: { before: 100 }
                       })
-                  ),
-                ],
-              }),
-            ],
-          },
-        ],
-      });
+                  ]
+              }]
+          });
 
       console.log("after docx");
 
-      const filePath = `files/${code_enseignant}_examens.docx`;
+      const filePath = path.join(filesDir, `${code_enseignant}_examens.docx`);
 
       try {
         const buffer = await Packer.toBuffer(doc);
@@ -804,7 +904,7 @@ app.post("/envoyer-mail", async (req, res) => {
         service: "gmail",
         auth: {
           user: "departement.informatique.usthb@gmail.com",
-          pass: "infoUSTHB",
+          pass: "pcvt nomo ocsf cows",
         },
       });
 
@@ -1008,6 +1108,159 @@ app.post("/envoyer-pv", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Erreur serveur lors de l'envoi des procès-verbaux.",
+    });
+  }
+});
+
+
+
+
+
+app.post('/inserer-surveillance', async (req, res) => {
+  const {
+    palier, specialite, semestre, section,
+    date_exam, horaire, module, salle, code_enseignant
+  } = req.body;
+
+  // Vérification des champs
+  if (!palier || !specialite || !semestre || !section || !date_exam || !horaire || !module || !salle || !code_enseignant) {
+    return res.status(400).json({ success: false, message: "Tous les champs sont requis." });
+  }
+
+  try {
+    // Vérifier si l'enseignant existe
+    const [enseignant] = await pool.query(
+      "SELECT * FROM enseignants WHERE code_enseignant = ?",
+      [code_enseignant]
+    );
+
+    if (enseignant.length === 0) {
+      return res.status(404).json({ success: false, message: "Enseignant non trouvé." });
+    }
+
+    // Calculer l'ordre (nombre de surveillances existantes pour cette date, heure et salle + 1)
+    const [surveillancesExistantes] = await pool.query(
+      "SELECT COUNT(*) as count FROM base_surveillance WHERE date_exam = ? AND horaire = ? AND salle = ?",
+      [date_exam, horaire, salle]
+    );
+    
+    const ordre = surveillancesExistantes[0].count + 1;
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // janvier = 0 donc +1
+
+    const annee_universitaire = month >= 9 
+        ? `${year}-${year + 1}` 
+        : `${year - 1}-${year}`;
+
+    // Insérer dans base_surveillance
+    await pool.query(
+      `INSERT INTO base_surveillance (palier, specialite, semestre, section, date_exam, horaire, module, salle, code_enseignant, annee_universitaire, ordre)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [palier, specialite, semestre, section, date_exam, horaire, module, salle, code_enseignant, annee_universitaire, ordre]
+    );
+    
+    res.json({ success: true, message: "Surveillance insérée avec succès." });
+
+  } catch (error) {
+    console.error("Erreur insertion :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur." });
+  }
+});
+
+app.get('/enseignants', async (req, res) => {
+  try {
+    const [enseignants] = await pool.query("SELECT * FROM enseignants");
+    res.json(enseignants);
+  } catch (error) {
+    console.error("Erreur récupération enseignants:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+
+app.get('/update-surveillances', async (req, res) => {
+  try {
+    // 1. Récupérer tous les enseignants
+    const [enseignants] = await pool.query("SELECT code_enseignant FROM enseignants");
+    
+    // 2. Pour chaque enseignant, compter les surveillances
+    for (const enseignant of enseignants) {
+      const [result] = await pool.query(
+        "SELECT COUNT(*) as count FROM base_surveillance WHERE code_enseignant = ?",
+        [enseignant.code_enseignant]
+      );
+      
+      const nbrSS = result[0].count;
+      
+      // 3. Mettre à jour le compteur dans la table enseignants
+      console.log("before insert");
+      await pool.query(
+        "UPDATE enseignants SET nbrSS = ? WHERE code_enseignant = ?",
+        [nbrSS, enseignant.code_enseignant]
+      );
+    }
+    
+    res.json({ success: true, message: "Compteurs de surveillance mis à jour" });
+  } catch (error) {
+    console.error("Erreur mise à jour surveillances:", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// Nouvelle route pour récupérer les surveillances d'un enseignant
+app.get('/surveillances-enseignant/:id', async (req, res) => {
+  try {
+    const [surveillances] = await pool.query(`
+      SELECT * FROM base_surveillance 
+      WHERE code_enseignant = ?
+      ORDER BY date_exam DESC
+    `, [req.params.id]);
+
+    res.json(surveillances);
+  } catch (error) {
+    console.error("Erreur:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// Route pour supprimer une surveillance
+app.delete('/surveillances/:id', async (req, res) => {
+  try {
+    // 1. Vérifier si la surveillance existe
+    const [surveillance] = await pool.query(
+      'SELECT * FROM base_surveillance WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (surveillance.length === 0) {
+      return res.status(404).json({ success: false, message: "Surveillance non trouvée" });
+    }
+
+    // 2. Supprimer la surveillance
+    await pool.query(
+      'DELETE FROM base_surveillance WHERE id = ?',
+      [req.params.id]
+    );
+
+    // 3. Mettre à jour le compteur nbrSS de l'enseignant
+    await pool.query(
+      'UPDATE enseignants SET nbrSS = nbrSS - 1 WHERE code_enseignant = ?',
+      [surveillance[0].code_enseignant]
+    );
+
+    res.json({ 
+      success: true,
+      message: "Surveillance supprimée avec succès"
+    });
+
+  } catch (error) {
+    console.error("Erreur suppression surveillance:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Erreur serveur",
+      error: error.message
     });
   }
 });
