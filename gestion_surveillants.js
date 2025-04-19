@@ -26,16 +26,62 @@ window.addEventListener('click', (event) => {
 //------------------------SAMI PARTE--------------------------------
 
 let formationsData = [];
+// Define the updateTotal function
+function updateTotal(data) {
+  const totalSurveillances = data.reduce((acc, enseignant) => acc + (enseignant.nbrSS || 0), 0);
+  document.getElementById("total-surveillances").textContent = totalSurveillances;
+  document.getElementById("total-surveillants").textContent = data.length;
+}
+function updateTotalAssigned(data) {
+  // Filtrer les surveillants ayant au moins une surveillance
+  const totalAssigned = data.filter(enseignant => enseignant.nbrSS > 0).length;
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        formationsData = await loadFormations();
-        await fetch('http://localhost:3000/update-surveillances');
-        initFilters();
-    } catch (error) {
-        console.error("Erreur initialisation:", error);
-    }
-});
+  // Mettre à jour l'élément HTML avec l'ID "total_assigne"
+  const totalAssignedElement = document.getElementById("total_assigne");
+  console.log(totalAssigned);
+  if (totalAssignedElement) {
+    totalAssignedElement.textContent = totalAssigned; // Affiche le total des assignés
+  }
+}
+async function initializeAndUpdate() {
+  try {
+    formationsData = await loadFormations();
+    await updateSurveillanceCounts();
+    initFilters();
+    const data = await fetchData(); // Récupère les données à jour
+    updateTotal(data); // Met à jour les totaux
+    updateTotalAssigned(data); // Met à jour le total des surveillants assignés
+  } catch (error) {
+    console.error("Erreur initialisation:", error);
+  }
+}
+
+async function fetchData() {
+  try {
+      const response = await fetch('http://localhost:3000/enseignants'); // Remplacez par l'URL correcte
+      if (!response.ok) {
+          throw new Error('Erreur de récupération des données');
+      }
+      return await response.json();  // Récupère les données au format JSON
+  } catch (error) {
+      console.error('Erreur fetchData:', error);
+      throw error; // Lance une erreur si la récupération échoue
+  }
+}
+
+async function updateSurveillanceCounts() {
+  try {
+      const response = await fetch('http://localhost:3000/update-surveillances');
+      if (!response.ok) {
+          throw new Error('Échec de la mise à jour des compteurs');
+      }
+      return await response.json();
+  } catch (error) {
+      console.error("Erreur mise à jour compteurs:", error);
+      throw error;
+  }
+}
+
 
 // Charge les données formations
 async function loadFormations() {
@@ -144,6 +190,8 @@ function initFilters() {
 
   document.addEventListener('DOMContentLoaded', function() {
     let enseignantsData = [];
+
+    initializeAndUpdate();
 
     fetch('http://localhost:3000/enseignants')
       .then(response => response.json())
@@ -332,44 +380,236 @@ function initFilters() {
     }
     
     // Fonction pour modifier une surveillance
-    function modifierSurveillance(surveillanceId) {
-      console.log('Modifier surveillance:', surveillanceId);
-      // Implémentez votre logique de modification ici
-      // Par exemple, ouvrir un formulaire de modification
+    async function modifierSurveillance(surveillanceId) {
+      try {
+        // 1. Récupérer les données actuelles
+        const response = await fetch(`http://localhost:3000/surveillances/${surveillanceId}`);
+        const surveillance = await response.json();
+    
+        if (!response.ok) throw new Error(surveillance.message || "Échec de la récupération");
+    
+        // Convertir la date au format YYYY-MM-DD pour le champ input[type="date"]
+        const formattedDate = new Date(surveillance.date_exam).toISOString().split('T')[0];
+    
+        // 2. Afficher un formulaire de modification
+        const formHtml = `
+          <div class="modal-form">
+            <h3>Modifier la surveillance</h3>
+            
+            <div class="form-group">
+              <label>Date:</label>
+              <input type="date" id="edit-date" value="${formattedDate}" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Horaire:</label>
+              <input type="time" id="edit-time" value="${surveillance.horaire}" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Module:</label>
+              <input type="text" id="edit-module" value="${surveillance.module}" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Salle:</label>
+              <input type="text" id="edit-salle" value="${surveillance.salle}" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Spécialité:</label>
+              <input type="text" id="edit-specialite" value="${surveillance.specialite}" required>
+            </div>
+            
+            <div class="form-buttons">
+              <button type="button" class="cancel-btn">Annuler</button>
+              <button type="button" class="save-btn">Enregistrer</button>
+            </div>
+          </div>
+        `;
+    
+        // 3. Afficher la modal
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.innerHTML = formHtml;
+        document.body.appendChild(modal);
+    
+        // 4. Gestion des événements
+        modal.querySelector('.cancel-btn').addEventListener('click', () => modal.remove());
+        
+        modal.querySelector('.save-btn').addEventListener('click', async () => {
+          try {
+            const updatedData = {
+              date_exam: document.getElementById('edit-date').value,
+              horaire: document.getElementById('edit-time').value,
+              module: document.getElementById('edit-module').value,
+              salle: document.getElementById('edit-salle').value,
+              specialite: document.getElementById('edit-specialite').value,
+              code_enseignant: surveillance.code_enseignant // Conserver le même enseignant
+            };
+    
+            // Validation simple
+            if (Object.values(updatedData).some(v => !v)) {
+              throw new Error("Tous les champs sont requis");
+            }
+    
+            const saveResponse = await fetch(`http://localhost:3000/surveillances/${surveillanceId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updatedData)
+            });
+    
+            const result = await saveResponse.json();
+    
+            if (!saveResponse.ok) throw new Error(result.error || "Échec de la modification");
+    
+            alert("Surveillance modifiée avec succès");
+            modal.remove();
+            
+            // Rafraîchir les données de la carte
+            await refreshSurveillanceDisplayForCard(surveillance.code_enseignant);
+    
+          } catch (error) {
+            alert("Erreur: " + error.message);
+          }
+        });
+    
+      } catch (error) {
+        console.error("Erreur modification:", error);
+        alert("Erreur: " + error.message);
+      }
     }
     
     // Fonction pour supprimer une surveillance
     async function supprimerSurveillance(surveillanceId, rowElement) {
-      if (!confirm('Voulez-vous vraiment supprimer cette surveillance ?')) {
-        return;
-      }
-    
       try {
+        if (!confirm('Voulez-vous vraiment supprimer cette surveillance ?\nCette action est irréversible.')) {
+          return;
+        }
+    
+        const loader = showLoader();
+    
+        // 1. D'abord supprimer de la base de données
         const response = await fetch(`http://localhost:3000/surveillances/${surveillanceId}`, {
           method: 'DELETE'
         });
     
-        if (response.ok) {
+        if (!response.ok) {
+          throw new Error('Échec de la suppression');
+        }
+    
+        // 2. Mettre à jour les compteurs côté serveur
+        await fetch('http://localhost:3000/update-surveillances');
+    
+        // 3. Animation de suppression UI
+        rowElement.style.transition = 'all 0.3s';
+        rowElement.style.opacity = '0';
+        rowElement.style.transform = 'translateX(-100px)';
+    
+        setTimeout(async () => {
+          // 4. Supprimer la ligne après l'animation
           rowElement.remove();
-          // Mettre à jour le compteur total
+          
+          // 5. Mettre à jour le compteur côté client
           const totalElement = document.querySelector('.total-surveillances');
           const currentTotal = parseInt(totalElement.textContent.match(/\d+/)[0]);
           totalElement.textContent = `Total: ${currentTotal - 1} surveillance(s)`;
-        } else {
-          throw new Error('Échec de la suppression');
-        }
+          
+          alert('Surveillance supprimée avec succès');
+          await initializeAndUpdate();
+        }, 300);
+    
       } catch (error) {
         console.error('Erreur:', error);
-        alert("Erreur lors de la suppression de la surveillance");
+        alert('Erreur lors de la suppression: ' + error.message);
+      } finally {
+        hideLoader();
       }
+    }
     
+    // Fonctions utilitaires (à ajouter à votre code)
+    function showConfirmationModal(title, message, type = 'warning') {
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'confirmation-modal';
+        modal.innerHTML = `
+          <div class="confirmation-content">
+            <h3>${title}</h3>
+            <p>${message}</p>
+            <div class="confirmation-buttons">
+              <button class="confirm-btn">Confirmer</button>
+              <button class="cancel-btn">Annuler</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
     
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
+        modal.querySelector('.confirm-btn').addEventListener('click', () => {
           modal.remove();
-        }
+          resolve(true);
+        });
+    
+        modal.querySelector('.cancel-btn').addEventListener('click', () => {
+          modal.remove();
+          resolve(false);
+        });
       });
     }
+    
+    function showLoader() {
+      const loader = document.createElement('div');
+      loader.className = 'fullscreen-loader';
+      loader.innerHTML = '<div class="loader-spinner"></div>';
+      document.body.appendChild(loader);
+      return loader;
+    }
+    
+    function hideLoader() {
+      const loader = document.querySelector('.fullscreen-loader');
+      if (loader) loader.remove();
+    }
+    
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `toast-notification ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    
+
+
+    async function refreshSurveillanceDisplay() {
+      const data = await fetchData(); // récupère les surveillances à jour
+      afficherEnseignants(data);     // met à jour l'affichage HTML
+      updateTotal(data);             // met à jour le total affiché
+    }
+    
+    async function refreshSurveillanceDisplayForCard(codeEnseignant) {
+      try {
+        const response = await fetch(`http://localhost:3000/surveillances-enseignant/${codeEnseignant}`);
+        const surveillances = await response.json();
+    
+        if (!response.ok) throw new Error("Erreur lors de la récupération des surveillances");
+    
+        // Mettre à jour l'affichage de la carte
+        afficherModalSurveillances(codeEnseignant, surveillances);
+      } catch (error) {
+        console.error("Erreur lors du rafraîchissement de la carte :", error);
+      }
+    }
+  
+    document.addEventListener('DOMContentLoaded', () => {
+      const statCards = document.querySelectorAll('.stat-card');
+      statCards.forEach(card => {
+        card.style.opacity = '1'; // Assurez-vous que les cartes sont visibles
+      });
+    });
   
 }); // Fin du DOMContentLoaded
 
@@ -391,4 +631,3 @@ function initFilters() {
       });
     });
   }
-  

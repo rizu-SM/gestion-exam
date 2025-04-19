@@ -33,7 +33,7 @@ app.use(cors());
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "2005",
+  password: "supra_2006",
   database: "try",
   waitForConnections: true,
   connectionLimit: 10,
@@ -1262,6 +1262,58 @@ app.delete('/surveillances/:id', async (req, res) => {
       message: "Erreur serveur",
       error: error.message
     });
+  }
+});
+
+app.get('/surveillances/:id', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM base_surveillance WHERE id = ?', [req.params.id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Surveillance non trouvée' });
+    }
+
+    res.json(rows[0]); // ✅ important : retourne bien un objet JSON
+  } catch (error) {
+    console.error("Erreur GET :", error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// Route pour modifier une surveillance
+app.put('/surveillances/:id', async (req, res) => {
+  try {
+    const { date_exam, horaire, module, salle, specialite } = req.body;
+
+    // Validation des données
+    if (!date_exam || !horaire || !module || !salle || !specialite ) {
+      return res.status(400).json({ error: "Tous les champs sont requis" });
+    }
+
+    // 1. Vérifier que la surveillance existe
+    const [existing] = await pool.query(
+      'SELECT * FROM base_surveillance WHERE id = ?',
+      [req.params.id]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ error: "Surveillance non trouvée" });
+    }
+
+    // 2. Mettre à jour la surveillance
+    await pool.query(
+      `UPDATE base_surveillance 
+       SET date_exam = ?, horaire = ?, module = ?, salle = ?, specialite = ?
+       WHERE id = ?`,
+      [date_exam, horaire, module, salle, specialite, req.params.id]
+    );
+
+
+    res.json({ success: true, message: "Surveillance mise à jour" });
+  } catch (error) {
+    console.error("Erreur modification:", error);
+    res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
