@@ -205,21 +205,22 @@ function initFilters() {
       })
       .catch(error => console.error('Erreur:', error));
 
-    document.getElementById('department-filter').addEventListener('change', function() {
-      const selectedDept = this.value;
-      const filtered = selectedDept 
-        ? enseignantsData.filter(e => e.departement && e.departement.toLowerCase() === selectedDept.toLowerCase())
-        : enseignantsData;
-      afficherEnseignants(filtered);
-    });
+    document.getElementById('department-filter').addEventListener('change', applyFilters);
+    document.getElementById('grade-filter').addEventListener('change', applyFilters);
 
-    document.getElementById('grade-filter').addEventListener('change', function() {
-      const selectedGrade = this.value;
-      const filtered = selectedGrade 
-        ? enseignantsData.filter(e => e.grade && e.grade.toLowerCase().includes(selectedGrade.toLowerCase()))
-        : enseignantsData;
-      afficherEnseignants(filtered);
-    });
+    function applyFilters() {
+        const selectedDept = document.getElementById('department-filter').value.toLowerCase();
+        const selectedGrade = document.getElementById('grade-filter').value.toLowerCase();
+
+        const filtered = enseignantsData.filter(enseignant => {
+            const matchesDept = !selectedDept || (enseignant.departement && enseignant.departement.toLowerCase() === selectedDept);
+            const matchesGrade = !selectedGrade || (enseignant.grade && enseignant.grade.toLowerCase().includes(selectedGrade));
+            return matchesDept && matchesGrade; // Both filters must match
+        });
+
+        afficherEnseignants(filtered);
+    }
+
     activerRecherche();
 
     function afficherEnseignants(data) {
