@@ -33,7 +33,7 @@ app.use(cors());
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "supra_2006",
+  password: "root",
   database: "try",
   waitForConnections: true,
   connectionLimit: 10,
@@ -1317,8 +1317,37 @@ app.put('/surveillances/:id', async (req, res) => {
   }
 });
 
+
+
+
+app.get('/surveillance', async (req, res) => {
+  try {
+    const [surveillance] = await pool.query("SELECT * FROM base_surveillance ORDER BY date_exam ASC, horaire ASC");
+    res.json(surveillance);
+  } catch (error) {
+    console.error("Erreur récupération des surveillances:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 // Démarrer le serveur
-app.listen(3000, () => {
-  console.log("Serveur démarré sur http://localhost:3000");
-  console.log("Route principale: POST /assigner-surveillants-principaux");
+// app.listen(3000, () => {
+//   console.log("Serveur démarré sur http://localhost:3000");
+//   console.log("Route principale: POST /assigner-surveillants-principaux");
+// });
+
+
+
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Serveur démarré sur http://localhost:${PORT}`);
+}).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} est déjà utilisé.`);
+        const server = app.listen(0, () => {
+          console.log(`Serveur démarré sur http://localhost:${server.address().port}`);
+        });
+    } else {
+        console.error('Erreur du serveur:', err);
+    }
 });

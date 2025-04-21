@@ -100,13 +100,13 @@
                             <th>Heure</th>
                             <th>Salle</th>
                             <th>Module</th>
-                            <th>Département</th>
+                            <th>Spécialité</th>
                             <th>Responsable</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr data-exam-id="1">
+                    <tbody id="surveillancesBody">
+                        <!-- <tr data-exam-id="1">
                             <td>05/05/2025</td>
                             <td>13:00 - 15:00</td>
                             <td>C6</td>
@@ -157,8 +157,8 @@
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </td>
-                        </tr>
-                    </tbody>
+                        </tr>-->
+                    </tbody> 
                 </table>
             </div>
             
@@ -197,27 +197,27 @@
                     <div class="details-grid">
                         <div class="detail-item">
                             <div class="detail-label">Date</div>
-                            <div class="detail-value" id="exam-date">05/05/2025</div>
+                            <div class="detail-value" id="exam-date"></div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Heure</div>
-                            <div class="detail-value" id="exam-time">13:00 - 15:00</div>
+                            <div class="detail-value" id="exam-time"></div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Salle</div>
-                            <div class="detail-value" id="exam-room">C6</div>
+                            <div class="detail-value" id="exam-room"></div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Module</div>
-                            <div class="detail-value" id="exam-module">Algorithmes</div>
+                            <div class="detail-value" id="exam-module"></div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Département</div>
-                            <div class="detail-value" id="exam-department">Informatique</div>
+                            <div class="detail-label">Spécialité</div>
+                            <div class="detail-value" id="exam-department"></div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Responsable</div>
-                            <div class="detail-value" id="exam-responsible">Prof. Lahrech</div>
+                            <div class="detail-value" id="exam-responsible"></div>
                         </div>
                     </div>
                 </div>
@@ -240,23 +240,23 @@
                     <div class="details-grid">
                         <div class="detail-item">
                             <div class="detail-label">Étudiants Inscrits</div>
-                            <div class="detail-value" id="exam-students">48</div>
+                            <div class="detail-value" id="exam-students"></div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Exigences Spéciales</div>
-                            <div class="detail-value" id="exam-requirements">Projecteur nécessaire</div>
+                            <div class="detail-value" id="exam-requirements"></div>
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="modal-footer">
-                <button class="modal-btn btn-outline" id="printBtn">
+                <button class="modal-btn btn-outline modal-btn btn-primary" id="printBtn">
                     <i class="fas fa-print"></i> Imprimer
                 </button>
-                <button class="modal-btn btn-primary" id="editExamBtn">
+                <!-- <button class="modal-btn btn-primary" id="editExamBtn">
                     <i class="fas fa-edit"></i> Modifier
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
