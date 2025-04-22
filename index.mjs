@@ -1330,6 +1330,56 @@ app.get('/surveillance', async (req, res) => {
   }
 });
 
+
+// Exam stats endpoint
+app.get('/exam-stats', async (req, res) => {
+  try {
+      console.log('Fetching exam stats...');
+      const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM exam');
+      const [changeRows] = await pool.query(`
+          SELECT COUNT(*) as change_count FROM exam 
+          WHERE date_exam >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+      `);
+      
+      res.json({
+          success: true,
+          total: totalRows[0].total,
+          weeklyChange: changeRows[0].change_count
+      });
+  } catch (error) {
+      console.error('Exam stats error:', error);
+      res.status(500).json({ 
+          success: false,
+          error: error.message
+      });
+  }
+});
+
+// Surveillance stats endpoint
+app.get('/surveillance-stats', async (req, res) => {
+  try {
+      console.log('Fetching surveillance stats...');
+      const [totalRows] = await pool.query('SELECT COUNT(*) as total FROM base_surveillance');
+      const [changeRows] = await pool.query(`
+          SELECT COUNT(*) as change_count FROM base_surveillance 
+          WHERE date_exam >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+      `);
+      
+      res.json({
+          success: true,
+          total: totalRows[0].total,
+          dailyChange: changeRows[0].change_count
+      });
+  } catch (error) {
+      console.error('Surveillance stats error:', error);
+      res.status(500).json({ 
+          success: false,
+          error: error.message
+      });
+  }
+});
+
+
 // Démarrer le serveur
 // app.listen(3000, () => {
 //   console.log("Serveur démarré sur http://localhost:3000");

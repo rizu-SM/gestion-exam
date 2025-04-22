@@ -15,6 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
     //loadAndDisplayUpcomingSurveillances
     loadAndDisplayUpcomingSurveillances();
 
+    // Load statistics when page loads
+    loadStatistics();
+
+    // Refresh every 5 minutes
+    setInterval(loadStatistics, 300000);
+
     // View buttons - Exam Details Modal
     const viewButtons = document.querySelectorAll('.action-btn.view');
     viewButtons.forEach(btn => {
@@ -38,6 +44,131 @@ document.addEventListener('DOMContentLoaded', function() {
         window.print();
     });
 });
+
+
+// // Function to load and display statistics
+// async function loadStatistics() {
+//     try {
+//         // 1. Load Examens Programmés data
+//         const examsResponse = await fetch('http://localhost:3000/exam-stats');
+//         if (!examsResponse.ok) throw new Error('Failed to load exam data');
+//         const examsData = await examsResponse.json();
+        
+//         if (examsData.success) {
+//             document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = examsData.total;
+//             document.querySelector('.stat-card:nth-child(1) .stat-change').textContent = 
+//                 examsData.weeklyChange > 0 ? `+${examsData.weeklyChange} depuis la semaine dernière` :
+//                 examsData.weeklyChange < 0 ? `${examsData.weeklyChange} depuis la semaine dernière` :
+//                 'Aucun changement';
+//         }
+
+//         // 2. Load Surveillances Assignées data
+//         const surveillanceResponse = await fetch('http://localhost:3000/surveillance-stats');
+//         if (!surveillanceResponse.ok) throw new Error('Failed to load surveillance data');
+//         const surveillanceData = await surveillanceResponse.json();
+        
+//         if (surveillanceData.success) {
+//             document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = surveillanceData.total;
+//             document.querySelector('.stat-card:nth-child(2) .stat-change').textContent = 
+//                 surveillanceData.dailyChange > 0 ? `+${surveillanceData.dailyChange} depuis hier` :
+//                 surveillanceData.dailyChange < 0 ? `${surveillanceData.dailyChange} depuis hier` :
+//                 'Aucun changement';
+//         }
+
+//     } catch (error) {
+//         console.error('Error loading statistics:', error);
+//         // Show error state in UI
+//         document.querySelectorAll('.stat-value').forEach(el => el.textContent = '--');
+//         document.querySelectorAll('.stat-change').forEach(el => {
+//             el.textContent = 'Données indisponibles';
+//             el.style.color = '#ff6b6b';
+//         });
+//     }
+// }
+
+// // Optional: Refresh every 5 minutes
+// setInterval(loadStatistics, 300000);
+
+
+async function loadStatistics() {
+    try {
+        // 1. Load Examens Programmés
+        const examsResponse = await fetch('http://localhost:3000/exam-stats');
+        
+        if (!examsResponse.ok) {
+            throw new Error(`HTTP error! status: ${examsResponse.status}`);
+        }
+        
+        const examsData = await examsResponse.json();
+        
+        if (!examsData.success) {
+            throw new Error(examsData.error || 'Failed to load exam data');
+        }
+        
+        updateCard(
+            '.stat-card:nth-child(1)',
+            examsData.total,
+            examsData.weeklyChange,
+            'semaine dernière'
+        );
+
+        // 2. Load Surveillances Assignées
+        const surveillanceResponse = await fetch('http://localhost:3000/surveillance-stats');
+        
+        if (!surveillanceResponse.ok) {
+            throw new Error(`HTTP error! status: ${surveillanceResponse.status}`);
+        }
+        
+        const surveillanceData = await surveillanceResponse.json();
+        
+        if (!surveillanceData.success) {
+            throw new Error(surveillanceData.error || 'Failed to load surveillance data');
+        }
+        
+        updateCard(
+            '.stat-card:nth-child(2)',
+            surveillanceData.total,
+            surveillanceData.dailyChange,
+            'hier'
+        );
+
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+        showErrorState();
+    }
+}
+
+// Helper function to update card UI
+function updateCard(selector, total, change, timePeriod) {
+    const card = document.querySelector(selector);
+    if (!card) return;
+    
+    card.querySelector('.stat-value').textContent = total || '0';
+    
+    const changeElement = card.querySelector('.stat-change');
+    if (change > 0) {
+        changeElement.textContent = `+${change} depuis ${timePeriod}`;
+        changeElement.style.color = '#28a745'; // Green for positive
+    } else if (change < 0) {
+        changeElement.textContent = `${change} depuis ${timePeriod}`;
+        changeElement.style.color = '#dc3545'; // Red for negative
+    } else {
+        changeElement.textContent = `Aucun changement`;
+        changeElement.style.color = '#6c757d'; // Gray for neutral
+    }
+}
+
+// Show error state
+function showErrorState() {
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.querySelector('.stat-value').textContent = '--';
+        const changeElement = card.querySelector('.stat-change');
+        changeElement.textContent = 'Données indisponibles';
+        changeElement.style.color = '#dc3545'; // Red for error
+    });
+}
+
+
 
 //loadAndDisplayUpcomingSurveillances
 async function loadUpcomingSurveillances() {
