@@ -129,6 +129,86 @@ document.querySelectorAll('.session-btn').forEach(btn => {
     });
 });
 
+function initFilters() {
+    const palierSelect = document.getElementById('palier');
+    const specialiteSelect = document.getElementById('specialite');
+    const moduleSelect = document.getElementById('module');
+    const sessionButtons = document.querySelectorAll('.session-btn');
+
+    // Remplir le palier
+    const paliers = [...new Set(formationsData.map(f => f.palier))];
+    paliers.forEach(p => palierSelect.add(new Option(p, p)));
+
+    // Écouteur pour les boutons de session
+    sessionButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Retirer la classe active de tous les boutons
+            sessionButtons.forEach(b => b.classList.remove('active'));
+            // Ajouter la classe active au bouton cliqué
+            this.classList.add('active');
+            // Mettre à jour les modules
+            updateModules();
+        });
+    });
+
+    // Écouteurs d'événements
+    palierSelect.addEventListener('change', () => {
+        specialiteSelect.disabled = !palierSelect.value;
+        if (!palierSelect.value) return;
+        
+        // Filtrer spécialités par palier
+        const specialites = [...new Set(
+            formationsData
+                .filter(f => f.palier === palierSelect.value)
+                .map(f => f.specialite)
+        )];
+        
+        specialiteSelect.innerHTML = '<option value="">Toutes les spécialités</option>';
+        specialites.forEach(s => specialiteSelect.add(new Option(s, s)));
+    });
+
+    specialiteSelect.addEventListener('change', updateModules);
+
+    function updateModules() {
+        // Récupérer la session active
+        const activeSessionBtn = document.querySelector('.session-btn.active');
+        const semestreValue = activeSessionBtn ? activeSessionBtn.dataset.semestre : null;
+        
+        const hasAllRequired = palierSelect.value && specialiteSelect.value && semestreValue;
+        moduleSelect.disabled = !hasAllRequired;
+        
+        if (!hasAllRequired) {
+            moduleSelect.innerHTML = '<option value="">Sélectionnez d\'abord les filtres</option>';
+            return;
+        }
+
+        // Déterminer la session cible
+        let targetSession;
+        if (semestreValue.startsWith('R1') || semestreValue === 'S1') {
+            targetSession = 'S1';
+        } else if (semestreValue.startsWith('R2') || semestreValue === 'S2') {
+            targetSession = 'S2';
+        }
+
+        // Filtrer modules
+        const modules = [...new Set(
+            formationsData
+                .filter(f => 
+                    f.palier === palierSelect.value &&
+                    f.specialite === specialiteSelect.value &&
+                    f.session === targetSession
+                )
+                .map(f => f.module)
+        )];
+        
+        moduleSelect.innerHTML = '<option value="">Tous les modules</option>';
+        modules.forEach(m => moduleSelect.add(new Option(m, m)));
+    }
+
+    // Initialiser les modules au chargement
+    updateModules();
+}
+
 // Variables globales
 let formationsData = [];
 let currentExams = [];
@@ -141,59 +221,60 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Initialisation...");
     loadFormations();
     loadExamens();
+    initFilters();
     
     // Configurer les écouteurs d'événements pour les dropdowns
-    document.getElementById('palier').addEventListener('change', function() {
-        const selectedPalier = this.value;
-        console.log("Palier sélectionné: ", selectedPalier);
-        const specialiteSelect = document.getElementById('specialite');
+    // document.getElementById('palier').addEventListener('change', function() {
+    //     const selectedPalier = this.value;
+    //     console.log("Palier sélectionné: ", selectedPalier);
+    //     const specialiteSelect = document.getElementById('specialite');
         
-        specialiteSelect.innerHTML = '<option value="">Sélectionner</option>';
-        specialiteSelect.disabled = true;
+    //     specialiteSelect.innerHTML = '<option value="">Sélectionner</option>';
+    //     specialiteSelect.disabled = true;
     
-        if (selectedPalier) {
-            const specialites = new Set(
-                formationsData
-                    .filter(formation => formation.palier === selectedPalier)
-                    .map(formation => formation.specialite)
-            );
+    //     if (selectedPalier) {
+    //         const specialites = new Set(
+    //             formationsData
+    //                 .filter(formation => formation.palier === selectedPalier)
+    //                 .map(formation => formation.specialite)
+    //         );
     
-            specialites.forEach(specialite => {
-                const option = new Option(specialite, specialite);
-                specialiteSelect.add(option);
-            });
+    //         specialites.forEach(specialite => {
+    //             const option = new Option(specialite, specialite);
+    //             specialiteSelect.add(option);
+    //         });
     
-            specialiteSelect.disabled = false;
-        }
-    });
+    //         specialiteSelect.disabled = false;
+    //     }
+    // });
     
-    document.getElementById('specialite').addEventListener('change', function() {
-        const selectedPalier = document.getElementById('palier').value;
-        const selectedSpecialite = this.value;
-        console.log("Specialité sélectionnée: ", selectedSpecialite);
-        const moduleSelect = document.getElementById('module');
+    // document.getElementById('specialite').addEventListener('change', function() {
+    //     const selectedPalier = document.getElementById('palier').value;
+    //     const selectedSpecialite = this.value;
+    //     console.log("Specialité sélectionnée: ", selectedSpecialite);
+    //     const moduleSelect = document.getElementById('module');
         
-        moduleSelect.innerHTML = '<option value="">Sélectionner</option>';
-        moduleSelect.disabled = true;
+    //     moduleSelect.innerHTML = '<option value="">Sélectionner</option>';
+    //     moduleSelect.disabled = true;
     
-        if (selectedPalier && selectedSpecialite) {
-            const modules = new Set(
-                formationsData
-                    .filter(formation => 
-                        formation.palier === selectedPalier &&
-                        formation.specialite === selectedSpecialite
-                    )
-                    .map(formation => formation.module)
-            );
+    //     if (selectedPalier && selectedSpecialite) {
+    //         const modules = new Set(
+    //             formationsData
+    //                 .filter(formation => 
+    //                     formation.palier === selectedPalier &&
+    //                     formation.specialite === selectedSpecialite
+    //                 )
+    //                 .map(formation => formation.module)
+    //         );
     
-            modules.forEach(module => {
-                const option = new Option(module, module);
-                moduleSelect.add(option);
-            });
+    //         modules.forEach(module => {
+    //             const option = new Option(module, module);
+    //             moduleSelect.add(option);
+    //         });
     
-            moduleSelect.disabled = modules.size === 0;
-        }
-    });
+    //         moduleSelect.disabled = modules.size === 0;
+    //     }
+    // });
     
     // Événement pour le bouton ajouter - CORRECTEMENT PLACÉ
     document.getElementById("ajouter").addEventListener("click", async function () {
