@@ -167,60 +167,77 @@
     </div>
 
         <!-- Add Proctor Modal -->
-        <div id="modal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Ajouter une Nouvelle Surveillance</h2>
-                <button class="close-btn" id="closeModalBtn">&times;</button>
+<div id="modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Ajouter une Nouvelle Surveillance</h2>
+        <button class="close-btn" id="closeModalBtn">&times;</button>
 
+        <div class="form-container">
+            <div class="form-group">
                 <label for="palier">Palier :</label>
                 <select id="palier">
                     <option value="">Sélectionner</option>
                 </select>
-        
+            </div>
+            
+            <div class="form-group">
                 <label for="specialite">Spécialité :</label>
                 <select id="specialite" disabled>
-                <option value="">Sélectionner un palier d'abord</option>
+                    <option value="">Sélectionner un palier d'abord</option>
                 </select>
+            </div>
 
+            <div class="form-group">
                 <label for="semestre">Semestre :</label>
-            <select id="semestre" class="form-control">
-                <option value="">Tous les semestres</option>
-                <option value="S1">S1</option>
-                <option value="S2">S2</option>
-                <option value="R1">R1</option>
-                <option value="R2">R2</option>
-                <!-- ... autres semestres -->
-            </select>
+                <select id="semestre" class="form-control">
+                    <option value="">Tous les semestres</option>
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="R1">R1</option>
+                    <option value="R2">R2</option>
+                </select>
+            </div>
 
-            <label for="module">Module :</label>
-            <select id="module" class="form-control" disabled>
-                <option value="">Sélectionnez d'abord spécialité et semestre</option>
-            </select>
-        
-        
-            <label for="section">Section :</label>
-            <input type="text" id="section" class="form-control" placeholder="Ex: Section A">
-        
+            <div class="form-group">
+                <label for="module">Module :</label>
+                <select id="module" class="form-control" disabled>
+                    <option value="">Sélectionnez d'abord spécialité et semestre</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="section">Section :</label>
+                <input type="text" id="section" class="form-control" placeholder="Ex: Section A">
+            </div>
+
+            <div class="form-group">
                 <label for="date">Date :</label>
                 <input type="date" id="date">
-        
+            </div>
+
+            <div class="form-group">
                 <label for="heure">Heure :</label>
                 <input type="time" id="heure">
-        
+            </div>
+
+            <div class="form-group">
                 <label for="salle">Salle :</label>
                 <input type="text" id="salle" placeholder="Ex: A12">
-        
+            </div>
+
+            <div class="form-group">
                 <label for="code_enseignant">Code Enseignant :</label>
                 <input type="text" id="code_enseignant" placeholder="Ex: ENS123">
-        
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" id="cancelAddBtn">Annuler</button>
-                    <button type="submit" class="btn btn-primary" id="ajouter">Enregistrer</button>
-                </div>
             </div>
         </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" id="cancelAddBtn">Annuler</button>
+            <button type="submit" class="btn btn-primary" id="ajouter">Enregistrer</button>
+        </div>
+    </div>
+</div>
         
 
         <script src="gestion_surveillants.js" defer></script>

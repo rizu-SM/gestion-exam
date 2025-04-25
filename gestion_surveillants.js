@@ -252,7 +252,7 @@ function initFilters() {
           <td><span class="status-badge">${surveillances} Examens</span></td>
           <td>
             <button class="action-btn assign" title="Affecter" data-id="${enseignant.code_enseignant}">
-              <i class="fas fa-calendar-plus"></i>
+              <i class="fas fa-eye"></i>
             </button>
           </td>
         `;
@@ -286,99 +286,461 @@ function initFilters() {
       
     }
 
+    // function afficherModalSurveillances(enseignantId, surveillances) {
+    //   const enseignant = enseignantsData.find(e => e.code_enseignant === enseignantId);
+    //   const nomComplet = enseignant ? `${enseignant.nom} ${enseignant.prenom}` : '';
+    
+    //   let htmlContent = `
+    //     <div class="modal-header">
+    //       <h5>Surveillances de ${nomComplet}</h5>
+    //       <span class="close-modal">&times;</span>
+    //     </div>
+    //     <div class="modal-body">
+    //       <table class="surveillance-table">
+    //         <thead>
+    //           <tr>
+    //             <th>Date</th>
+    //             <th>Horaire</th>
+    //             <th>Module</th>
+    //             <th>Salle</th>
+    //             <th>Spécialité</th>
+    //             <th>Actions</th>
+    //           </tr>
+    //         </thead>
+    //         <tbody>
+    //   `;
+    
+    //   if (surveillances.length === 0) {
+    //     htmlContent += `<p class="no-surveillance">Aucune surveillance enregistrée pour cet enseignant.</p>`;
+    //   } else {
+
+    
+    //     surveillances.forEach(surv => {
+    //       htmlContent += `
+    //         <tr data-id="${surv.id}">
+    //           <td>${new Date(surv.date_exam).toLocaleDateString()}</td>
+    //           <td>${surv.horaire}</td>
+    //           <td>${surv.module}</td>
+    //           <td>${surv.salle}</td>
+    //           <td>${surv.specialite}</td>
+    //           <td class="actions-cell">
+    //             <button class="action-btn modify-surveillance" title="Modifier">
+    //               <i class="fas fa-edit"></i>
+    //             </button>
+    //             <button class="action-btn delete-surveillance" title="Supprimer">
+    //               <i class="fas fa-trash"></i>
+    //             </button>
+    //           </td>
+    //         </tr>
+    //       `;
+    //     });
+    
+    //     htmlContent += `
+    //         </tbody>
+    //       </table>
+    //       <div class="total-surveillances">
+    //         Total: ${surveillances.length} surveillance(s)
+    //       </div>
+    //     `;
+    //   }
+    
+    //   htmlContent += `</div>`;
+    
+    //   const modal = document.createElement('div');
+    //   modal.className = 'custom-modal';
+    //   modal.innerHTML = htmlContent;
+    //   document.body.appendChild(modal);
+    
+    //   // Gestion des événements pour les boutons
+    //   modal.querySelectorAll('.modify-surveillance').forEach(btn => {
+    //     btn.addEventListener('click', (e) => {
+    //       const row = e.target.closest('tr');
+    //       const surveillanceId = row.getAttribute('data-id');
+    //       modifierSurveillance(surveillanceId);
+    //     });
+    //   });
+    
+    //   modal.querySelectorAll('.delete-surveillance').forEach(btn => {
+    //     btn.addEventListener('click', (e) => {
+    //       const row = e.target.closest('tr');
+    //       const surveillanceId = row.getAttribute('data-id');
+    //       supprimerSurveillance(surveillanceId, row);
+    //     });
+    //   });
+    
+    //   modal.querySelector('.close-modal').addEventListener('click', () => {
+    //     modal.remove();
+    //   });
+    
+    //   modal.addEventListener('click', (e) => {
+    //     if (e.target === modal) {
+    //       modal.remove();
+    //     }
+    //   });
+    // }
+
+
+
     function afficherModalSurveillances(enseignantId, surveillances) {
       const enseignant = enseignantsData.find(e => e.code_enseignant === enseignantId);
       const nomComplet = enseignant ? `${enseignant.nom} ${enseignant.prenom}` : '';
-    
+      const grade = enseignant?.grade || 'Non spécifié';
+      const departement = enseignant?.departement || 'Non spécifié';
+  
+      const formatDate = (dateString) => {
+          return new Date(dateString).toLocaleDateString('fr-FR');
+      };
+  
       let htmlContent = `
-        <div class="modal-header">
-    <h5>Surveillances de ${nomComplet}</h5>
-    <span class="close-modal">&times;</span>
-  </div>
-        <div class="modal-body">
-
-          <table class="surveillance-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Horaire</th>
-                <th>Module</th>
-                <th>Salle</th>
-                <th>Spécialité</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-    
+      <div class="modal-overlay">
+          <div class="exam-modal">
+              <div class="modal-header">
+                  <h2 class="modal-title">Surveillances de ${nomComplet}</h2>
+                  <span class="close-modal">&times;</span>
+              </div>
+              
+              <div class="modal-body">
+                  <div class="exam-section">
+                      <h3 class="section-title">
+                          <i class="fas fa-info-circle"></i> Informations de Base
+                      </h3>
+                      <div class="details-grid">
+                          <div class="detail-item">
+                              <div class="detail-label">Nom complet</div>
+                              <div class="detail-value">${nomComplet}</div>
+                          </div>
+                          <div class="detail-item">
+                              <div class="detail-label">Grade</div>
+                              <div class="detail-value">${grade}</div>
+                          </div>
+                          <div class="detail-item">
+                              <div class="detail-label">Département</div>
+                              <div class="detail-value">${departement}</div>
+                          </div>
+                          <div class="detail-item">
+                              <div class="detail-label">Total surveillances</div>
+                              <div class="detail-value">${surveillances.length}</div>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <div class="exam-section">
+                      <h3 class="section-title">
+                          <i class="fas fa-calendar-check"></i> Surveillances Assignées
+                      </h3>`;
+        
+  
       if (surveillances.length === 0) {
-        htmlContent += `<p class="no-surveillance">Aucune surveillance enregistrée pour cet enseignant.</p>`;
-      } else {
-
-    
-        surveillances.forEach(surv => {
           htmlContent += `
-            <tr data-id="${surv.id}">
-              <td>${new Date(surv.date_exam).toLocaleDateString()}</td>
-              <td>${surv.horaire}</td>
-              <td>${surv.module}</td>
-              <td>${surv.salle}</td>
-              <td>${surv.specialite}</td>
-              <td class="actions-cell">
-                <button class="action-btn modify-surveillance" title="Modifier">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn delete-surveillance" title="Supprimer">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </td>
-            </tr>
-          `;
-        });
-    
-        htmlContent += `
-            </tbody>
-          </table>
-          <div class="total-surveillances">
-            Total: ${surveillances.length} surveillance(s)
-          </div>
-        `;
+                      <div class="no-data-message">
+                          <i class="fas fa-info-circle"></i> Aucune surveillance enregistrée pour cet enseignant
+                      </div>`;
+      } else {
+          htmlContent += `
+                      <div class="table-container">
+                          <table class="styled-table">
+                              <thead>
+                                  <tr>
+                                      <th>Date</th>
+                                      <th>Horaire</th>
+                                      <th>Module</th>
+                                      <th>Salle</th>
+                                      <th>Spécialité</th>
+                                      <th>Actions</th>
+                                  </tr>
+                              </thead>
+                              <tbody>`;
+  
+          surveillances.forEach(surv => {
+              htmlContent += `
+                                  <tr data-id="${surv.id}">
+                                      <td>${formatDate(surv.date_exam)}</td>
+                                      <td>${surv.horaire}</td>
+                                      <td>${surv.module}</td>
+                                      <td>${surv.salle}</td>
+                                      <td>${surv.specialite}</td>
+                                      <td class="actions-cell">
+                                          <button class="action-btn modify-surveillance" title="Modifier">
+                                              <i class="fas fa-edit"></i>
+                                          </button>
+                                          <button class="action-btn delete-surveillance" title="Supprimer">
+                                              <i class="fas fa-trash"></i>
+                                          </button>
+                                      </td>
+                                  </tr>`;
+          });
+  
+          htmlContent += `
+                              </tbody>
+                          </table>
+                      </div>`;
       }
-    
-      htmlContent += `</div>`;
-    
+  
+      htmlContent += `
+                  </div>
+              </div>
+              
+              <div class="modal-footer">
+                  <button class="modal-btn btn-outline" id="cancelBtn">Fermer</button>
+                  <button class="modal-btn btn-primary" id="printBtn">
+                      <i class="fas fa-print"></i> Imprimer
+                  </button>
+              </div>
+          </div>
+      </div>`;
+  
       const modal = document.createElement('div');
-      modal.className = 'custom-modal';
       modal.innerHTML = htmlContent;
       document.body.appendChild(modal);
-    
-      // Gestion des événements pour les boutons
+  
+      // Add this style element for the table enhancements
+      const style = document.createElement('style');
+      style.textContent = `
+          .table-container {
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+              // border: 1px solid #e0e0e0;
+          }
+          
+          .styled-table {
+              width: 100%;
+              border-collapse: separate;
+              border-spacing: 0;
+              background: white;
+          }
+          
+          .styled-table th {
+              background-color: var(--primary);
+              color: white;
+              padding: 12px 15px;
+              text-align: left;
+              border: none;
+          }
+          
+          .styled-table th:first-child {
+              border-top-left-radius: 11px;
+          }
+          
+          .styled-table th:last-child {
+              border-top-right-radius: 11px;
+          }
+          
+          .styled-table td {
+              padding: 12px 15px;
+              border-bottom: 1px solid #e0e0e0;
+              border-right: 1px solid #e0e0e0;
+          }
+          
+          .styled-table td:first-child {
+              border-left: 1px solid #e0e0e0;
+          }
+          
+          .styled-table tr:last-child td {
+              border-bottom: none;
+          }
+          
+          .styled-table tr:hover td {
+              background-color: #f8f9fa;
+          }
+      `;
+      modal.appendChild(style);
+  
+      // Rest of your event handlers remain the same...
       modal.querySelectorAll('.modify-surveillance').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const row = e.target.closest('tr');
-          const surveillanceId = row.getAttribute('data-id');
-          modifierSurveillance(surveillanceId);
-        });
+          btn.addEventListener('click', (e) => {
+              const row = e.target.closest('tr');
+              const surveillanceId = row.getAttribute('data-id');
+              modifierSurveillance(surveillanceId);
+          });
       });
-    
+  
       modal.querySelectorAll('.delete-surveillance').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const row = e.target.closest('tr');
-          const surveillanceId = row.getAttribute('data-id');
-          supprimerSurveillance(surveillanceId, row);
-        });
+          btn.addEventListener('click', (e) => {
+              const row = e.target.closest('tr');
+              const surveillanceId = row.getAttribute('data-id');
+              supprimerSurveillance(surveillanceId, row);
+          });
       });
-    
+  
       modal.querySelector('.close-modal').addEventListener('click', () => {
-        modal.remove();
-      });
-    
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
           modal.remove();
-        }
       });
-    }
+  
+      modal.querySelector('#cancelBtn').addEventListener('click', () => {
+          modal.remove();
+      });
+  
+      modal.querySelector('#printBtn').addEventListener('click', () => {
+        const printWindow = window.open('', '_blank');
+        const printDate = new Date().toLocaleDateString('fr-FR');
+        const printTime = new Date().toLocaleTimeString('fr-FR');
+        
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Surveillances de ${nomComplet}</title>
+                    <style>
+                        @page { size: A4; margin: 1cm; }
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            padding: 20px;
+                        }
+                        .print-header { 
+                            text-align: center;
+                            margin-bottom: 20px;
+                            padding-bottom: 15px;
+                            border-bottom: 2px solid #4361ee;
+                        }
+                        .print-title {
+                            color: #2c3e50;
+                            margin-bottom: 5px;
+                        }
+                        .print-subtitle {
+                            color: #7f8c8d;
+                            font-weight: normal;
+                            margin-top: 0;
+                        }
+                        .print-section { 
+                            margin-bottom: 25px;
+                            page-break-inside: avoid;
+                        }
+                        .section-title {
+                            color: #4361ee;
+                            border-bottom: 1px solid #eee;
+                            padding-bottom: 5px;
+                            margin-bottom: 15px;
+                        }
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                            gap: 15px;
+                            margin-bottom: 20px;
+                        }
+                        .info-item {
+                            margin-bottom: 10px;
+                        }
+                        .info-label {
+                            font-weight: bold;
+                            color: #7f8c8d;
+                            font-size: 0.9em;
+                        }
+                        .print-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 15px 0;
+                            font-size: 0.9em;
+                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                        }
+                        .print-table th {
+                            background-color: #4361ee;
+                            color: white;
+                            text-align: left;
+                            padding: 10px 12px;
+                        }
+                        .print-table td {
+                            padding: 8px 12px;
+                            border-bottom: 1px solid #ddd;
+                        }
+                        .print-table tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+                        .print-footer {
+                            margin-top: 30px;
+                            font-size: 0.8em;
+                            color: #7f8c8d;
+                            text-align: right;
+                            border-top: 1px solid #eee;
+                            padding-top: 10px;
+                        }
+                        @media print {
+                            .no-print { display: none; }
+                            body { padding: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <h1 class="print-title">Surveillances de ${nomComplet}</h1>
+                        <p class="print-subtitle">${printDate} à ${printTime}</p>
+                    </div>
+                    
+                    <div class="print-section">
+                        <h2 class="section-title">Informations de Base</h2>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Nom complet</div>
+                                <div>${nomComplet}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Grade</div>
+                                <div>${grade}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Département</div>
+                                <div>${departement}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Total surveillances</div>
+                                <div>${surveillances.length}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="print-section">
+                        <h2 class="section-title">Surveillances Assignées</h2>
+                        ${surveillances.length > 0 ? `
+                        <table class="print-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Horaire</th>
+                                    <th>Module</th>
+                                    <th>Salle</th>
+                                    <th>Spécialité</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${surveillances.map(surv => `
+                                    <tr>
+                                        <td>${formatDate(surv.date_exam)}</td>
+                                        <td>${surv.horaire}</td>
+                                        <td>${surv.module}</td>
+                                        <td>${surv.salle}</td>
+                                        <td>${surv.specialite}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        ` : '<p>Aucune surveillance enregistrée</p>'}
+                    </div>
+                    <script>
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 200);
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    });
+  
+      modal.addEventListener('click', (e) => {
+          if (e.target === modal.querySelector('.modal-overlay')) {
+              modal.remove();
+          }
+      });
+  
+      // Show modal
+      modal.querySelector('.modal-overlay').style.display = 'flex';
+  }
+
+
+
+    
     
     // Fonction pour modifier une surveillance
     async function modifierSurveillance(surveillanceId) {
