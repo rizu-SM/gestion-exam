@@ -399,7 +399,6 @@
 
 
 
-
 document.querySelectorAll('.session-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
@@ -430,7 +429,10 @@ function openEditModal(examId) {
     document.getElementById('edit-specialite').value = exam.specialite; 
     document.getElementById('edit-module').value = exam.module;
     document.getElementById('edit-section').value = exam.section;
-    document.getElementById('edit-date').value = exam.date_exam.split('T')[0]; // Format date
+    // Format the date without timezone adjustments
+    const date = new Date(exam.date_exam);
+    const formattedDate = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    document.getElementById('edit-date').value = formattedDate;
     document.getElementById('edit-heure').value = exam.horaire;
     document.getElementById('edit-salle').value = exam.salle;
 
@@ -809,13 +811,16 @@ function displayExamens(examens) {
     examens.forEach(examen => {
         const row = tbody.insertRow();
 
+        // Use the date as received from the backend without modifications
+        const date = examen.date_exam.split('T')[0]; // Extract only the date part
+
         // Add cells for each column in the new order
         const cells = [
             examen.palier, // Palier
             examen.specialite, // Spécialité
             examen.module,
             examen.section,
-            examen.date_exam.split('T')[0], // Format date
+            date, // Use the unmodified date
             examen.horaire,
             examen.salle,
         ];

@@ -33,7 +33,7 @@ app.use(cors());
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "root",
+  password: "2005",
   database: "try",
   waitForConnections: true,
   connectionLimit: 10,
@@ -453,7 +453,12 @@ app.delete("/supprimer-examen/:id", async (req, res) => {
 // Endpoint pour récupérer tous les examens
 app.get("/examens", async (req, res) => {
   try {
-    const [examens] = await pool.query("SELECT * FROM exam_temp");
+    const [examens] = await pool.query(`
+      SELECT id, palier, specialite, section, module, 
+             DATE_FORMAT(date_exam, '%Y-%m-%d') AS date_exam, 
+             horaire, salle, semestre, annee_universitaire 
+      FROM exam_temp
+    `);
     res.json(examens);
   } catch (error) {
     console.error("Erreur lors de la récupération des examens:", error);
