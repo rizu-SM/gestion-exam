@@ -47,7 +47,21 @@ app.post("/gestion-surveillances", async (req, res) => {
      * ÉTAPE 1: Assignation des professeurs de cours comme surveillants
      * (anciennement route '/assignerProfDeCour')
      *****************************************************************/
-    const { semestre, pourcentagePermanent, annee_universitaire } = req.body;
+    const { semestre, pourcentagePermanent } = req.body;
+
+     // Détermination automatique de l'année universitaire
+     const currentDate = new Date();
+     const currentMonth = currentDate.getMonth() + 1; // Les mois commencent à 0
+     const currentYear = currentDate.getFullYear();
+     
+     // Si nous sommes après août (mois 8), l'année universitaire commence
+     // Sinon, nous sommes dans l'année universitaire précédente
+     let annee_universitaire;
+     if (currentMonth >= 9) {
+         annee_universitaire = `${currentYear}-${currentYear + 1}`;
+     } else {
+         annee_universitaire = `${currentYear - 1}-${currentYear}`;
+     }
 
     // Vérification de l'assignation existante
     const [existe] = await pool.query(
@@ -990,6 +1004,12 @@ app.post("/envoyer-pv", async (req, res) => {
       });
     }
 
+    // Lancer une instance de Puppeteer
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
     for (const examen of examens) {
       const { date_exam, horaire, salle, module } = examen;
 
@@ -1010,6 +1030,7 @@ app.post("/envoyer-pv", async (req, res) => {
         );
         continue;
       }
+
       const professeurPrincipal = enseignants.find(
         (enseignant) => enseignant.ordre === 0
       );
@@ -1021,99 +1042,114 @@ app.post("/envoyer-pv", async (req, res) => {
       }
 
       const emailProfesseurPrincipal = professeurPrincipal.email1;
-      console.log("before creat file");
-      if (!fs.existsSync("files")) {
-        fs.mkdirSync("files");
-      }
 
-      console.log("after creat file");
-      const doc = new Document({
-        creator: "Administration des Examens",
-        title: "Procès-Verbal de Surveillance",
-        description: "Liste des enseignants pour l'examen",
-        sections: [
-          {
-            children: [
-              new Paragraph({
-                text: "Procès-Verbal de Surveillance",
-                heading: "Heading1",
-                alignment: AlignmentType.CENTER,
-              }),
-              new Paragraph({
-                text: `Examen : ${module}`,
-                alignment: AlignmentType.LEFT,
-              }),
-              new Paragraph({
-                text: `Salle : ${salle}, Horaire : ${horaire}, Date : ${date_exam}`,
-                alignment: AlignmentType.LEFT,
-              }),
-              new Paragraph({ text: "\n" }), // Blank line for spacing
-              new Table({
-                rows: [
-                  // Table Header
-                  new TableRow({
-                    children: [
-                      new TableCell({
-                        children: [new Paragraph("Nom & Prénom")],
-                      }),
-                      new TableCell({ children: [new Paragraph("Email")] }),
-                      new TableCell({ children: [new Paragraph("Palier")] }),
-                      new TableCell({
-                        children: [new Paragraph("Spécialité")],
-                      }),
-                      new TableCell({ children: [new Paragraph("Section")] }),
-                      new TableCell({ children: [new Paragraph("Ordre")] }),
-                    ],
-                  }),
+      // Générer le contenu HTML pour le PV
+      const htmlContent = `
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Procès-Verbal de Surveillance</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              padding: 20px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .header h1 {
+              font-size: 1.8em;
+              color: #2c3e50;
+            }
+            .header p {
+              font-size: 1.2em;
+              color: #7f8c8d;
+            }
+            .info {
+              margin-bottom: 20px;
+            }
+            .info p {
+              margin: 5px 0;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            table th, table td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            table th {
+              background-color: #f4f4f4;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Procès-Verbal de Surveillance</h1>
+            <p>Examen : ${module}</p>
+          </div>
+          <div class="info">
+            <p><strong>Date :</strong> ${date_exam}</p>
+            <p><strong>Horaire :</strong> ${horaire}</p>
+            <p><strong>Salle :</strong> ${salle}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nom & Prénom</th>
+                <th>Email</th>
+                <th>Palier</th>
+                <th>Spécialité</th>
+                <th>Section</th>
+                <th>Ordre</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${enseignants
+                .map(
+                  (enseignant) => `
+                <tr>
+                  <td>${enseignant.nom} ${enseignant.prenom}</td>
+                  <td>${enseignant.email1}</td>
+                  <td>${enseignant.palier}</td>
+                  <td>${enseignant.specialite}</td>
+                  <td>${enseignant.section}</td>
+                  <td>${enseignant.ordre}</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
 
-                  ...enseignants.map(
-                    (enseignant) =>
-                      new TableRow({
-                        children: [
-                          new TableCell({
-                            children: [
-                              new Paragraph(
-                                `${enseignant.nom} ${enseignant.prenom}`
-                              ),
-                            ],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph(enseignant.email1)],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph(enseignant.palier)],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph(enseignant.specialite)],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph(enseignant.section)],
-                          }),
-                          new TableCell({
-                            children: [new Paragraph(String(enseignant.ordre))],
-                          }),
-                        ],
-                      })
-                  ),
-                ],
-              }),
-            ],
-          },
-        ],
+      // Générer le PDF avec Puppeteer
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+      const pdfPath = path.join(
+        process.cwd(),
+        "files",
+        `PV_${module}_${date_exam}_${horaire}.pdf`
+      );
+      await page.pdf({
+        path: pdfPath,
+        format: "A4",
+        printBackground: true,
       });
+      await page.close();
 
-      const filePath = `files/PV_${module}_${date_exam}_${horaire}.docx`;
-      try {
-        const buffer = await Packer.toBuffer(doc);
-        fs.writeFileSync(filePath, buffer);
-        console.log(
-          `PV généré pour le module ${module}, salle ${salle}, date ${date_exam}.`
-        );
-      } catch (fileError) {
-        console.error(`Erreur lors de la génération du fichier :`, fileError);
-        continue;
-      }
-
+      // Envoyer le PDF par email
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -1130,16 +1166,224 @@ app.post("/envoyer-pv", async (req, res) => {
           text: `Cher professeur ${professeurPrincipal.nom} ${professeurPrincipal.prenom},\n\nVeuillez trouver ci-joint le procès-verbal de surveillance pour l'examen suivant :\n\nModule : ${module}\nSalle : ${salle}\nHoraire : ${horaire}\nDate : ${date_exam}\n\nCordialement,\nAdministration des Examens`,
           attachments: [
             {
-              filename: `PV_${module}_${date_exam}.docx`,
-              path: filePath,
+              filename: `PV_${module}_${date_exam}.pdf`,
+              path: pdfPath,
             },
           ],
         });
         console.log(`E-mail envoyé avec succès à ${emailProfesseurPrincipal}.`);
+
+        // Supprimer le fichier PDF après l'envoi
+        fs.unlinkSync(pdfPath);
       } catch (emailError) {
         console.error(`Erreur lors de l'envoi de l'e-mail :`, emailError);
       }
     }
+
+    // Fermer le navigateur Puppeteer
+    await browser.close();
+
+    res.json({ success: true, message: "Procès-verbaux envoyés avec succès." });
+  } catch (error) {
+    console.error("Erreur serveur :", error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur serveur lors de l'envoi des procès-verbaux.",
+    });
+  }
+});
+
+app.post("/envoyer-pv", async (req, res) => {
+  try {
+    const [examens] = await pool.query(`
+        SELECT DISTINCT date_exam, horaire, salle, module FROM base_surveillance
+      `);
+
+    if (examens.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Aucun examen trouvé dans la base de données.",
+      });
+    }
+
+    // Lancer une instance de Puppeteer
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    for (const examen of examens) {
+      const { date_exam, horaire, salle, module } = examen;
+
+      const [enseignants] = await pool.query(
+        `
+          SELECT b.*, e.nom, e.prenom, e.email1 
+          FROM base_surveillance b
+          JOIN enseignants e ON b.code_enseignant = e.code_enseignant
+          WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ?
+          ORDER BY b.ordre ASC
+          `,
+        [date_exam, horaire, salle, module]
+      );
+
+      if (enseignants.length === 0) {
+        console.log(
+          `Aucun enseignant trouvé pour l'examen : ${module}, salle : ${salle}, horaire : ${horaire}`
+        );
+        continue;
+      }
+
+      const professeurPrincipal = enseignants.find(
+        (enseignant) => enseignant.ordre === 0
+      );
+      if (!professeurPrincipal) {
+        console.log(
+          `Aucun professeur principal trouvé pour l'examen : ${module}, salle : ${salle}, horaire : ${horaire}`
+        );
+        continue;
+      }
+
+      const emailProfesseurPrincipal = professeurPrincipal.email1;
+
+      // Générer le contenu HTML pour le PV
+      const htmlContent = `
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Procès-Verbal de Surveillance</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              padding: 20px;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .header h1 {
+              font-size: 1.8em;
+              color: #2c3e50;
+            }
+            .header p {
+              font-size: 1.2em;
+              color: #7f8c8d;
+            }
+            .info {
+              margin-bottom: 20px;
+            }
+            .info p {
+              margin: 5px 0;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            table th, table td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            table th {
+              background-color: #f4f4f4;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Procès-Verbal de Surveillance</h1>
+            <p>Examen : ${module}</p>
+          </div>
+          <div class="info">
+            <p><strong>Date :</strong> ${date_exam}</p>
+            <p><strong>Horaire :</strong> ${horaire}</p>
+            <p><strong>Salle :</strong> ${salle}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nom & Prénom</th>
+                <th>Email</th>
+                <th>Palier</th>
+                <th>Spécialité</th>
+                <th>Section</th>
+                <th>Ordre</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${enseignants
+                .map(
+                  (enseignant) => `
+                <tr>
+                  <td>${enseignant.nom} ${enseignant.prenom}</td>
+                  <td>${enseignant.email1}</td>
+                  <td>${enseignant.palier}</td>
+                  <td>${enseignant.specialite}</td>
+                  <td>${enseignant.section}</td>
+                  <td>${enseignant.ordre}</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+
+      // Générer le PDF avec Puppeteer
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+      const pdfPath = path.join(
+        process.cwd(),
+        "files",
+        `PV_${module}_${date_exam}_${horaire}.pdf`
+      );
+      await page.pdf({
+        path: pdfPath,
+        format: "A4",
+        printBackground: true,
+      });
+      await page.close();
+
+      // Envoyer le PDF par email
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "departement.informatique.usthb@gmail.com",
+          pass: "pcvt nomo ocsf cows",
+        },
+      });
+
+      try {
+        await transporter.sendMail({
+          from: '"Administration des Examens" <departement.informatique.usthb@gmail.com>',
+          to: emailProfesseurPrincipal,
+          subject: `Procès-Verbal de Surveillance - Module ${module}`,
+          text: `Cher professeur ${professeurPrincipal.nom} ${professeurPrincipal.prenom},\n\nVeuillez trouver ci-joint le procès-verbal de surveillance pour l'examen suivant :\n\nModule : ${module}\nSalle : ${salle}\nHoraire : ${horaire}\nDate : ${date_exam}\n\nCordialement,\nAdministration des Examens`,
+          attachments: [
+            {
+              filename: `PV_${module}_${date_exam}.pdf`,
+              path: pdfPath,
+            },
+          ],
+        });
+        console.log(`E-mail envoyé avec succès à ${emailProfesseurPrincipal}.`);
+
+        // Supprimer le fichier PDF après l'envoi
+        fs.unlinkSync(pdfPath);
+      } catch (emailError) {
+        console.error(`Erreur lors de l'envoi de l'e-mail :`, emailError);
+      }
+    }
+
+    // Fermer le navigateur Puppeteer
+    await browser.close();
 
     res.json({ success: true, message: "Procès-verbaux envoyés avec succès." });
   } catch (error) {
