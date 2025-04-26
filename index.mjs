@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import mysql from "mysql2/promise";
+import mysql from "mysql2/promise"
+import puppeteer from "puppeteer";
 import {
   Document,
   Packer,
@@ -33,7 +34,7 @@ app.use(cors());
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "2005",
+  password: "supra_2006",
   database: "try",
   waitForConnections: true,
   connectionLimit: 10,
@@ -63,7 +64,9 @@ app.post("/gestion-surveillances", async (req, res) => {
 
     // Assignation des surveillants principaux
     const [examens] = await pool.query(
-      "SELECT * FROM exam WHERE semestre = ? AND annee_universitaire = ?",
+      `SELECT * FROM exam 
+       WHERE semestre = ? AND annee_universitaire = ? 
+       AND module IN (SELECT module FROM formation WHERE module_info = 'oui')`,
       [semestre, annee_universitaire]
     );
 
@@ -129,7 +132,8 @@ app.post("/gestion-surveillances", async (req, res) => {
      * (anciennement route '/total-surveillants')
      *****************************************************************/
     const [sallesData] = await pool.query(
-      "SELECT salle FROM exam WHERE semestre = ? AND annee_universitaire = ?",
+      `SELECT salle FROM exam WHERE semestre = ? AND annee_universitaire = ? 
+      AND module IN (SELECT module FROM formation WHERE module_info = 'oui')` ,
       [semestre, annee_universitaire]
     );
     let totalSalles = 0;
@@ -664,245 +668,269 @@ app.get('/verifier-erreurs-examens', async (req, res) => {
 
 app.post("/envoyer-mail", async (req, res) => {
   try {
-      // Créer le dossier files s'il n'existe pas
-      const filesDir = path.join(process.cwd(), "files");
-      if (!fs.existsSync(filesDir)) {
-          fs.mkdirSync(filesDir, { recursive: true });
-      }
+    // Create files directory if it doesn't exist
+    const filesDir = path.join(process.cwd(), "files");
+    if (!fs.existsSync(filesDir)) {
+      fs.mkdirSync(filesDir, { recursive: true });
+    }
 
-      // Créer le dossier assets s'il n'existe pas
-      const assetsDir = path.join(process.cwd(), "assets");
-      if (!fs.existsSync(assetsDir)) {
-          fs.mkdirSync(assetsDir, { recursive: true });
-      }
+    const [base_surveillance] = await pool.query(
+      "SELECT DISTINCT code_enseignant FROM base_surveillance"
+    );
 
-      const [base_surveillance] = await pool.query(
-          "SELECT DISTINCT code_enseignant FROM base_surveillance"
+    if (base_surveillance.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Aucun enseignant trouvé dans base_surveillance.",
+      });
+    }
+
+    // Launch a browser instance once for all PDF generations
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    for (const { code_enseignant } of base_surveillance) {
+      const [examens] = await pool.query(
+        `SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre
+         FROM base_surveillance
+         WHERE code_enseignant = ?`,
+        [code_enseignant]
       );
 
-      if (base_surveillance.length === 0) {
-          return res.status(404).json({
-              success: false,
-              message: "Aucun enseignant trouvé dans base_surveillance.",
-          });
-      }
+      if (examens.length === 0) continue;
 
-      for (const { code_enseignant } of base_surveillance) {
-          const [examens] = await pool.query(
-              `SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre
-               FROM base_surveillance
-               WHERE code_enseignant = ?`,
-              [code_enseignant]
-          );
+      const [enseignant] = await pool.query(
+        `SELECT email1, nom, prenom, grade, departement FROM enseignants WHERE code_enseignant = ?`,
+        [code_enseignant]
+      );
 
-          if (examens.length === 0) continue;
+      if (enseignant.length === 0 || !enseignant[0].email1) continue;
 
-          const [enseignant] = await pool.query(
-              `SELECT email1 FROM enseignants WHERE code_enseignant = ?`,
-              [code_enseignant]
-          );
+      const email = enseignant[0].email1;
+      const nomComplet = `${enseignant[0].prenom} ${enseignant[0].nom}`;
+      const grade = enseignant[0].grade;
+      const departement = enseignant[0].departement;
 
-          if (enseignant.length === 0 || !enseignant[0].email1) continue;
+      // Format date and time for display
+      const now = new Date();
+      const printDate = now.toLocaleDateString('fr-FR', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
 
-          const email = enseignant[0].email1;
+      // Helper function to format exam dates
+      const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-FR', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      };
 
-          // Chemin absolu vers le logo
-          const logoPath = path.join(assetsDir, "logo.png");
-          
-          // Vérifier si le logo existe, sinon utiliser un placeholder
-          let logoImage;
-          if (fs.existsSync(logoPath)) {
-              logoImage = new ImageRun({
-                  data: fs.readFileSync(logoPath),
-                  transformation: {
-                      width: 100,
-                      height: 100
-                  },
-                  floating: {
-                      horizontalPosition: {
-                          relative: HorizontalPositionRelativeFrom.PAGE,
-                          offset: 400000
-                      }
-                  }
-              });
-          }
+      // Prepare surveillance data for HTML template
+      const surveillances = examens.map(exam => ({
+        module: exam.module,
+        palier: exam.palier,
+        specialite: exam.specialite,
+        section: exam.section,
+        date_exam: exam.date_exam,
+        horaire: exam.horaire,
+        salle: exam.salle,
+        semestre: exam.semestre
+      }));
 
-          const doc = new Document({
-              creator: "Système de Gestion des Examens",
-              title: "Convocation de Surveillance",
-              description: "Détail des examens à surveiller",
-              styles: {
-                  paragraphStyles: [
-                      {
-                          id: "headerStyle",
-                          name: "En-tête",
-                          run: {
-                              size: 28,
-                              bold: true,
-                              color: "2d609b",
-                              font: "Arial"
-                          },
-                          paragraph: {
-                              spacing: { after: 200 },
-                              alignment: AlignmentType.CENTER
-                          }
-                      },
-                      {
-                          id: "subheaderStyle",
-                          name: "Sous-titre",
-                          run: {
-                              size: 22,
-                              bold: true,
-                              color: "444444",
-                              font: "Arial"
-                          },
-                          paragraph: {
-                              spacing: { after: 150 },
-                              alignment: AlignmentType.CENTER
-                          }
-                      },
-                      {
-                          id: "tableHeader",
-                          name: "En-tête tableau",
-                          run: {
-                              size: 12,
-                              bold: true,
-                              color: "FFFFFF",
-                              font: "Arial"
-                          }
-                      },
-                      {
-                          id: "tableCell",
-                          name: "Cellule tableau",
-                          run: {
-                              size: 11,
-                              font: "Arial"
-                          }
-                      }
-                  ]
-              },
-              sections: [{
-                  properties: {
-                      page: {
-                          margin: {
-                              top: 1000,
-                              right: 1000,
-                              bottom: 1000,
-                              left: 1000
-                          }
-                      }
-                  },
-                  children: [
-                      // En-tête avec logo et titre
-                      new Paragraph({
-                          children: [
-                              ...(logoImage ? [logoImage] : []),
-                              new TextRun({
-                                  text: "Université des Sciences et Technologies",
-                                  style: "headerStyle"
-                              })
-                          ],
-                          alignment: AlignmentType.CENTER
-                      }),
+      // Generate HTML content using the provided design
+      const logoPath = path.resolve("logo.png");
 
-                      // Sous-titre
-                      new Paragraph({
-                          text: "Détail de vos surveillances d'examens",
-                          style: "subheaderStyle"
-                      }),
+      const htmlContent = `
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Détail de vos surveillances d'examens</title>
+          <style>
+            @page { size: A4; margin: 1cm; }
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              padding: 20px;
+            }
+            .print-header { 
+              text-align: center;
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 2px solid #4361ee;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 20px;
+            }
+            .logo-container {
+              width: 80px;
+              height: 80px;
+              border: 1px dashed #ccc;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #999;
+              font-size: 0.8em;
+            }
+            .header-text {
+              flex: 1;
+            }
+            .print-title {
+              color: #2c3e50;
+              margin-bottom: 5px;
+              font-size: 1.5em;
+            }
+            .print-subtitle {
+              color: #7f8c8d;
+              font-weight: normal;
+              margin-top: 0;
+              font-size: 1.1em;
+            }
+            .print-section { 
+              margin-bottom: 25px;
+              page-break-inside: avoid;
+            }
+            .section-title {
+              color: #4361ee;
+              border-bottom: 1px solid #eee;
+              padding-bottom: 5px;
+              margin-bottom: 15px;
+            }
+            .info-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 15px;
+              margin-bottom: 20px;
+            }
+            .info-item {
+              margin-bottom: 10px;
+            }
+            .info-label {
+              font-weight: bold;
+              color: #7f8c8d;
+              font-size: 0.9em;
+            }
+            .print-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 15px 0;
+              font-size: 0.9em;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            }
+            .print-table th {
+              background-color: #4361ee;
+              color: white;
+              text-align: left;
+              padding: 10px 12px;
+            }
+            .print-table td {
+              padding: 8px 12px;
+              border-bottom: 1px solid #ddd;
+            }
+            .print-table tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            .print-footer {
+              margin-top: 30px;
+              font-size: 0.8em;
+              color: #7f8c8d;
+              text-align: right;
+              border-top: 1px solid #eee;
+              padding-top: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+              <img src="file://${logoPath}" style="height:59px; width:182px;">
+            <div class="header-text">
+              <h1 class="print-title">Université de science et de technologie Houari Boumediene</h1>
+              <p class="print-subtitle">Faculté d'informatique</p>
+            </div>
+          </div>
 
-                      // Date de génération
-                      new Paragraph({
-                          text: `Généré le ${new Date().toLocaleDateString('fr-FR')}`,
-                          alignment: AlignmentType.RIGHT,
-                          spacing: { after: 300 }
-                      }),
+          <div class="print-section">
+            <h2 class="section-title">Informations de Base</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Nom complet</div>
+                <div>${nomComplet}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Grade</div>
+                <div>${grade}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Département</div>
+                <div>${departement}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Total surveillances</div>
+                <div>${surveillances.length}</div>
+              </div>
+            </div>
+          </div>
 
-                      // Tableau des examens
-                      new Table({
-                          width: {
-                              size: 100,
-                              type: WidthType.PERCENTAGE
-                          },
-                          borders: {
-                              top: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
-                              bottom: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
-                              left: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
-                              right: { style: BorderStyle.SINGLE, size: 4, color: "2d609b" },
-                              insideHorizontal: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" },
-                              insideVertical: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" }
-                          },
-                          rows: [
-                              // En-tête du tableau
-                              new TableRow({
-                                  height: { value: 500, rule: HeightRule.EXACT },
-                                  tableHeader: true,
-                                  children: [
-                                      "Module", "Niveau", "Spécialité", "Groupe", 
-                                      "Date", "Horaire", "Salle", "Session"
-                                  ].map(text => new TableCell({
-                                      shading: { fill: "2d609b" },
-                                      verticalAlign: VerticalAlign.CENTER,
-                                      children: [new Paragraph({
-                                          text,
-                                          style: "tableHeader",
-                                          alignment: AlignmentType.CENTER
-                                      })]
-                                  }))
-                              }),
-                              
-                              // Lignes des examens
-                              ...examens.map(exam => new TableRow({
-                                  children: [
-                                      exam.module,
-                                      exam.palier,
-                                      exam.specialite,
-                                      exam.section,
-                                      new Date(exam.date_exam).toLocaleDateString('fr-FR'),
-                                      exam.horaire,
-                                      exam.salle,
-                                      exam.semestre
-                                  ].map((text, index) => new TableCell({
-                                      verticalAlign: VerticalAlign.CENTER,
-                                      shading: index % 2 ? { fill: "f8f8f8" } : undefined,
-                                      children: [new Paragraph({
-                                          text: String(text),
-                                          style: "tableCell",
-                                          alignment: index === 0 ? AlignmentType.LEFT : AlignmentType.CENTER
-                                      })]
-                                  }))
-                              }))
-                          ]
-                      }),
+          <div class="print-section">
+            <h2 class="section-title">Surveillances Assignées</h2>
+            ${surveillances.length > 0 ? `
+            <table class="print-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Horaire</th>
+                  <th>Module</th>
+                  <th>Salle</th>
+                  <th>Spécialité</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${surveillances.map(surv => `
+                  <tr>
+                    <td>${formatDate(surv.date_exam)}</td>
+                    <td>${surv.horaire}</td>
+                    <td>${surv.module}</td>
+                    <td>${surv.salle}</td>
+                    <td>${surv.specialite}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ` : '<p>Aucune surveillance enregistrée</p>'}
+          </div>
+        </body>
+        </html>
+      `;
 
-                      // Pied de page
-                      new Paragraph({
-                          text: "Merci pour votre collaboration",
-                          alignment: AlignmentType.CENTER,
-                          spacing: { before: 400 },
-                          style: "subheaderStyle"
-                      }),
-                      
-                      new Paragraph({
-                          text: "Service des Examens - Département Informatique",
-                          alignment: AlignmentType.CENTER,
-                          spacing: { before: 100 }
-                      })
-                  ]
-              }]
-          });
-
-      console.log("after docx");
-
-      const filePath = path.join(filesDir, `${code_enseignant}_examens.docx`);
-
-      try {
-        const buffer = await Packer.toBuffer(doc);
-        fs.writeFileSync(filePath, buffer);
-      } catch (fileError) {
-        console.error(`Erreur lors de la génération du fichier :`, fileError);
-        continue;
-      }
+      // Generate PDF from HTML
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, {
+        waitUntil: 'networkidle0'
+      });
+      
+      const pdfPath = path.join(filesDir, `${code_enseignant}_examens.pdf`);
+      await page.pdf({
+        path: pdfPath,
+        format: 'A4',
+        margin: {
+          top: '1cm',
+          right: '1cm',
+          bottom: '1cm',
+          left: '1cm'
+        },
+        printBackground: true
+      });
+      await page.close();
 
       // Configuration du transporteur email
       const transporter = nodemailer.createTransport({
@@ -919,20 +947,26 @@ app.post("/envoyer-mail", async (req, res) => {
           to: email,
           subject: "Vos examens à surveiller",
           text: "Veuillez trouver ci-joint vos examens à surveiller.",
+          html: "<p>Veuillez trouver ci-joint le PDF contenant vos examens à surveiller.</p>",
           attachments: [
             {
-              filename: `${code_enseignant}_examens.docx`,
-              path: filePath,
+              filename: `Surveillances_${nomComplet.replace(/\s+/g, '_')}.pdf`,
+              path: pdfPath,
             },
           ],
         });
 
         console.log(`Email envoyé à ${email}`);
+        
+        // Delete the PDF file after sending
+        fs.unlinkSync(pdfPath);
       } catch (emailError) {
         console.error(`Erreur lors de l'envoi de l'email :`, emailError);
       }
     }
 
+    // Close the browser when done
+    await browser.close();
     res.json({ success: true, message: "Emails envoyés avec succès." });
   } catch (error) {
     console.error("Erreur serveur :", error);
@@ -942,7 +976,7 @@ app.post("/envoyer-mail", async (req, res) => {
     });
   }
 });
-//PVs (Procès-Verbaux)
+//PV 
 app.post("/envoyer-pv", async (req, res) => {
   try {
     const [examens] = await pool.query(`

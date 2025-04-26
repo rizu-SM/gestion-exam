@@ -481,7 +481,9 @@ function initFilters() {
               </div>
               
               <div class="modal-footer">
-                  <button class="modal-btn btn-outline" id="cancelBtn">Fermer</button>
+                  <button class="modal-btn btn-primary" id="sendBtn">
+                  <i class="fa fa-envelope"></i> Envoyer
+                  </button>
                   <button class="modal-btn btn-primary" id="printBtn">
                       <i class="fas fa-print"></i> Imprimer
                   </button>
@@ -567,8 +569,7 @@ function initFilters() {
           modal.remove();
       });
   
-      modal.querySelector('#cancelBtn').addEventListener('click', () => {
-          modal.remove();
+      modal.querySelector('#sendBtn').addEventListener('click', () => {
       });
   
       modal.querySelector('#printBtn').addEventListener('click', () => {
