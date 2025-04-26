@@ -476,10 +476,10 @@ tr:hover {
     gap: 0.5rem;
 }
 
-.toggle-wrapper {
+/* .toggle-wrapper {
     display: flex;
-    align-items: center;
-}
+    align-items: end;
+} */
 
 .toggle-switch {
     position: relative;
@@ -588,6 +588,24 @@ tr:hover {
 
 .closeSubmit-btn:hover {
     color: #e74c3c;
+}
+
+/* Percentage input styling */
+.percentage-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.percentage-input input {
+    padding-right: 2rem;
+}
+
+.percentage-symbol {
+    position: absolute;
+    right: 0.75rem;
+    color: #495057;
+    pointer-events: none;
 }
 
 
