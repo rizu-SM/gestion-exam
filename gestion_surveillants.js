@@ -2,6 +2,7 @@
 const addProctorBtn = document.getElementById('addProctorBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
 const cancelAddBtn = document.getElementById('cancelAddBtn');
+const closeBtn = document.getElementById('closeModalBtn');
 const modal = document.getElementById('modal');
 
 addProctorBtn.addEventListener('click', () => {
@@ -15,6 +16,10 @@ closeModalBtn.addEventListener('click', () => {
 
 cancelAddBtn.addEventListener('click', () => {
     modal.style.display = 'none';
+});
+
+closeBtn.addEventListener('click', () => {
+  modal.style.display = 'none';
 });
 
 window.addEventListener('click', (event) => {
@@ -386,11 +391,7 @@ function initFilters() {
       const nomComplet = enseignant ? `${enseignant.nom} ${enseignant.prenom}` : '';
       const grade = enseignant?.grade || 'Non spécifié';
       const departement = enseignant?.departement || 'Non spécifié';
-  
-      const formatDate = (dateString) => {
-          return new Date(dateString).toLocaleDateString('fr-FR');
-      };
-  
+
       let htmlContent = `
       <div class="modal-overlay">
           <div class="exam-modal">
@@ -452,10 +453,14 @@ function initFilters() {
                               <tbody>`;
   
           surveillances.forEach(surv => {
+              // Format the date as DD/MM/YYYY
+              const formattedDate = formatDate(surv.date_exam);
+              // Format time (08:00:00 → 08:00)
+              const formattedTime = formatTime(surv.horaire);
               htmlContent += `
                                   <tr data-id="${surv.id}">
-                                      <td>${formatDate(surv.date_exam)}</td>
-                                      <td>${surv.horaire}</td>
+                                      <td>${formattedDate}</td>
+                                      <td>${formattedTime}</td>
                                       <td>${surv.module}</td>
                                       <td>${surv.salle}</td>
                                       <td>${surv.specialite}</td>
@@ -576,7 +581,7 @@ function initFilters() {
         const printWindow = window.open('', '_blank');
         const printDate = new Date().toLocaleDateString('fr-FR');
         const printTime = new Date().toLocaleTimeString('fr-FR');
-        
+
         printWindow.document.write(`
             <html>
                 <head>
@@ -707,7 +712,7 @@ function initFilters() {
                                 ${surveillances.map(surv => `
                                     <tr>
                                         <td>${formatDate(surv.date_exam)}</td>
-                                        <td>${surv.horaire}</td>
+                                        <td>${formatTime(surv.horaire)}</td>
                                         <td>${surv.module}</td>
                                         <td>${surv.salle}</td>
                                         <td>${surv.specialite}</td>
@@ -738,6 +743,20 @@ function initFilters() {
       // Show modal
       modal.querySelector('.modal-overlay').style.display = 'flex';
   }
+
+  // Helper function to format date as DD/MM/YYYY
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+// Format time as HH:MM (remove seconds)
+function formatTime(timeString) {
+  return timeString.substring(0, 5); // Takes first 5 characters (HH:MM)
+}
 
 
 

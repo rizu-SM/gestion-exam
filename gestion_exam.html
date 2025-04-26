@@ -198,6 +198,80 @@
         </div>
     </div>
 
+    <!-- <div class="modalSubmit-overlay" id="submitModal">
+        <div class="submit-modal">
+            <div class="modalSubmit-header">
+                <h2 class="modal-title">Soumettre l'emplois d'examens</h2>
+                <button class="closeSubmit-btn" onclick="closeSubmitModal()">&times;</button>
+            </div>
+            <div class="modalSubmit-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <select id="semestre" class="form-control">
+                            <option value="S1">S1</option>
+                            <option value="S2">S2</option>
+                            <option value="R1">R1</option>
+                            <option value="R2">R2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="submit-sendemail">Envoyer emails</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="submit-sendemail" class="toggle-switch-checkbox">
+                            <label for="submit-sendemail" class="toggle-switch-label">
+                                <span class="toggle-switch-inner"></span>
+                                <span class="toggle-switch-switch"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modalSubmit-footer">
+                <button class="btn btn-outline" onclick="closeSubmitModal()">Annuler</button>
+                <button class="btn btn-primary" id="confirmSubmitBtn">Confirmer</button>
+            </div>
+        </div>
+    </div> -->
+
+
+    <div class="modalSubmit-overlay" id="submitModal">
+        <div class="submit-modal">
+            <div class="modalSubmit-header">
+                <h2 class="modalSubmit-title">Soumettre l'emplois d'examens</h2>
+                <button class="closeSubmit-btn" onclick="closeSubmitModal()">&times;</button>
+            </div>
+            <div class="modalSubmit-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="semestre">Semestre</label>
+                        <select id="semestre" class="form-control">
+                            <option value="S1">S1</option>
+                            <option value="S2">S2</option>
+                            <option value="R1">R1</option>
+                            <option value="R2">R2</option>
+                        </select>
+                    </div>
+                    <div class="form-group toggle-container">
+                        <label for="submit-sendemail">Envoyer emails</label>
+                        <div class="toggle-wrapper">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="submit-sendemail" class="toggle-switch-checkbox">
+                                <label for="submit-sendemail" class="toggle-switch-label">
+                                    <span class="toggle-switch-inner"></span>
+                                    <span class="toggle-switch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modalSubmit-footer">
+                <button class="btn btn-outline" onclick="closeSubmitModal()">Annuler</button>
+                <button class="btn btn-primary" id="confirmSubmitBtn">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
     <script src="gestion_exam.js" defer></script>
 </body>
 </html>

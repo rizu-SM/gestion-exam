@@ -940,6 +940,10 @@ thead tr:hover {
   gap: 0.5rem;
 }
 
+.section-title i {
+  color: var(--primary);
+}
+
 .details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1066,6 +1070,7 @@ thead tr:hover {
   }
 }
 
+/* Verification Section */
 .verification-section {
   background: white;
   border-radius: 12px;
@@ -1082,6 +1087,19 @@ thead tr:hover {
 }
 
 
+.section-titleE {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-titleE i {
+  color: var(--primary);
+}
 
 
 

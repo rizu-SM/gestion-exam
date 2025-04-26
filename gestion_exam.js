@@ -811,8 +811,13 @@ function displayExamens(examens) {
     examens.forEach(examen => {
         const row = tbody.insertRow();
 
+        // Format the date as DD/MM/YYYY
+        const formattedDate = formatDate(examen.date_exam.split('T')[0]);
+        // Format time (08:00:00 → 08:00)
+        const formattedTime = formatTime(examen.horaire);
+
         // Use the date as received from the backend without modifications
-        const date = examen.date_exam.split('T')[0]; // Extract only the date part
+        // const date = examen.date_exam.split('T')[0];
 
         // Add cells for each column in the new order
         const cells = [
@@ -820,8 +825,8 @@ function displayExamens(examens) {
             examen.specialite, // Spécialité
             examen.module,
             examen.section,
-            date, // Use the unmodified date
-            examen.horaire,
+            formattedDate, // Use the unmodified date
+            formattedTime,
             examen.salle,
         ];
 
@@ -841,6 +846,20 @@ function displayExamens(examens) {
             </button>
         `;
     });
+}
+
+// Helper function to format date as DD/MM/YYYY
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+// Format time as HH:MM (remove seconds)
+function formatTime(timeString) {
+    return timeString.substring(0, 5); // Takes first 5 characters (HH:MM)
 }
 
 // Event listener for session buttons
@@ -872,3 +891,29 @@ async function deleteExam(id) {
 
 // Load exams on page load
 document.addEventListener('DOMContentLoaded', loadExamens);
+
+
+
+// Function to open the submit modal
+function openSubmitModal() {
+    const modal = document.getElementById('submitModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+}
+
+// Function to close the submit modal
+function closeSubmitModal() {
+    const modal = document.getElementById('submitModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Re-enable scrolling
+}
+
+// Add event listener to the submit button
+document.getElementById('submitBtn').addEventListener('click', openSubmitModal);
+
+// Close modal when clicking outside of it
+document.getElementById('submitModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeSubmitModal();
+    }
+});
