@@ -44,7 +44,7 @@ const pool = mysql.createPool({
 app.post("/gestion-surveillances", async (req, res) => {
   try {
     /*****************************************************************
-     * ÉTAPE 1: Assignation des professeurs de cours comme surveillants
+     * ÉTAPE 1: Assignation des professeurs de cours comme surveillants principal
      * (anciennement route '/assignerProfDeCour')
      *****************************************************************/
     const { semestre, pourcentagePermanent } = req.body;
@@ -76,6 +76,8 @@ app.post("/gestion-surveillances", async (req, res) => {
       });
     }
 
+    console.log(annee_universitaire);
+    console.log(semestre);
     // Assignation des surveillants principaux
     const [examens] = await pool.query(
       `SELECT * FROM exam 
@@ -83,6 +85,7 @@ app.post("/gestion-surveillances", async (req, res) => {
        AND module IN (SELECT module FROM formation WHERE module_info = 'oui')`,
       [semestre, annee_universitaire]
     );
+    console.log(examens);
 
     const resultatsAssignation = [];
     const erreursAssignation = [];
@@ -99,9 +102,9 @@ app.post("/gestion-surveillances", async (req, res) => {
         if (enseignants.length === 0) {
           erreursAssignation.push({
             examen_id: examen.id,
-            message: "Aucun enseignant trouvé pour ce module",
+            message: "Aucun enseignant trouvé pour ce module - Examen ignoré",
           });
-          continue;
+          continue; // On saute complètement cet examen
         }
 
         const salles = examen.salle.split("+").filter((s) => s.trim() !== ""); // Diviser les salles  sont séparées par '+'
@@ -110,8 +113,8 @@ app.post("/gestion-surveillances", async (req, res) => {
         await pool.query(
           `INSERT INTO base_surveillance 
                      (palier, specialite, semestre, section, date_exam, horaire, 
-                      module, salle, code_enseignant, ordre, nbrSE, nbrSS, annee_universitaire)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 0, ?)`,
+                      module, salle, code_enseignant, ordre, nbrSE, annee_universitaire)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
           [
             examen.palier,
             examen.specialite,
@@ -282,8 +285,8 @@ app.post("/gestion-surveillances", async (req, res) => {
             await pool.query(
               `INSERT INTO base_surveillance 
                              (palier, specialite, semestre, section, date_exam, horaire, module, salle, 
-                              code_enseignant, ordre, nbrSE, nbrSS, annee_universitaire)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                              code_enseignant, ordre, nbrSE, annee_universitaire)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,  ?)`,
               [
                 examen.palier,
                 examen.specialite,
@@ -296,7 +299,6 @@ app.post("/gestion-surveillances", async (req, res) => {
                 enseignant.code_enseignant,
                 ordre,
                 salles.length * 2,
-                1,
                 annee_universitaire,
               ]
             );
@@ -786,16 +788,7 @@ app.post("/envoyer-mail", async (req, res) => {
               justify-content: center;
               gap: 20px;
             }
-            .logo-container {
-              width: 80px;
-              height: 80px;
-              border: 1px dashed #ccc;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #999;
-              font-size: 0.8em;
-            }
+            
             .header-text {
               flex: 1;
             }
@@ -866,7 +859,7 @@ app.post("/envoyer-mail", async (req, res) => {
         </head>
         <body>
           <div class="print-header">
-              <img src="file://${logoPath}" style="height:59px; width:182px;">
+              
             <div class="header-text">
               <h1 class="print-title">Université de science et de technologie Houari Boumediene</h1>
               <p class="print-subtitle">Faculté d'informatique</p>
@@ -1063,16 +1056,7 @@ app.post("/envoyer-pv", async (req, res) => {
             justify-content: center;
             gap: 20px;
         }
-        .logo-container {
-            width: 80px;
-            height: 80px;
-            border: 1px dashed #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 0.8em;
-        }
+        
         .header-text {
             flex: 1;
         }
@@ -1176,9 +1160,6 @@ app.post("/envoyer-pv", async (req, res) => {
 </head>
 <body>
     <div class="print-header">
-        <div class="logo-container">
-            [LOGO]
-        </div>
         <div class="header-text">
             <h1 class="print-title">Université de science et de technologie Houari Boumediene</h1>
             <p class="print-subtitle">Faculté d'informatique</p>
@@ -1409,16 +1390,6 @@ app.post("/envoyer-mail-enseignant", async (req, res) => {
             justify-content: center;
             gap: 20px;
           }
-          .logo-container {
-            width: 80px;
-            height: 80px;
-            border: 1px dashed #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 0.8em;
-          }
           .header-text {
             flex: 1;
           }
@@ -1489,7 +1460,6 @@ app.post("/envoyer-mail-enseignant", async (req, res) => {
       </head>
       <body>
         <div class="print-header">
-            <img src="file://${logoPath}" style="height:59px; width:182px;">
           <div class="header-text">
             <h1 class="print-title">Université de science et de technologie Houari Boumediene</h1>
             <p class="print-subtitle">Faculté d'informatique</p>
@@ -1870,11 +1840,21 @@ app.get('/surveillance-stats', async (req, res) => {
 });
 
 
-// Démarrer le serveur
-// app.listen(3000, () => {
-//   console.log("Serveur démarré sur http://localhost:3000");
-//   console.log("Route principale: POST /assigner-surveillants-principaux");
-// });
+app.post('/export-examens', async (req, res) => {
+  try {
+    // Copier les examens de exam_temp vers exam
+    await pool.query(`
+      INSERT INTO exam (palier, specialite, section, module, date_exam, horaire, salle, semestre, annee_universitaire)
+      SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre, annee_universitaire FROM exam_temp
+    `);
+    // Vider exam_temp
+    await pool.query('DELETE FROM exam_temp');
+    res.json({ success: true, message: "Exportation réussie." });
+  } catch (error) {
+    console.error("Erreur export examens:", error);
+    res.status(500).json({ success: false, message: "Erreur lors de l'exportation." });
+  }
+});
 
 
 
