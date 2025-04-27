@@ -107,7 +107,10 @@ app.post("/gestion-surveillances", async (req, res) => {
           continue; // On saute complètement cet examen
         }
 
-        const salles = examen.salle.split("+").filter((s) => s.trim() !== ""); // Diviser les salles  sont séparées par '+'
+        const salles = examen.salle.split("+")
+          .map(s => s.trim())
+          .filter(s => s !== "");
+        // Diviser les salles  sont séparées par '+'
         const nbrSE = salles.length * 2; // 2 surveillants  par salle
 
         await pool.query(
@@ -148,6 +151,7 @@ app.post("/gestion-surveillances", async (req, res) => {
      * ÉTAPE 2: Calcul du nombre total de surveillants nécessaires
      * (anciennement route '/total-surveillants')
      *****************************************************************/
+
     const [sallesData] = await pool.query(
       `SELECT salle FROM exam WHERE semestre = ? AND annee_universitaire = ? 
       AND module IN (SELECT module FROM formation WHERE module_info = 'oui')` ,
@@ -164,11 +168,11 @@ app.post("/gestion-surveillances", async (req, res) => {
       }
     }
 
-    console.log(totalSalles);
+    console.log("total sall :",totalSalles);
     console.log(
       "-------------------------------------------------------------------"
     );
-    const totalSurveillants = totalSalles * 2;
+    const totalSurveillants = totalSalles * 2 + resultatsAssignation.length;
 
     /*****************************************************************
      * ÉTAPE 3: Répartition des surveillances entre enseignants
@@ -237,12 +241,8 @@ app.post("/gestion-surveillances", async (req, res) => {
     });
     //pour les prof de cour déja assigné on update leur avaibilité (surveillances) avec -1
 
-    const [enseignantassigne] = await pool.query(
-      "SELECT code_enseignant FROM base_surveillance WHERE semestre = ? AND annee_universitaire = ?",
-      [semestre, annee_universitaire]
-    );
 
-    enseignantassigne.forEach((ens, index) => {
+    resultatsAssignation.forEach((ens, index) => {
       updateQueries.push(
         pool.query(
           "UPDATE enseignants SET surveillances = surveillances - 1 WHERE code_enseignant = ?",
@@ -295,7 +295,7 @@ app.post("/gestion-surveillances", async (req, res) => {
                 examen.date_exam,
                 examen.horaire,
                 examen.module,
-                salle,
+                examen.salle,
                 enseignant.code_enseignant,
                 ordre,
                 salles.length * 2,
@@ -356,81 +356,6 @@ app.post("/gestion-surveillances", async (req, res) => {
   }
 });
 
-app.post("/affecter-surveillants-secondaires", async (req, res) => {
-  try {
-    // Récupérer tous les examens depuis la table `exam`
-    const [examens] = await pool.query(
-      `SELECT palier, specialite, section, date_exam, horaire, module, salle, semestre
-             FROM exam`
-    );
-
-    for (const examen of examens) {
-      const salles = examen.salle.split("+").filter((s) => s.trim() !== "");
-      const surveillantsSecondairesCount = salles.length * 2;
-
-      const [enseignantsDisponibles] = await pool.query(
-        `SELECT code_enseignant, surveillances FROM enseignants
-                WHERE etat = 'admin' AND surveillances > 0
-                AND code_enseignant NOT IN (
-                        SELECT code_enseignant FROM base_surveillance
-                        WHERE date_exam = ? AND horaire = ?
-                )
-                ORDER BY surveillances ASC
-                LIMIT ?`,
-        [examen.date_exam, examen.horaire, surveillantsSecondairesCount]
-      );
-
-      let enseignantIndex = 0;
-      let ordre = 2;
-
-      for (const salle of salles) {
-        for (let i = 0; i < 2; i++) {
-          if (enseignantIndex >= enseignantsDisponibles.length) break;
-
-          const enseignant = enseignantsDisponibles[enseignantIndex];
-          enseignantIndex++;
-
-          await pool.query(
-            `INSERT INTO base_surveillance 
-                         (palier, specialite, semestre, section, date_exam, horaire, module, salle, code_enseignant, ordre, nbrSE, nbrSS)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              examen.palier,
-              examen.specialite,
-              examen.semestre,
-              examen.section,
-              examen.date_exam,
-              examen.horaire,
-              examen.module,
-              salle,
-              enseignant.code_enseignant,
-              ordre,
-              salles.length * 2,
-              1,
-            ]
-          );
-
-          await pool.query(
-            `UPDATE enseignants SET surveillances = surveillances - 1 WHERE code_enseignant = ?`,
-            [enseignant.code_enseignant]
-          );
-
-          ordre++;
-        }
-      }
-    }
-
-    res
-      .status(200)
-      .json({ message: "Surveillants secondaires affectés avec succès." });
-  } catch (error) {
-    console.error(
-      "Erreur lors de l'affectation des surveillants secondaires :",
-      error
-    );
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
 
 app.get("/envoyer-formation", async (req, res) => {
   try {
@@ -1056,7 +981,16 @@ app.post("/envoyer-pv", async (req, res) => {
             justify-content: center;
             gap: 20px;
         }
-        
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            border: 1px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 0.8em;
+        }
         .header-text {
             flex: 1;
         }
@@ -1160,6 +1094,9 @@ app.post("/envoyer-pv", async (req, res) => {
 </head>
 <body>
     <div class="print-header">
+        <div class="logo-container">
+            [LOGO]
+        </div>
         <div class="header-text">
             <h1 class="print-title">Université de science et de technologie Houari Boumediene</h1>
             <p class="print-subtitle">Faculté d'informatique</p>
