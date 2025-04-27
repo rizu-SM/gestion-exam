@@ -886,8 +886,8 @@ document.getElementById('verifyBtn').addEventListener('click', async function() 
             errorResults.innerHTML = `
                 <div class="no-errors">
                     <i class="fas fa-check-circle"></i>
-                    <h3>No Errors Detected</h3>
-                    <p>All exams are properly scheduled with no conflicts.</p>
+                    <h3>Aucune erreur détectée</h3>
+                    <p>Tous les examens sont correctement programmés sans conflits.</p>
                 </div>
             `;
         } else {
