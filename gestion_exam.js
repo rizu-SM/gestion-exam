@@ -410,8 +410,8 @@ function openEditModal(examId) {
     document.getElementById('editModal').dataset.examId = examId;
 
     // Populate the fields
-    document.getElementById('edit-palier').value = exam.palier; 
-    document.getElementById('edit-specialite').value = exam.specialite; 
+    document.getElementById('edit-palier').value = exam.palier;
+    document.getElementById('edit-specialite').value = exam.specialite;
     document.getElementById('edit-module').value = exam.module;
     document.getElementById('edit-section').value = exam.section;
     // Format the date without timezone adjustments
@@ -435,7 +435,7 @@ document.getElementById('saveEditBtn').addEventListener('click', async function 
     }
 
     const palier = document.getElementById('edit-palier').value;
-    const specialite = document.getElementById('edit-specialite').value; 
+    const specialite = document.getElementById('edit-specialite').value;
     const module = document.getElementById('edit-module').value;
     const section = document.getElementById('edit-section').value;
     const date_exam = document.getElementById('edit-date').value;
@@ -786,22 +786,14 @@ function displayExamens(examens) {
     examens.forEach(examen => {
         const row = tbody.insertRow();
 
-        // Format the date as DD/MM/YYYY
-        const formattedDate = formatDate(examen.date_exam.split('T')[0]);
-        // Format time (08:00:00 → 08:00)
-        const formattedTime = formatTime(examen.horaire);
-
-        // Use the date as received from the backend without modifications
-        // const date = examen.date_exam.split('T')[0];
-
         // Add cells for each column in the new order
         const cells = [
             examen.palier, // Palier
             examen.specialite, // Spécialité
             examen.module,
             examen.section,
-            formattedDate, // Use the unmodified date
-            formattedTime,
+            examen.date_exam.split('T')[0], // Format date
+            examen.horaire,
             examen.salle,
         ];
 
@@ -821,20 +813,6 @@ function displayExamens(examens) {
             </button>
         `;
     });
-}
-
-// Helper function to format date as DD/MM/YYYY
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-}
-
-// Format time as HH:MM (remove seconds)
-function formatTime(timeString) {
-    return timeString.substring(0, 5); // Takes first 5 characters (HH:MM)
 }
 
 // Event listener for session buttons
@@ -867,8 +845,6 @@ async function deleteExam(id) {
 // Load exams on page load
 document.addEventListener('DOMContentLoaded', loadExamens);
 
-
-
 // Vérification
 document.getElementById('verifyBtn').addEventListener('click', async function() {
     const verifyBtn = document.getElementById('verifyBtn');
@@ -894,7 +870,7 @@ document.getElementById('verifyBtn').addEventListener('click', async function() 
             errorResults.innerHTML = `
                 <div class="alert alert-warning mb-3">
                     <i class="fas fa-exclamation-circle mr-2"></i>
-                    ${data.erreurs.length} problèmes de planification ont été trouvés qui nécessitent une attention particulière.
+                    ${data.erreurs.length} problème(s) de planification ont été trouvés.
                 </div>
                 <div class="table-responsive">
                     <table class="error-table">
@@ -910,13 +886,13 @@ document.getElementById('verifyBtn').addEventListener('click', async function() 
                                 <tr>
                                     <td>
                                         <span class="error-badge ${
-                                            error.type.includes('Conflit') ? 'badge-conflict' : 
-                                            error.type.includes('Doublon') ? 'badge-warning' : 'badge-danger'
+                                            error.type && error.type.includes('Conflit') ? 'badge-conflict' : 
+                                            error.type && error.type.includes('Doublon') ? 'badge-warning' : 'badge-danger'
                                         }">
-                                            ${error.type}
+                                            ${error.type || ''}
                                         </span>
                                     </td>
-                                    <td>${error.message}</td>
+                                    <td>${error.message || ''}</td>
                                     <td>
                                         <div class="exam-ids">
                                             ${(error.examens || [error.examen]).map(id => `
@@ -942,44 +918,147 @@ document.getElementById('verifyBtn').addEventListener('click', async function() 
     }
 });
 
-// Close modal handlers
-document.getElementById('closeErrorModal').addEventListener('click', function() {
-    document.getElementById('errorModal').style.display = 'none';
-});
-
-document.getElementById('closeModalBtn').addEventListener('click', function() {
-    document.getElementById('errorModal').style.display = 'none';
-});
-
-// Export functionality (placeholder)
-document.getElementById('exportErrorsBtn').addEventListener('click', function() {
-    alert('Export functionality would be implemented here');
-    // In a real implementation, this would generate a CSV/PDF report
-});
-
-
-
-
-// Function to open the submit modal
 function openSubmitModal() {
-    const modal = document.getElementById('submitModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    // 1. Vérification avant ouverture
+    fetch('http://localhost:3000/verifier-erreurs-examens')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success && data.erreurs && data.erreurs.length > 0) {
+                // Afficher le modal d'erreur
+                showErrorModal(data.erreurs);
+            } else {
+                // Ouvrir le modal de soumission
+                document.getElementById('submitModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        })
+        .catch(() => alert("Erreur lors de la vérification."));
 }
 
-// Function to close the submit modal
 function closeSubmitModal() {
-    const modal = document.getElementById('submitModal');
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto'; // Re-enable scrolling
+    document.getElementById('submitModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
 }
 
-// Add event listener to the submit button
-document.getElementById('submitBtn').addEventListener('click', openSubmitModal);
-
-// Close modal when clicking outside of it
-document.getElementById('submitModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeSubmitModal();
+// Error modal helpers
+function showErrorModal(erreurs) {
+    const modal = document.getElementById('errorModal');
+    const results = document.getElementById('errorResults');
+    if (!Array.isArray(erreurs) || erreurs.length === 0) {
+        results.innerHTML = `<div class="no-errors">
+            <i class="fas fa-check-circle"></i>
+            <h3>Aucune erreur détectée</h3>
+            <p>Tous les examens sont correctement programmés sans conflits.</p>
+        </div>`;
+    } else {
+        results.innerHTML = `
+            <div class="alert alert-warning mb-3">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                ${erreurs.length} problème(s) de planification ont été trouvés.
+            </div>
+            <div class="table-responsive">
+                <table class="error-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Examens concernés</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${erreurs.map(error => `
+                            <tr>
+                                <td>
+                                    <span class="error-badge ${
+                                        error.type && error.type.includes('Conflit') ? 'badge-conflict' : 
+                                        error.type && error.type.includes('Doublon') ? 'badge-warning' : 'badge-danger'
+                                    }">
+                                        ${error.type || ''}
+                                    </span>
+                                </td>
+                                <td>${error.message || ''}</td>
+                                <td>
+                                    <div class="exam-ids">
+                                        ${(error.examens || [error.examen]).map(id => `
+                                            <span class="exam-id">#${id}</span>
+                                        `).join('')}
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
     }
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeErrorModal() {
+    document.getElementById('errorModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+document.getElementById('closeErrorModal').onclick = closeErrorModal;
+document.getElementById('closeModalBtn').onclick = closeErrorModal;
+
+// "Confirmer" button logic
+document.getElementById('confirmSubmitBtn').addEventListener('click', async function () {
+    const semestre = document.getElementById('semestre').value;
+    const pourcentagePermanent = parseInt(document.getElementById('surveillance-percentage').value, 10) || 0;
+    const envoyerEmails = document.getElementById('submit-sendemail').checked;
+
+    // 1. Exporter exam_temp -> exam
+    try {
+        const exportRes = await fetch('http://localhost:3000/export-examens', { method: 'POST' });
+        const exportData = await exportRes.json();
+        if (!exportData.success) {
+            alert(exportData.message || "Erreur lors de l'exportation des examens.");
+            return;
+        }
+    } catch (e) {
+        alert("Erreur lors de l'exportation des examens.");
+        return;
+    }
+
+    // 2. Appeler /gestion-surveillances
+    try {
+        const surveilRes = await fetch('http://localhost:3000/gestion-surveillances', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ semestre, pourcentagePermanent })
+        });
+        const surveilData = await surveilRes.json();
+        if (!surveilData.success) {
+            alert(surveilData.message || "Erreur lors de la gestion des surveillances.");
+            return;
+        }
+    } catch (e) {
+        alert("Erreur lors de la gestion des surveillances.");
+        return;
+    }
+
+    // 3. Envoyer les emails si demandé
+    if (envoyerEmails) {
+        try {
+            const emailRes = await fetch('http://localhost:3000/envoyer-mail', { method: 'POST' });
+            const emailData = await emailRes.json();
+            if (!emailData.success) {
+                alert(emailData.message || "Erreur lors de l'envoi des emails.");
+            }
+            // Envoyer aussi les PV
+            const pvRes = await fetch('http://localhost:3000/envoyer-pv', { method: 'POST' });
+            const pvData = await pvRes.json();
+            if (!pvData.success) {
+                alert(pvData.message || "Erreur lors de l'envoi des PV.");
+            }
+        } catch (e) {
+            alert("Erreur lors de l'envoi des emails ou des PV.");
+        }
+    }
+
+    alert("Examens soumis et surveillances générées avec succès !");
+    closeSubmitModal();
+    loadExamens();
 });
+
+// Remplacer l'ancien onclick dans le HTML par openSubmitModal()
