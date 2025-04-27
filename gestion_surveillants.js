@@ -574,9 +574,148 @@ function initFilters() {
           modal.remove();
       });
   
-      modal.querySelector('#sendBtn').addEventListener('click', () => {
+      // modal.querySelector('#sendBtn').addEventListener('click', async function() {
+        
+      // });
+
+    //   modal.querySelector('#sendBtn').addEventListener('click', async function() {
+    //     const sendBtn = modal.querySelector('#sendBtn');
+    //     const originalContent = sendBtn.innerHTML;
+        
+    //     try {
+    //         // Afficher la boîte de confirmation
+    //         const confirmation = await Swal.fire({
+    //             title: 'Confirmation',
+    //             text: `Êtes-vous sûr de vouloir envoyer le rapport de surveillance à ${nomComplet} ?`,
+    //             icon: 'question',
+    //             showCancelButton: true,
+    //             confirmButtonColor: '#3085d6',
+    //             cancelButtonColor: '#d33',
+    //             confirmButtonText: 'Oui, envoyer',
+    //             cancelButtonText: 'Annuler'
+    //         });
+    
+    //         // Si l'utilisateur annule, on ne fait rien
+    //         if (!confirmation.isConfirmed) {
+    //             return;
+    //         }
+    
+    //         // Afficher un indicateur de chargement
+    //         sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+    //         sendBtn.disabled = true;
+    
+    //         // Envoyer la requête au serveur pour cet enseignant spécifique
+    //         const response = await fetch('http://localhost:3000/envoyer-mail-enseignant', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify({
+    //                 enseignantId: enseignantId,
+    //                 surveillances: surveillances
+    //             })
+    //         });
+    
+    //         const result = await response.json();
+    
+    //         if (result.success) {
+    //             await Swal.fire({
+    //                 icon: 'success',
+    //                 title: 'Succès',
+    //                 text: `L'email a été envoyé avec succès à ${nomComplet} !`,
+    //                 confirmButtonText: 'OK'
+    //             });
+    //         } else {
+    //             await Swal.fire({
+    //                 icon: 'error',
+    //                 title: 'Erreur',
+    //                 text: result.message || `Erreur lors de l'envoi de l'email à ${nomComplet}`,
+    //                 confirmButtonText: 'OK'
+    //             });
+    //         }
+    //     } catch (error) {
+    //         console.error('Erreur:', error);
+    //         await Swal.fire({
+    //             icon: 'error',
+    //             title: 'Erreur',
+    //             text: `Une erreur s'est produite lors de l'envoi de l'email à ${nomComplet}`,
+    //             confirmButtonText: 'OK'
+    //         });
+    //     } finally {
+    //         // Réinitialiser le bouton
+    //         sendBtn.innerHTML = originalContent;
+    //         sendBtn.disabled = false;
+    //     }
+    // });
+
+    // Récupérer le bouton après l'avoir ajouté au DOM
+    const sendBtn = modal.querySelector('#sendBtn');
+
+    sendBtn.addEventListener('click', async () => {
+      try {
+        // Afficher la boîte de confirmation
+        const confirmation = await Swal.fire({
+          title: 'Confirmation',
+          text: 'Êtes-vous sûr de vouloir envoyer le emplois de surveillance ?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#4361ee',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Oui, envoyer',
+          cancelButtonText: 'Annuler'
+        });
+        // Si l'utilisateur annule, on ne fait rien
+        if (!confirmation.isConfirmed) {
+          return;
+        }
+
+        // Afficher un indicateur de chargement
+        sendBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Envoi en cours...';
+        sendBtn.disabled = true;
+
+        // Envoyer la requête au serveur
+        const response = await fetch('http://localhost:3000/envoyer-mail-enseignant', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                code_enseignant: enseignantId // Assurez-vous d'avoir cette variable disponible
+            })
+        });
+
+        const result = await response.json();
+
+          if (result.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Succès',
+                text: `l'emplois de surveillance a été envoyé avec succès à Pr. ${nomComplet} !`,
+                confirmButtonText: 'OK'
+            });
+          } else {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: result.message || `Erreur lors de l'envoi de l'emplois de surveillance à Pr. ${nomComplet}`,
+              confirmButtonText: 'OK'
+            });
+          }
+      } catch (error) {
+          console.error('Erreur:', error);
+          await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: `Une erreur s'est produite lors de l'envoi de l'emplois de surveillance à Pr. ${nomComplet}`,
+                confirmButtonText: 'OK'
+          });
+      } finally {
+          // Réinitialiser le bouton
+          sendBtn.innerHTML = '<i class="fa fa-envelope"></i> Envoyer';
+          sendBtn.disabled = false;
+      }
       });
-  
+
       modal.querySelector('#printBtn').addEventListener('click', () => {
         const printWindow = window.open('', '_blank');
         const printDate = new Date().toLocaleDateString('fr-FR');
@@ -1014,3 +1153,100 @@ function formatTime(timeString) {
       });
     });
   }
+
+
+
+
+  document.getElementById('sendEmailsBtn').addEventListener('click', async function() {
+    const sendBtn = document.getElementById('sendEmailsBtn');
+    const originalContent = sendBtn.innerHTML;
+    
+    try {
+        // Afficher la boîte de confirmation
+        const confirmation = await Swal.fire({
+            title: 'Confirmation',
+            text: 'Êtes-vous sûr de vouloir envoyer les emplois de surveillances et PVs à tous les enseignants ?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4361ee',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Oui, envoyer',
+            cancelButtonText: 'Annuler'
+        });
+  
+        // Si l'utilisateur annule, on ne fait rien
+        if (!confirmation.isConfirmed) {
+            return;
+        }
+  
+        // Afficher un indicateur de chargement
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+        sendBtn.disabled = true;
+  
+        // Envoyer la requête au serveur envoyer-mail
+        const response = await fetch('http://localhost:3000/envoyer-mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        // Envoyer la requête au serveur envoyer-PV
+        const responsePV = await fetch('http://localhost:3000/envoyer-pv', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            code_enseignant: code_enseignant // Ajoutez ce paramètre à votre route /envoyer-pv
+          })
+        });
+  
+        const result = await response.json();
+
+        const resultPV = await responsePV.json();
+  
+        if (result.success && resultPV.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Succès',
+                text: 'Les emplois de surveillances et PVs ont été envoyés avec succès à tous les enseignants !',
+                confirmButtonText: 'OK'
+            });
+        }else if (result.success && !resultPV.success) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: 'Erreur lors de l\'envoi PVs',
+              confirmButtonText: 'OK'
+            });
+        }else if (!result.success && resultPV.success) {
+            await Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: 'Erreur lors de l\'envoi des emplois de surveillances',
+              confirmButtonText: 'OK'
+            });
+          
+        } else {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: result.message || 'Erreur lors de l\'envoi des emplois de surveillances et PVs',
+                confirmButtonText: 'OK'
+            });
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Une erreur s\'est produite lors de l\'envoi des emplois de surveillances et PVs',
+            confirmButtonText: 'OK'
+        });
+      } finally {
+        // Réinitialiser le bouton
+        sendBtn.innerHTML = originalContent;
+        sendBtn.disabled = false;
+      }
+  });

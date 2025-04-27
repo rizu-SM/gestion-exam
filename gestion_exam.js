@@ -430,7 +430,12 @@ function openEditModal(examId) {
 document.getElementById('saveEditBtn').addEventListener('click', async function () {
     const examId = document.getElementById('editModal').dataset.examId; // Retrieve the exam ID
     if (!examId) {
-        alert("Erreur : ID de l'examen introuvable.");
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Erreur : ID de l\'examen introuvable.',
+            confirmButtonText: 'OK'
+        });
         return;
     }
 
@@ -443,7 +448,12 @@ document.getElementById('saveEditBtn').addEventListener('click', async function 
     const salle = document.getElementById('edit-salle').value;
 
     if (!palier || !specialite || !section || !module || !date_exam || !horaire || !salle) {
-        alert('Tous les champs sont obligatoires.');
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Tous les champs sont obligatoires.',
+            confirmButtonText: 'OK'
+        });
         return;
     }
 
@@ -466,15 +476,31 @@ document.getElementById('saveEditBtn').addEventListener('click', async function 
 
         const result = await response.json();
         if (result.success) {
-            alert('Examen modifié avec succès !');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Succès',
+                text: 'Examen modifié avec succès !',
+                confirmButtonText: 'OK'
+            });
             closeEditModal();
             loadExamens(); // Reload the table
         } else {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Erreur lors de la modification',
+                confirmButtonText: 'OK'
+            });
             alert(result.message || "Erreur lors de la modification");
         }
     } catch (error) {
         console.error('Erreur lors de la modification:', error);
-        alert("Erreur lors de la modification");
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Erreur lors de la modification',
+            confirmButtonText: 'OK'
+        });
     }
 });
 
@@ -698,15 +724,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
     
             if (data.success) {
-                alert('Examen ajouté avec succès!');
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Succès',
+                    text: 'Examen ajouté avec succès!',
+                    confirmButtonText: 'OK'
+                });
                 resetForm();
                 loadExamens(); // Refresh the table
             } else {
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erreur',
+                    text: 'Erreur lors de l\'ajout',
+                    confirmButtonText: 'OK'
+                });
                 alert(data.message || "Erreur lors de l'ajout");
             }
         } catch (error) {
             console.error('Erreur:', error);
-            alert("Erreur lors de l'envoi des données");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Erreur lors de l\'envoi des données',
+                confirmButtonText: 'OK'
+            });
         }
     });
 });
@@ -721,7 +763,12 @@ async function loadFormations() {
         setupPalierDropdown();
     } catch (error) {
         console.error('Erreur dans loadFormations:', error);
-        alert('Erreur lors du chargement des formations');
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Erreur lors du chargement des formations',
+            confirmButtonText: 'OK'
+        });
     }
 }
 
@@ -760,7 +807,12 @@ async function loadExamens() {
         }
     } catch (error) {
         console.error('Erreur lors du chargement des examens:', error);
-        alert('Erreur lors du chargement des examens');
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Erreur lors du chargement des examens',
+            confirmButtonText: 'OK'
+        });
     }
 }
 
@@ -837,7 +889,12 @@ async function deleteExam(id) {
             loadExamens(); // Reload the table
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
-            alert('Erreur lors de la suppression');
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Erreur lors de la suppression:',
+                confirmButtonText: 'OK'
+            });
         }
     }
 }
@@ -911,7 +968,12 @@ document.getElementById('verifyBtn').addEventListener('click', async function() 
         errorModal.style.display = 'flex';
     } catch (error) {
         console.error('Verification failed:', error);
-        alert('Failed to verify exams. Please try again.');
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Failed to verify exams. Please try again.',
+            confirmButtonText: 'OK'
+        });
     } finally {
         verifyBtn.innerHTML = '<i class="fas fa-check"></i> Verifier';
         verifyBtn.disabled = false;
@@ -932,7 +994,8 @@ function openSubmitModal() {
                 document.body.style.overflow = 'hidden';
             }
         })
-        .catch(() => alert("Erreur lors de la vérification."));
+        .catch(() => alert("Erreur lors de la vérification.")
+        );
 }
 
 function closeSubmitModal() {
@@ -1012,10 +1075,28 @@ document.getElementById('confirmSubmitBtn').addEventListener('click', async func
         const exportRes = await fetch('http://localhost:3000/export-examens', { method: 'POST' });
         const exportData = await exportRes.json();
         if (!exportData.success) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Erreur lors de l\'exportation des examens.',
+                confirmButtonText: 'OK'
+            });
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Erreur lors de l\'exportation des examens.',
+                confirmButtonText: 'OK'
+            });
             alert(exportData.message || "Erreur lors de l'exportation des examens.");
             return;
         }
     } catch (e) {
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Erreur lors de l\'exportation des examens.',
+            confirmButtonText: 'OK'
+        });
         alert("Erreur lors de l'exportation des examens.");
         return;
     }
@@ -1029,11 +1110,22 @@ document.getElementById('confirmSubmitBtn').addEventListener('click', async func
         });
         const surveilData = await surveilRes.json();
         if (!surveilData.success) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Erreur lors de la gestion des surveillances.',
+                confirmButtonText: 'OK'
+            });
             alert(surveilData.message || "Erreur lors de la gestion des surveillances.");
             return;
         }
     } catch (e) {
-        alert("Erreur lors de la gestion des surveillances.");
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: 'Erreur lors de la gestion des surveillances.',
+            confirmButtonText: 'OK'
+        });
         return;
     }
 
@@ -1052,11 +1144,20 @@ document.getElementById('confirmSubmitBtn').addEventListener('click', async func
                 alert(pvData.message || "Erreur lors de l'envoi des PV.");
             }
         } catch (e) {
-            alert("Erreur lors de l'envoi des emails ou des PV.");
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: 'Erreur lors de l\'envoi des emails ou des PV.',
+                confirmButtonText: 'OK'
+            });
         }
     }
-
-    alert("Examens soumis et surveillances générées avec succès !");
+    await Swal.fire({
+        icon: 'success',
+        title: 'Succès',
+        text: 'Examens soumis et surveillances générées avec succès !',
+        confirmButtonText: 'OK'
+    });
     closeSubmitModal();
     loadExamens();
 });
