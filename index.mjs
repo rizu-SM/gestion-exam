@@ -994,17 +994,14 @@ app.post("/envoyer-mail", async (req, res) => {
 app.post("/envoyer-pv", async (req, res) => {
   try {
     const [examens] = await pool.query(`
-        SELECT DISTINCT date_exam, horaire, salle, module FROM base_surveillance
-      `);
+      SELECT DISTINCT date_exam, horaire, salle, module 
+      FROM base_surveillance
+    `);
 
     if (examens.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Aucun examen trouvé dans la base de données.",
-      });
+      return res.status(404).json({ success: false, message: "Aucun examen trouvé." });
     }
 
-    // Lancer une instance de Puppeteer
     const browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -1013,385 +1010,595 @@ app.post("/envoyer-pv", async (req, res) => {
     for (const examen of examens) {
       const { date_exam, horaire, salle, module } = examen;
 
-      const [enseignants] = await pool.query(
-        `
-          SELECT b.*, e.nom, e.prenom, e.email1 
-          FROM base_surveillance b
-          JOIN enseignants e ON b.code_enseignant = e.code_enseignant
-          WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ?
-          ORDER BY b.ordre ASC
-          `,
-        [date_exam, horaire, salle, module]
-      );
+      const [principaux] = await pool.query(`
+        SELECT b.*, e.nom, e.prenom, e.email1 
+        FROM base_surveillance b
+        JOIN enseignants e ON b.code_enseignant = e.code_enseignant
+        WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ? AND b.ordre = 1
+        LIMIT 1
+      `, [date_exam, horaire, salle, module]);
 
-      if (enseignants.length === 0) {
-        console.log(
-          `Aucun enseignant trouvé pour l'examen : ${module}, salle : ${salle}, horaire : ${horaire}`
-        );
+      if (principaux.length === 0) {
+        console.log(`Aucun professeur principal trouvé pour ${module} (${salle} ${horaire})`);
         continue;
       }
 
-      const professeurPrincipal = enseignants.find(
-        (enseignant) => enseignant.ordre === 0
-      );
-      if (!professeurPrincipal) {
-        console.log(
-          `Aucun professeur principal trouvé pour l'examen : ${module}, salle : ${salle}, horaire : ${horaire}`
-        );
-        continue;
-      }
+      const professeurPrincipal = principaux[0];
 
-      const emailProfesseurPrincipal = professeurPrincipal.email1;
+      const [sec] = await pool.query(`
+        SELECT b.code_enseignant, e.nom, e.prenom, e.email1, b.ordre
+        FROM base_surveillance b
+        JOIN enseignants e ON b.code_enseignant = e.code_enseignant
+        WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ? AND b.ordre != 1
+        ORDER BY b.ordre
+      `, [date_exam, horaire, salle, module]);
 
-      // Générer le contenu HTML pour le PV
+      const tousEnseignants = [professeurPrincipal, ...sec];
+
       const htmlContent = `
-        <html lang="fr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Procès-Verbal de Surveillance</title>
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              padding: 20px;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 20px;
-            }
-            .header h1 {
-              font-size: 1.8em;
-              color: #2c3e50;
-            }
-            .header p {
-              font-size: 1.2em;
-              color: #7f8c8d;
-            }
-            .info {
-              margin-bottom: 20px;
-            }
-            .info p {
-              margin: 5px 0;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 20px 0;
-            }
-            table th, table td {
-              border: 1px solid #ddd;
-              padding: 8px;
-              text-align: left;
-            }
-            table th {
-              background-color: #f4f4f4;
-              font-weight: bold;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Procès-Verbal de Surveillance</h1>
-            <p>Examen : ${module}</p>
-          </div>
-          <div class="info">
-            <p><strong>Date :</strong> ${date_exam}</p>
-            <p><strong>Horaire :</strong> ${horaire}</p>
-            <p><strong>Salle :</strong> ${salle}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Nom & Prénom</th>
-                <th>Email</th>
-                <th>Palier</th>
-                <th>Spécialité</th>
-                <th>Section</th>
-                <th>Ordre</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${enseignants
-                .map(
-                  (enseignant) => `
-                <tr>
-                  <td>${enseignant.nom} ${enseignant.prenom}</td>
-                  <td>${enseignant.email1}</td>
-                  <td>${enseignant.palier}</td>
-                  <td>${enseignant.specialite}</td>
-                  <td>${enseignant.section}</td>
-                  <td>${enseignant.ordre}</td>
-                </tr>
-              `
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </body>
-        </html>
-      `;
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails de Surveillance</title>
+    <style>
+        @page { 
+            size: A4; 
+            margin: 1cm; 
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+        }
+        .print-header { 
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4361ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            border: 1px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 0.8em;
+        }
+        .header-text {
+            flex: 1;
+        }
+        .print-title {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 1.5em;
+        }
+        .print-subtitle {
+            color: #7f8c8d;
+            font-weight: normal;
+            margin-top: 0;
+            font-size: 1.1em;
+        }
+        .print-section { 
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            color: #4361ee;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .proctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .proctor-card {
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .proctor-card.principal {
+            border-left: 3px solid #4361ee;
+            background-color: #f8f9fe;
+        }
+        .proctor-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #e3e9fd;
+            color: #4361ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .proctor-info {
+            flex-grow: 1;
+        }
+        .proctor-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        .proctor-role {
+            font-size: 0.85em;
+            color: #7f8c8d;
+        }
+        .optional-section {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .print-footer {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #7f8c8d;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        @media print {
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <div class="logo-container">
+            [LOGO]
+        </div>
+        <div class="header-text">
+            <h1 class="print-title">Université de science et de technologie Houari Boumediene</h1>
+            <p class="print-subtitle">Faculté d'informatique</p>
+            <p class="print-subtitle">Détails de Surveillance - Examen du <span id="print-exam-date">${new Date(date_exam).toLocaleDateString('fr-FR')}</span></p>
+        </div>
+    </div>
+    
+    <div class="print-section">
+        <h2 class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            Informations de l'examen
+        </h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Date</div>
+                <div id="exam-date">${new Date(date_exam).toLocaleDateString('fr-FR')}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Heure</div>
+                <div id="exam-time">${horaire}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Salle</div>
+                <div id="exam-room">${salle}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Module</div>
+                <div id="exam-module">${module}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="print-section">
+        <h2 class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Équipe de surveillance
+        </h2>
+        <div class="proctors-grid">
+            ${tousEnseignants.map((enseignant, index) => `
+                <div class="proctor-card ${index === 0 ? 'principal' : ''}">
+                    <div class="proctor-avatar">${enseignant.nom.charAt(0)}${enseignant.prenom.charAt(0)}</div>
+                    <div class="proctor-info">
+                        <div class="proctor-name">${enseignant.nom} ${enseignant.prenom}</div>
+                        <div class="proctor-role">
+                          ${index === 0 
+                            ? 'Professeur Principal' 
+                            : `email: ${enseignant.email1}`} 
+                          (Ordre: ${enseignant.ordre})
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    </div>
+    
+    <div class="print-footer">
+        Généré le <span id="print-date">${new Date().toLocaleDateString()}</span> à <span id="print-time">${new Date().toLocaleTimeString()}</span>
+    </div>
+</body>
+</html>
+`;
 
-      // Générer le PDF avec Puppeteer
+
       const page = await browser.newPage();
       await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
+      const dateExamString = new Date(date_exam).toISOString().split('T')[0]; // "YYYY-MM-DD"
       const pdfPath = path.join(
         process.cwd(),
         "files",
-        `PV_${module}_${date_exam}_${horaire}.pdf`
+        `PV_${module}_${dateExamString.replace(/-/g, '')}_${horaire.replace(/:/g, '')}.pdf`
       );
+
       await page.pdf({
         path: pdfPath,
         format: "A4",
         printBackground: true,
+        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' }
       });
       await page.close();
 
-      // Envoyer le PDF par email
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: "departement.informatique.usthb@gmail.com",
-          pass: "infoUSTHB",
+          user: process.env.EMAIL_USER || "departement.informatique.usthb@gmail.com",
+          pass: process.env.EMAIL_PASS || "pcvt nomo ocsf cows",
         },
       });
 
       try {
         await transporter.sendMail({
           from: '"Administration des Examens" <departement.informatique.usthb@gmail.com>',
-          to: emailProfesseurPrincipal,
-          subject: `Procès-Verbal de Surveillance - Module ${module}`,
-          text: `Cher professeur ${professeurPrincipal.nom} ${professeurPrincipal.prenom},\n\nVeuillez trouver ci-joint le procès-verbal de surveillance pour l'examen suivant :\n\nModule : ${module}\nSalle : ${salle}\nHoraire : ${horaire}\nDate : ${date_exam}\n\nCordialement,\nAdministration des Examens`,
-          attachments: [
-            {
-              filename: `PV_${module}_${date_exam}.pdf`,
-              path: pdfPath,
-            },
-          ],
+          to: professeurPrincipal.email1,
+          subject: `Procès-Verbal - Module ${module}`,
+          html: `
+            <p>Cher professeur ${professeurPrincipal.nom} ${professeurPrincipal.prenom},</p>
+            <p>Voici le procès-verbal pour :</p>
+            <ul>
+              <li><strong>Module :</strong> ${module}</li>
+              <li><strong>Salle :</strong> ${salle}</li>
+              <li><strong>Date :</strong> ${new Date(date_exam).toLocaleDateString('fr-FR')}</li>
+              <li><strong>Horaire :</strong> ${horaire}</li>
+            </ul>
+            <p>Cordialement,<br>Administration des Examens</p>
+          `,
+          attachments: [{
+            filename: `PV_${module}_${dateExamString}.pdf`,
+            path: pdfPath,
+            contentType: 'application/pdf'
+          }],
         });
-        console.log(`E-mail envoyé avec succès à ${emailProfesseurPrincipal}.`);
 
-        // Supprimer le fichier PDF après l'envoi
+        console.log(`Email envoyé à ${professeurPrincipal.email1}`);
         fs.unlinkSync(pdfPath);
+
       } catch (emailError) {
-        console.error(`Erreur lors de l'envoi de l'e-mail :`, emailError);
+        console.error(`Erreur lors de l'envoi de l'email:`, emailError);
       }
     }
 
-    // Fermer le navigateur Puppeteer
     await browser.close();
+    res.json({ success: true, message: "Tous les PV ont été envoyés." });
 
-    res.json({ success: true, message: "Procès-verbaux envoyés avec succès." });
   } catch (error) {
-    console.error("Erreur serveur :", error);
-    res.status(500).json({
-      success: false,
-      message: "Erreur serveur lors de l'envoi des procès-verbaux.",
-    });
+    console.error("Erreur serveur:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-app.post("/envoyer-pv", async (req, res) => {
-  try {
-    const [examens] = await pool.query(`
-        SELECT DISTINCT date_exam, horaire, salle, module FROM base_surveillance
-      `);
 
-    if (examens.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Aucun examen trouvé dans la base de données.",
-      });
+//email poue un seul enseignant
+
+app.post("/envoyer-mail-enseignant", async (req, res) => {
+  try {
+    const { code_enseignant } = req.body;
+
+    if (!code_enseignant) {
+      return res.status(400).json({ success: false, message: "Code enseignant requis." });
     }
 
-    // Lancer une instance de Puppeteer
+    const filesDir = path.join(process.cwd(), "files");
+    if (!fs.existsSync(filesDir)) {
+      fs.mkdirSync(filesDir, { recursive: true });
+    }
+
+    const [examens] = await pool.query(
+      `SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre
+       FROM base_surveillance
+       WHERE code_enseignant = ?`,
+      [code_enseignant]
+    );
+
+    if (examens.length === 0) {
+      return res.status(404).json({ success: false, message: "Aucun examen trouvé pour cet enseignant." });
+    }
+
+    const [enseignant] = await pool.query(
+      `SELECT email1, nom, prenom, grade, departement FROM enseignants WHERE code_enseignant = ?`,
+      [code_enseignant]
+    );
+
+    if (enseignant.length === 0 || !enseignant[0].email1) {
+      return res.status(404).json({ success: false, message: "Enseignant introuvable ou email manquant." });
+    }
+
+    const email = enseignant[0].email1;
+    const nomComplet = `${enseignant[0].prenom} ${enseignant[0].nom}`;
+    const grade = enseignant[0].grade;
+    const departement = enseignant[0].departement;
+
+    const now = new Date();
+    const printDate = now.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
+    const surveillances = examens.map(exam => ({
+      module: exam.module,
+      palier: exam.palier,
+      specialite: exam.specialite,
+      section: exam.section,
+      date_exam: exam.date_exam,
+      horaire: exam.horaire,
+      salle: exam.salle,
+      semestre: exam.semestre
+    }));
+
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
-    for (const examen of examens) {
-      const { date_exam, horaire, salle, module } = examen;
+    const page = await browser.newPage();
 
-      const [enseignants] = await pool.query(
-        `
-          SELECT b.*, e.nom, e.prenom, e.email1 
-          FROM base_surveillance b
-          JOIN enseignants e ON b.code_enseignant = e.code_enseignant
-          WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ?
-          ORDER BY b.ordre ASC
-          `,
-        [date_exam, horaire, salle, module]
-      );
+    const logoPath = path.resolve("logo.png");
 
-      if (enseignants.length === 0) {
-        console.log(
-          `Aucun enseignant trouvé pour l'examen : ${module}, salle : ${salle}, horaire : ${horaire}`
-        );
-        continue;
-      }
-
-      const professeurPrincipal = enseignants.find(
-        (enseignant) => enseignant.ordre === 0
-      );
-      if (!professeurPrincipal) {
-        console.log(
-          `Aucun professeur principal trouvé pour l'examen : ${module}, salle : ${salle}, horaire : ${horaire}`
-        );
-        continue;
-      }
-
-      const emailProfesseurPrincipal = professeurPrincipal.email1;
-
-      // Générer le contenu HTML pour le PV
-      const htmlContent = `
-        <html lang="fr">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Procès-Verbal de Surveillance</title>
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              padding: 20px;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 20px;
-            }
-            .header h1 {
-              font-size: 1.8em;
-              color: #2c3e50;
-            }
-            .header p {
-              font-size: 1.2em;
-              color: #7f8c8d;
-            }
-            .info {
-              margin-bottom: 20px;
-            }
-            .info p {
-              margin: 5px 0;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 20px 0;
-            }
-            table th, table td {
-              border: 1px solid #ddd;
-              padding: 8px;
-              text-align: left;
-            }
-            table th {
-              background-color: #f4f4f4;
-              font-weight: bold;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Procès-Verbal de Surveillance</h1>
-            <p>Examen : ${module}</p>
+    const htmlContent = `
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Détail de vos surveillances d'examens</title>
+        <style>
+          @page { size: A4; margin: 1cm; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+          }
+          .print-header { 
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4361ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+          }
+          .logo-container {
+            width: 80px;
+            height: 80px;
+            border: 1px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 0.8em;
+          }
+          .header-text {
+            flex: 1;
+          }
+          .print-title {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 1.5em;
+          }
+          .print-subtitle {
+            color: #7f8c8d;
+            font-weight: normal;
+            margin-top: 0;
+            font-size: 1.1em;
+          }
+          .print-section { 
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+          }
+          .section-title {
+            color: #4361ee;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+          }
+          .info-item {
+            margin-bottom: 10px;
+          }
+          .info-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.9em;
+          }
+          .print-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+          }
+          .print-table th {
+            background-color: #4361ee;
+            color: white;
+            text-align: left;
+            padding: 10px 12px;
+          }
+          .print-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #ddd;
+          }
+          .print-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+          }
+          .print-footer {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #7f8c8d;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-header">
+            <img src="file://${logoPath}" style="height:59px; width:182px;">
+          <div class="header-text">
+            <h1 class="print-title">Université de science et de technologie Houari Boumediene</h1>
+            <p class="print-subtitle">Faculté d'informatique</p>
           </div>
-          <div class="info">
-            <p><strong>Date :</strong> ${date_exam}</p>
-            <p><strong>Horaire :</strong> ${horaire}</p>
-            <p><strong>Salle :</strong> ${salle}</p>
+        </div>
+
+        <div class="print-section">
+          <h2 class="section-title">Informations de Base</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Nom complet</div>
+              <div>${nomComplet}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Grade</div>
+              <div>${grade}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Département</div>
+              <div>${departement}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Total surveillances</div>
+              <div>${surveillances.length}</div>
+            </div>
           </div>
-          <table>
+        </div>
+
+        <div class="print-section">
+          <h2 class="section-title">Surveillances Assignées</h2>
+          ${surveillances.length > 0 ? `
+          <table class="print-table">
             <thead>
               <tr>
-                <th>Nom & Prénom</th>
-                <th>Email</th>
-                <th>Palier</th>
+                <th>Date</th>
+                <th>Horaire</th>
+                <th>Module</th>
+                <th>Salle</th>
                 <th>Spécialité</th>
-                <th>Section</th>
-                <th>Ordre</th>
               </tr>
             </thead>
             <tbody>
-              ${enseignants
-                .map(
-                  (enseignant) => `
+              ${surveillances.map(surv => `
                 <tr>
-                  <td>${enseignant.nom} ${enseignant.prenom}</td>
-                  <td>${enseignant.email1}</td>
-                  <td>${enseignant.palier}</td>
-                  <td>${enseignant.specialite}</td>
-                  <td>${enseignant.section}</td>
-                  <td>${enseignant.ordre}</td>
+                  <td>${formatDate(surv.date_exam)}</td>
+                  <td>${surv.horaire}</td>
+                  <td>${surv.module}</td>
+                  <td>${surv.salle}</td>
+                  <td>${surv.specialite}</td>
                 </tr>
-              `
-                )
-                .join("")}
+              `).join('')}
             </tbody>
           </table>
-        </body>
-        </html>
-      `;
+          ` : '<p>Aucune surveillance enregistrée</p>'}
+        </div>
 
-      // Générer le PDF avec Puppeteer
-      const page = await browser.newPage();
-      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+        <div class="print-footer">
+          <p>Document généré le ${printDate}</p>
+        </div>
+      </body>
+      </html>
+    `;
 
-      const pdfPath = path.join(
-        process.cwd(),
-        "files",
-        `PV_${module}_${date_exam}_${horaire}.pdf`
-      );
-      await page.pdf({
-        path: pdfPath,
-        format: "A4",
-        printBackground: true,
-      });
-      await page.close();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-      // Envoyer le PDF par email
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: "departement.informatique.usthb@gmail.com",
-          pass: "pcvt nomo ocsf cows",
-        },
-      });
-
-      try {
-        await transporter.sendMail({
-          from: '"Administration des Examens" <departement.informatique.usthb@gmail.com>',
-          to: emailProfesseurPrincipal,
-          subject: `Procès-Verbal de Surveillance - Module ${module}`,
-          text: `Cher professeur ${professeurPrincipal.nom} ${professeurPrincipal.prenom},\n\nVeuillez trouver ci-joint le procès-verbal de surveillance pour l'examen suivant :\n\nModule : ${module}\nSalle : ${salle}\nHoraire : ${horaire}\nDate : ${date_exam}\n\nCordialement,\nAdministration des Examens`,
-          attachments: [
-            {
-              filename: `PV_${module}_${date_exam}.pdf`,
-              path: pdfPath,
-            },
-          ],
-        });
-        console.log(`E-mail envoyé avec succès à ${emailProfesseurPrincipal}.`);
-
-        // Supprimer le fichier PDF après l'envoi
-        fs.unlinkSync(pdfPath);
-      } catch (emailError) {
-        console.error(`Erreur lors de l'envoi de l'e-mail :`, emailError);
-      }
-    }
-
-    // Fermer le navigateur Puppeteer
+    const pdfPath = path.join(filesDir, `${code_enseignant}_examens.pdf`);
+    await page.pdf({
+      path: pdfPath,
+      format: 'A4',
+      margin: {
+        top: '1cm',
+        right: '1cm',
+        bottom: '1cm',
+        left: '1cm'
+      },
+      printBackground: true
+    });
+    await page.close();
     await browser.close();
 
-    res.json({ success: true, message: "Procès-verbaux envoyés avec succès." });
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "departement.informatique.usthb@gmail.com",
+        pass: "pcvt nomo ocsf cows",
+      },
+    });
+
+    await transporter.sendMail({
+      from: '"Administration des examens" <hamrounsamiabdelmalek@gmail.com>',
+      to: email,
+      subject: "Vos examens à surveiller",
+      text: "Veuillez trouver ci-joint vos examens à surveiller.",
+      html: "<p>Veuillez trouver ci-joint le PDF contenant vos examens à surveiller.</p>",
+      attachments: [
+        {
+          filename: `Surveillances_${nomComplet.replace(/\s+/g, '_')}.pdf`,
+          path: pdfPath,
+        },
+      ],
+    });
+
+    console.log(`Email envoyé à ${email}`);
+    fs.unlinkSync(pdfPath);
+
+    res.json({ success: true, message: "Email envoyé avec succès." });
   } catch (error) {
     console.error("Erreur serveur :", error);
-    res.status(500).json({
-      success: false,
-      message: "Erreur serveur lors de l'envoi des procès-verbaux.",
-    });
+    res.status(500).json({ success: false, message: "Erreur serveur lors de l'envoi de l'email." });
   }
 });
 
