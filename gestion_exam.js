@@ -94,10 +94,7 @@
 //     alert("Vérification en cours...\n\nCette fonction vérifiera les conflits d'emploi du temps.");
 // });
 
-// // Soumission
-// document.getElementById('submitBtn').addEventListener('click', function() {
-//     alert("Soumission réussie!\n\nL'emploi du temps a été confirmé.");
-// });
+
 
 // // Fermer le modal en cliquant à l'extérieur
 // document.getElementById('editModal').addEventListener('click', function(e) {
@@ -387,18 +384,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 document.querySelectorAll('.session-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
@@ -491,16 +476,6 @@ document.getElementById('saveEditBtn').addEventListener('click', async function 
         console.error('Erreur lors de la modification:', error);
         alert("Erreur lors de la modification");
     }
-});
-
-// Vérification
-document.getElementById('verifyBtn').addEventListener('click', function() {
-    alert("Vérification en cours...\n\nCette fonction vérifiera les conflits d'emploi du temps.");
-});
-
-// Soumission
-document.getElementById('submitBtn').addEventListener('click', function() {
-    alert("Soumission réussie!\n\nL'emploi du temps a été confirmé.");
 });
 
 // Fermer le modal en cliquant à l'extérieur
@@ -891,6 +866,97 @@ async function deleteExam(id) {
 
 // Load exams on page load
 document.addEventListener('DOMContentLoaded', loadExamens);
+
+
+
+// Vérification
+document.getElementById('verifyBtn').addEventListener('click', async function() {
+    const verifyBtn = document.getElementById('verifyBtn');
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
+    verifyBtn.disabled = true;
+    
+    try {
+        const response = await fetch('http://localhost:3000/verifier-erreurs-examens');
+        const data = await response.json();
+        
+        const errorResults = document.getElementById('errorResults');
+        const errorModal = document.getElementById('errorModal');
+        
+        if (data.success || data.erreurs.length === 0) {
+            errorResults.innerHTML = `
+                <div class="no-errors">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>No Errors Detected</h3>
+                    <p>All exams are properly scheduled with no conflicts.</p>
+                </div>
+            `;
+        } else {
+            errorResults.innerHTML = `
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    ${data.erreurs.length} problèmes de planification ont été trouvés qui nécessitent une attention particulière.
+                </div>
+                <div class="table-responsive">
+                    <table class="error-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Examens concernés</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.erreurs.map(error => `
+                                <tr>
+                                    <td>
+                                        <span class="error-badge ${
+                                            error.type.includes('Conflit') ? 'badge-conflict' : 
+                                            error.type.includes('Doublon') ? 'badge-warning' : 'badge-danger'
+                                        }">
+                                            ${error.type}
+                                        </span>
+                                    </td>
+                                    <td>${error.message}</td>
+                                    <td>
+                                        <div class="exam-ids">
+                                            ${(error.examens || [error.examen]).map(id => `
+                                                <span class="exam-id">#${id}</span>
+                                            `).join('')}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        errorModal.style.display = 'flex';
+    } catch (error) {
+        console.error('Verification failed:', error);
+        alert('Failed to verify exams. Please try again.');
+    } finally {
+        verifyBtn.innerHTML = '<i class="fas fa-check"></i> Verifier';
+        verifyBtn.disabled = false;
+    }
+});
+
+// Close modal handlers
+document.getElementById('closeErrorModal').addEventListener('click', function() {
+    document.getElementById('errorModal').style.display = 'none';
+});
+
+document.getElementById('closeModalBtn').addEventListener('click', function() {
+    document.getElementById('errorModal').style.display = 'none';
+});
+
+// Export functionality (placeholder)
+document.getElementById('exportErrorsBtn').addEventListener('click', function() {
+    alert('Export functionality would be implemented here');
+    // In a real implementation, this would generate a CSV/PDF report
+});
+
 
 
 

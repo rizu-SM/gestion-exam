@@ -47,49 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // // Function to load and display statistics
-// async function loadStatistics() {
-//     try {
-//         // 1. Load Examens Programmés data
-//         const examsResponse = await fetch('http://localhost:3000/exam-stats');
-//         if (!examsResponse.ok) throw new Error('Failed to load exam data');
-//         const examsData = await examsResponse.json();
-        
-//         if (examsData.success) {
-//             document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = examsData.total;
-//             document.querySelector('.stat-card:nth-child(1) .stat-change').textContent = 
-//                 examsData.weeklyChange > 0 ? `+${examsData.weeklyChange} depuis la semaine dernière` :
-//                 examsData.weeklyChange < 0 ? `${examsData.weeklyChange} depuis la semaine dernière` :
-//                 'Aucun changement';
-//         }
-
-//         // 2. Load Surveillances Assignées data
-//         const surveillanceResponse = await fetch('http://localhost:3000/surveillance-stats');
-//         if (!surveillanceResponse.ok) throw new Error('Failed to load surveillance data');
-//         const surveillanceData = await surveillanceResponse.json();
-        
-//         if (surveillanceData.success) {
-//             document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = surveillanceData.total;
-//             document.querySelector('.stat-card:nth-child(2) .stat-change').textContent = 
-//                 surveillanceData.dailyChange > 0 ? `+${surveillanceData.dailyChange} depuis hier` :
-//                 surveillanceData.dailyChange < 0 ? `${surveillanceData.dailyChange} depuis hier` :
-//                 'Aucun changement';
-//         }
-
-//     } catch (error) {
-//         console.error('Error loading statistics:', error);
-//         // Show error state in UI
-//         document.querySelectorAll('.stat-value').forEach(el => el.textContent = '--');
-//         document.querySelectorAll('.stat-change').forEach(el => {
-//             el.textContent = 'Données indisponibles';
-//             el.style.color = '#ff6b6b';
-//         });
-//     }
-// }
-
-// // Optional: Refresh every 5 minutes
-// setInterval(loadStatistics, 300000);
-
-
 async function loadStatistics() {
     try {
         // 1. Load Examens Programmés
@@ -282,8 +239,6 @@ function formatTime(timeString) {
 
 
 function formatResponsableName(surveillance) {
-    // if (!surveillance.code_enseignant) return 'Non assigné';
-    
     // Split and format the code_enseignant
     const nameParts = surveillance.code_enseignant.split('_')
         .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
@@ -368,7 +323,8 @@ async function showExamDetails(examId) {
             `;
             proctorsList.appendChild(assistantCard);
         });
-    
+
+        
         // Show modal
         document.getElementById('examModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
