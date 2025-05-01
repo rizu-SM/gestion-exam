@@ -145,7 +145,8 @@ async function loadAndDisplayUpcomingSurveillances() {
     try {
         // Fetch surveillances from your API endpoint
         const surveillances = await loadUpcomingSurveillances();
-        // console.log("surveillances", surveillances);
+        console.log("surveillances", surveillances);
+        
         
         // Get the table body element
         const tbody = document.querySelector('#surveillancesBody');
@@ -165,6 +166,18 @@ async function loadAndDisplayUpcomingSurveillances() {
         //     const dateB = new Date(b.date_exam + 'T' + b.horaire);
         //     return dateA - dateB; // Sort ascending (earliest first)
         // });
+
+
+        if (upcomingSurveillances.length === 0) {
+            const tbody = document.querySelector('#surveillancesBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center;">
+                        Pas de Surveillances a Venir.
+                    </td>
+                </tr>
+            `;
+        }
         
         // Add each upcoming surveillance to the table
         upcomingSurveillances.forEach(surveillance => {

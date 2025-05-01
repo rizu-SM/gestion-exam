@@ -232,6 +232,17 @@ function initFilters() {
       const tableBody = document.querySelector('.table-container tbody');
       tableBody.innerHTML = '';
 
+      if (data.length === 0) {
+        
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center;">
+                    Pas de Enseignant Disponible.
+                </td>
+            </tr>
+        `;
+    }
+
       data.forEach(enseignant => {
         const row = document.createElement('tr');
         const nomComplet = `${enseignant.nom} ${enseignant.prenom}`;
