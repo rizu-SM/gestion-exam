@@ -536,21 +536,134 @@ tr:hover {
 }
 
 
-.auth-logo {
+
+
+
+
+/* Enhanced Sidebar Styles - Add these to your CSS */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+  }
+  
+  .sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+  }
+  
+  .auth-logo {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
     margin-bottom: 1rem;
-}
-
-.auth-logo i {
-    font-size: 1.75rem;
-    color: var(--primary);
-}
-
-.auth-logo h1 {
+    color: white;
+  }
+  
+  .auth-logo i {
+    font-size: 2rem;
+    color: white;
+  }
+  
+  .auth-logo h1 {
     font-size: 1.5rem;
-    color: var(--primary);
+    color: white;
     font-weight: 700;
-}
+    margin: 0;
+  }
+  
+  .sidebar-menu {
+    padding: 1rem 0;
+  }
+  
+  .menu-title {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    margin: 0.25rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+  
+  .menu-item i {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateX(5px);
+  }
+  
+  .menu-item:hover i {
+    color: white;
+  }
+  
+  .menu-item.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-left: 3px solid white;
+    font-weight: 500;
+  }
+  
+  .menu-item.active i {
+    color: white;
+  }
+  
+  /* Mobile responsive styles */
+  @media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .menu-toggle {
+        display: flex;
+    }
+  }
+  
+  /* Add this to ensure proper spacing with the fixed sidebar */
+  .main-content {
+    margin-left: 280px; /* Should match sidebar width */
+    padding: 2rem;
+    transition: all 0.3s ease;
+  }
+  
+  @media (max-width: 992px) {
+    .main-content {
+        margin-left: 0;
+    }
+  }
+
