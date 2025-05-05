@@ -360,3 +360,15 @@ function getInitials(code) {
         .join('')
         .substring(0, 2);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add confirmation for logout
+    const logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                e.preventDefault();
+            }
+        });
+    }
+});

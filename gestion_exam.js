@@ -1161,5 +1161,16 @@ document.getElementById('confirmSubmitBtn').addEventListener('click', async func
     closeSubmitModal();
     loadExamens();
 });
-
 // Remplacer l'ancien onclick dans le HTML par openSubmitModal()
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Add confirmation for logout
+    const logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                e.preventDefault();
+            }
+        });
+    }
+});
