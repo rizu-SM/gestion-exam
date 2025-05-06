@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -251,6 +251,565 @@
         <div class="welcome-image">
             <img src="C:\Users\Informatics\Downloads\gestion-exam\student_taking_a_college_exam.webp" alt="Exam supervision illustration">
         </div>
+    </div>
+</body>
+</html> -->
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Surveillances d'Examens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #e6f0ff;
+            --secondary: #3f37c9;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #f72585;
+            --gray: #adb5bd;
+            --gray-light: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f5f7fb;
+            color: var(--dark);
+            overflow: hidden;
+        }
+
+        .welcome-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .welcome-content {
+            flex: 1;
+            padding: 4rem;
+            overflow-y: auto;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .welcome-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        .welcome-logo h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .welcome-features {
+            margin: 2rem 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feature-text h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-text p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-light);
+        }
+
+        .welcome-image {
+            flex: 1;
+            background: url('./student_taking_a_college_exam.webp') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .welcome-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(245, 247, 251, 0.4), transparent);
+        }
+
+        @media (max-width: 992px) {
+            .welcome-container {
+                flex-direction: column;
+            }
+
+            .welcome-content {
+                padding: 2rem;
+                max-width: 100%;
+            }
+
+            .welcome-image {
+                display: none;
+            }
+
+            .welcome-logo {
+                justify-content: center;
+            }
+
+            .welcome-actions {
+                justify-content: center;
+            }
+
+            .feature-item {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .welcome-content {
+                padding: 4rem 8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="welcome-content">
+            <div class="welcome-logo">
+                <i class="fas fa-user-shield"></i>
+                <h1>ProctorAssign</h1>
+            </div>
+            
+            <h2 class="welcome-title">Gestion simplifiée des surveillances d'examens</h2>
+            <p class="welcome-subtitle">
+                Optimisez l'organisation des examens avec notre plateforme de gestion des surveillances. 
+                Assignez facilement les surveillants, génez les plannings et simplifiez votre processus.
+            </p>
+            
+            <div class="welcome-features">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Planification intelligente</h3>
+                        <p>Créez et gérez facilement le calendrier des examens avec des outils d'optimisation.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Gestion des surveillants</h3>
+                        <p>Assignez automatiquement ou manuellement les surveillants selon leurs disponibilités.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Notifications automatiques</h3>
+                        <p>Envoyez automatiquement les convocations et rappels aux surveillants.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-actions">
+                <a href="signin.html" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </a>
+                <a href="signup.html" class="btn btn-outline">
+                    <i class="fas fa-user-plus"></i> Créer un compte
+                </a>
+            </div>
+        </div>
+        
+        <div class="welcome-image"></div>
+    </div>
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Surveillances d'Examens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #e6f0ff;
+            --secondary: #3f37c9;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #f72585;
+            --gray: #adb5bd;
+            --gray-light: #e9ecef;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f5f7fb;
+            color: var(--dark);
+            overflow: hidden;
+        }
+
+        .welcome-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .welcome-content {
+            flex: 1;
+            padding: 4rem;
+            overflow-y: auto;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .welcome-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        .welcome-logo h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .welcome-features {
+            margin: 2rem 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feature-text h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-text p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-light);
+        }
+
+        .welcome-image {
+            flex: 1;
+            background: url('./student_taking_a_college_exam.webp') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .welcome-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30%; /* Reduced width of gradient */
+            height: 100%;
+            background: linear-gradient(to right, rgba(245, 247, 251, 0.3), transparent); /* More transparent */
+        }
+
+        @media (max-width: 992px) {
+            .welcome-container {
+                flex-direction: column;
+            }
+
+            .welcome-content {
+                padding: 2rem;
+                max-width: 100%;
+            }
+
+            .welcome-image {
+                display: none;
+            }
+
+            .welcome-logo {
+                justify-content: center;
+            }
+
+            .welcome-title, .welcome-subtitle {
+                text-align: center;
+            }
+
+            .welcome-actions {
+                justify-content: center;
+            }
+
+            .feature-item {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .welcome-content {
+                padding: 4rem 8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="welcome-content">
+            <div class="welcome-logo">
+                <i class="fas fa-user-shield"></i>
+                <h1>ProctorAssign</h1>
+            </div>
+            
+            <h2 class="welcome-title">Gestion simplifiée des surveillances d'examens</h2>
+            <p class="welcome-subtitle">
+                Optimisez l'organisation des examens avec notre plateforme de gestion des surveillances. 
+                Assignez facilement les surveillants, génez les plannings et simplifiez votre processus.
+            </p>
+            
+            <div class="welcome-features">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Planification intelligente</h3>
+                        <p>Créez et gérez facilement le calendrier des examens avec des outils d'optimisation.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Gestion des surveillants</h3>
+                        <p>Assignez automatiquement ou manuellement les surveillants selon leurs disponibilités.</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Notifications automatiques</h3>
+                        <p>Envoyez automatiquement les convocations et rappels aux surveillants.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-actions">
+                <a href="signin.html" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </a>
+                <a href="signup.html" class="btn btn-outline">
+                    <i class="fas fa-user-plus"></i> Créer un compte
+                </a>
+            </div>
+        </div>
+        
+        <div class="welcome-image"></div>
     </div>
 </body>
 </html>

@@ -38,11 +38,11 @@
                 <span>Surveillants</span>
             </a>
             
-            <!-- <div class="menu-title">Notifications</div>
-            <a href="#" class="menu-item">
+            <div class="menu-title">Notifications</div>
+            <a href="notification.html" class="menu-item">
                 <i class="fas fa-bell"></i>
                 <span>Alertes</span>
-            </a> -->
+            </a>
         </nav>
         <!-- Logout Button at Bottom -->
         <div class="sidebar-footer">
@@ -55,11 +55,45 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <header class="header">
+        <!-- <header class="header">
             <h1>Gestion des Surveillants</h1>
             <div class="user-profile">
                 <div class="user-avatar">AD</div>
                 <span>Administrateur</span>
+            </div>
+        </header> -->
+
+        <header class="header">
+            <h1>Gestion des Surveillants</h1>
+            <div class="user-profile" id="userProfile">
+                <div class="user-avatar">AD</div>
+                <span>Administrateur</span>
+                <i class="fas fa-chevron-down profile-arrow"></i>
+                
+                <!-- Dropdown Menu -->
+                <div class="profile-dropdown">
+                    <div class="dropdown-header">
+                        <div class="user-avatar large">AD</div>
+                        <div class="user-info">
+                            <div class="user-name">Administrateur</div>
+                            <div class="user-email">admin@proctorassign.com</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-user"></i>
+                        <span>Mon Profil</span>
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Paramètres</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="welcome_page.html" class="dropdown-item logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Déconnexion</span>
+                    </a>
+                </div>
             </div>
         </header>
 

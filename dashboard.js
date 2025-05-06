@@ -372,3 +372,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const userProfile = document.getElementById('userProfile');
+    
+    // Toggle dropdown
+    userProfile.addEventListener('click', function(e) {
+        e.stopPropagation();
+        this.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function() {
+        userProfile.classList.remove('active');
+    });
+    
+    // Prevent dropdown from closing when clicking inside
+    const dropdown = document.querySelector('.profile-dropdown');
+    dropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+});
