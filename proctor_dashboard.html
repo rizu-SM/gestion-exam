@@ -19,17 +19,13 @@
         </div>
         <nav class="sidebar-menu">
             <div class="menu-title">Navigation</div>
-            <a href="proctor-dashboard.html" class="menu-item active">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Tableau de bord</span>
-            </a>
-            
-            <a href="proctor-assignments.html" class="menu-item">
+
+            <a href="proctor_dashboard.html" class="menu-item active">
                 <i class="fas fa-clipboard-list"></i>
                 <span>Mes Surveillances</span>
             </a>
             
-            <a href="proctor-requests.html" class="menu-item">
+            <a href="proctor_requests.html" class="menu-item">
                 <i class="fas fa-exchange-alt"></i>
                 <span>Demandes</span>
             </a>
@@ -45,10 +41,10 @@
     <!-- Proctor Main Content -->
     <main class="main-content">
         <header class="header">
-            <h1>Tableau de bord Surveillant</h1>
+            <h1>Bonjour Prof. Mekhaldi Mohamed</h1>
             <div class="user-profile" id="userProfile">
                 <div class="user-avatar">AD</div>
-                <span>Prof. Dupont</span>
+                <span>Prof. Mekhaldi</span>
                 <i class="fas fa-chevron-down profile-arrow"></i>
                 
                 <!-- Dropdown Menu -->
@@ -56,8 +52,8 @@
                     <div class="dropdown-header">
                         <div class="user-avatar large">AD</div>
                         <div class="user-info">
-                            <div class="user-name">Prof. Dupont</div>
-                            <div class="user-email">p.dupont@univ.edu</div>
+                            <div class="user-name">Mekhaldi Mohamed</div>
+                            <div class="user-email">m.mekhaldi@edu.usthb.dz</div>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
@@ -82,7 +78,7 @@
         <div class="proctor-stats-container">
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-title">Surveillances ce mois</span>
+                    <span class="stat-title">Surveillances ce semestre</span>
                     <div class="stat-icon exams">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
@@ -99,7 +95,7 @@
                     </div>
                 </div>
                 <div class="stat-value">16</div>
-                <span class="stat-change">Moyenne: 2h/examen</span>
+                <span class="stat-change">Moyenne: 1.5h/examen</span>
             </div>
             
             <div class="stat-card">
@@ -117,7 +113,7 @@
         <!-- Upcoming Surveillances -->
         <div class="table-responsive-container">
             <div class="table-header">
-                <h2 class="section-title">Mes prochaines surveillances</h2>
+                <h2 class="section-title">Mes surveillances</h2>
                 <button class="btn btn-primary">
                     <i class="fas fa-exchange-alt"></i> Demander un changement
                 </button>
@@ -131,19 +127,21 @@
                             <th>Heure</th>
                             <th>Salle</th>
                             <th>Module</th>
-                            <th>Responsable</th>
-                            <th>Statut</th>
+                            <th>Spécialité</th>
+                            <th>Section</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="proctorAssignmentsBody">
                         <tr>
-                            <td>15/05/2023</td>
-                            <td>09:00 - 11:00</td>
+                            <!-- <td>15/05/2023</td>
+                            <td>09:00</td>
                             <td>B12</td>
                             <td>Algorithmes</td>
+                            <td>Informatique</td>
+                            <td>Section A</td>
                             <td>Prof. Martin</td>
-                            <td><span class="status-badge confirmed">Confirmé</span></td>
                             <td>
                                 <button class="action-btn request" title="Demander changement">
                                     <i class="fas fa-exchange-alt"></i>
@@ -152,72 +150,24 @@
                         </tr>
                         <tr>
                             <td>17/05/2023</td>
-                            <td>14:00 - 16:00</td>
+                            <td>14:00</td>
                             <td>A8</td>
-                            <td>Base de données</td>
+                            <td>Algorithmes</td>
+                            <td>Informatique</td>
+                            <td>Section A</td>
                             <td>Dr. Smith</td>
-                            <td><span class="status-badge pending">En attente</span></td>
                             <td>
                                 <button class="action-btn request" title="Demander changement">
                                     <i class="fas fa-exchange-alt"></i>
                                 </button>
                             </td>
-                        </tr>
+                        </tr> -->
                     </tbody>
                 </table>
             </div>
         </div>
 
         
-        <!-- <div class="request-form" id="requestForm" style="display: none;">
-            <h2 class="section-title">
-                <i class="fas fa-exchange-alt"></i>
-                Demande de changement
-            </h2>
-            
-            <form id="surveillanceChangeForm">
-                <div class="form-group">
-                    <label for="surveillanceSelect">Surveillance à modifier</label>
-                    <select id="surveillanceSelect" class="form-control" required>
-                        <option value="">Sélectionnez une surveillance</option>
-                        <option value="1">15/05 - Algorithmes (09:00-11:00, B12)</option>
-                        <option value="2">17/05 - Base de données (14:00-16:00, A8)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="requestType">Type de demande</label>
-                    <select id="requestType" class="form-control" required>
-                        <option value="">Sélectionnez un type</option>
-                        <option value="change">Changement de créneau</option>
-                        <option value="swap">Échange avec un collègue</option>
-                        <option value="cancel">Annulation</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="requestReason">Motif</label>
-                    <textarea id="requestReason" class="form-control" rows="3" 
-                              placeholder="Expliquez la raison de votre demande..." required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="preferredDate">Date préférée (si changement)</label>
-                    <input type="date" id="preferredDate" class="form-control">
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" id="cancelRequest">
-                        Annuler
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> Envoyer la demande
-                    </button>
-                </div>
-            </form>
-        </div> -->
-
-
         <div class="request-form" id="requestForm" style="display: none;">
             <h2 class="section-title">
                 <i class="fas fa-exchange-alt"></i>
@@ -229,8 +179,8 @@
                     <label for="surveillanceSelect">Surveillance à modifier</label>
                     <select id="surveillanceSelect" class="form-control" required>
                         <option value="">Sélectionnez une surveillance</option>
-                        <option value="1">15/05 - Algorithmes (09:00-11:00, B12)</option>
-                        <option value="2">17/05 - Base de données (14:00-16:00, A8)</option>
+                        <option value="1">15/05 - Algorithmes (09:00-10:30, B12)</option>
+                        <option value="2">17/05 - Base de données (14:00-15:30, A8)</option>
                     </select>
                 </div>
                 
@@ -250,18 +200,30 @@
                               placeholder="Expliquez la raison de votre demande..." required></textarea>
                 </div>
                 
-                <div class="form-group" id="preferredDateGroup">
-                    <label for="preferredDate">Date préférée (si changement)</label>
-                    <input type="date" id="preferredDate" class="form-control">
-                </div>
-                
-                <div class="form-group" id="colleagueSelectGroup" style="display: none;">
+                <!-- <div class="form-group" id="colleagueSelectGroup" style="display: none;">
                     <label for="colleagueSelect">Collègue pour échange</label>
                     <select id="colleagueSelect" class="form-control">
                         <option value="">Sélectionnez un collègue</option>
                         <option value="101">Prof. Martin</option>
                         <option value="102">Dr. Smith</option>
                     </select>
+                </div> -->
+                <div class="form-group" id="colleagueSelectGroup" style="display: none;">
+                    <label for="colleagueSearch">Collègue pour échange</label>
+                    <input type="text" id="colleagueSearch" class="form-control" placeholder="Tapez un nom ou prénom...">
+                    <div id="colleagueResults" class="autocomplete-list"></div>
+                </div>
+
+                <div class="form-group" id="colleagueSurveillanceGroup" style="display: none;">
+                    <label for="colleagueSurveillanceSelect">Surveillance du collègue (pour échange)</label>
+                    <select id="colleagueSurveillanceSelect" class="form-control">
+                        <option value="">Sélectionnez une surveillance du collègue</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="preferredDateGroup"  style="display: none;">
+                    <label for="preferredDate">Date préférée (si changement)</label>
+                    <input type="date" id="preferredDate" class="form-control">
                 </div>
                 
                 <div class="form-actions">
@@ -274,161 +236,87 @@
                 </div>
             </form>
         </div>
+
+    <!-- Exam Details Modal (Hidden by default) -->
+    <div class="modal-overlay" id="examModal">
+        <div class="exam-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Détails de l'Examen</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="exam-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Informations de Base
+                    </h3>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Date</div>
+                            <div class="detail-value" id="exam-date"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Heure</div>
+                            <div class="detail-value" id="exam-time"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Salle</div>
+                            <div class="detail-value" id="exam-room"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Module</div>
+                            <div class="detail-value" id="exam-module"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Spécialité</div>
+                            <div class="detail-value" id="exam-department"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Responsable</div>
+                            <div class="detail-value" id="exam-responsible"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="exam-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user-shield"></i>
+                        Surveillants Assignés
+                    </h3>
+                    <div class="proctors-list" id="proctors-list">
+                        <!-- Proctors will be added here dynamically -->
+                    </div>
+                </div>
+                
+                <div class="exam-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        Informations Supplémentaires
+                    </h3>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Étudiants Inscrits</div>
+                            <div class="detail-value" id="exam-students"></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Exigences Spéciales</div>
+                            <div class="detail-value" id="exam-requirements"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="modal-btn btn-outline modal-btn btn-primary" id="printBtn">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+            </div>
+        </div>
+    </div>
+
     </main>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Show/hide request form
-            const showFormButtons = document.querySelectorAll('.action-btn.request, .btn.btn-primary');
-            const requestForm = document.getElementById('requestForm');
-            const cancelButton = document.getElementById('cancelRequest');
-            
-            showFormButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    requestForm.style.display = 'block';
-                    // Scroll to form
-                    requestForm.scrollIntoView({ behavior: 'smooth' });
-                });
-            });
-            
-            cancelButton.addEventListener('click', function() {
-                requestForm.style.display = 'none';
-            });
-            
-            // Form submission
-            const changeForm = document.getElementById('surveillanceChangeForm');
-            changeForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Here you would send the request to your backend
-                // This is just a simulation
-                alert('Demande envoyée avec succès! Les administrateurs en ont été notifiés.');
-                requestForm.style.display = 'none';
-                changeForm.reset();
-                
-                // In a real app, you would update the UI or show a confirmation message
-            });
-            
-            // Dynamic request type fields
-            const requestType = document.getElementById('requestType');
-            const preferredDateGroup = document.querySelector('label[for="preferredDate"]').parentElement;
-            
-            requestType.addEventListener('change', function() {
-                if (this.value === 'change') {
-                    preferredDateGroup.style.display = 'block';
-                } else {
-                    preferredDateGroup.style.display = 'none';
-                }
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-    const requestType = document.getElementById('requestType');
-    const preferredDateGroup = document.getElementById('preferredDateGroup');
-    const colleagueSelectGroup = document.getElementById('colleagueSelectGroup');
-    
-    // Dynamic form fields based on request type
-    requestType.addEventListener('change', function() {
-        preferredDateGroup.style.display = 'none';
-        colleagueSelectGroup.style.display = 'none';
-        
-        if (this.value === 'change') {
-            preferredDateGroup.style.display = 'block';
-        } else if (this.value === 'swap') {
-            colleagueSelectGroup.style.display = 'block';
-        }
-    });
-    
-    // Form submission
-    const changeForm = document.getElementById('surveillanceChangeForm');
-    changeForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Form validation
-        const surveillanceSelect = document.getElementById('surveillanceSelect');
-        const requestReason = document.getElementById('requestReason');
-        
-        if (!surveillanceSelect.value) {
-            alert('Veuillez sélectionner une surveillance');
-            surveillanceSelect.focus();
-            return;
-        }
-        
-        if (!requestType.value) {
-            alert('Veuillez sélectionner un type de demande');
-            requestType.focus();
-            return;
-        }
-        
-        if (!requestReason.value.trim()) {
-            alert('Veuillez expliquer le motif de votre demande');
-            requestReason.focus();
-            return;
-        }
-        
-        // Additional validation for specific types
-        if (requestType.value === 'change' && !document.getElementById('preferredDate').value) {
-            alert('Veuillez sélectionner une date préférée');
-            return;
-        }
-        
-        if (requestType.value === 'swap' && !document.getElementById('colleagueSelect').value) {
-            alert('Veuillez sélectionner un collègue');
-            return;
-        }
-        
-        // Here you would send the data to your backend
-        const formData = {
-            surveillanceId: surveillanceSelect.value,
-            requestType: requestType.value,
-            reason: requestReason.value,
-            preferredDate: requestType.value === 'change' ? document.getElementById('preferredDate').value : null,
-            colleagueId: requestType.value === 'swap' ? document.getElementById('colleagueSelect').value : null
-        };
-        
-        console.log('Form data:', formData); // Replace with actual API call
-        
-        // Show success message
-        alert('Votre demande a été envoyée avec succès aux administrateurs.');
-        
-        // Reset and hide form
-        changeForm.reset();
-        document.getElementById('requestForm').style.display = 'none';
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Add confirmation for logout
-    const logoutBtn = document.querySelector('.logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                e.preventDefault();
-            }
-        });
-    }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const userProfile = document.getElementById('userProfile');
-    
-    // Toggle dropdown
-    userProfile.addEventListener('click', function(e) {
-        e.stopPropagation();
-        this.classList.toggle('active');
-    });
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function() {
-        userProfile.classList.remove('active');
-    });
-    
-    // Prevent dropdown from closing when clicking inside
-    const dropdown = document.querySelector('.profile-dropdown');
-    dropdown.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-});
-    </script>
+    <script src="proctor_dashboard.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demandes de changement</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="proctor_dashboard.css">
+    <style>
+        .requests-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        .requests-filters {
+            display: flex;
+            gap: 1rem;
+        }
+        .request-type-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+            background: #f1f3fa;
+            color: #4361ee;
+        }
+        .request-type-badge.swap { background: #e0f7fa; color: #0097a7; }
+        .request-type-badge.cancel { background: #ffe5e9; color: #f72585; }
+        .request-type-badge.change { background: #e6f0ff; color: #4361ee; }
+        .request-status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .request-status-badge.pending {
+            background: #fff3cd;
+            color: #b68900;
+        }
+        .request-status-badge.accepted {
+            background: #e6f9e6;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="auth-logo">
+                <i class="fas fa-user-shield"></i>
+                <h1>ProctorAssign</h1>
+            </div>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-title">Navigation</div>
+            <a href="proctor_dashboard.html" class="menu-item">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Mes Surveillances</span>
+            </a>
+            <a href="proctor_requests.html" class="menu-item active">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Demandes</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="welcome_page.html" class="menu-item logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Déconnecter</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h1>Mes demandes de changement</h1>
+            <div class="user-profile" id="userProfile">
+                <div class="user-avatar">AD</div>
+                <span>Prof. Mekhaldi</span>
+                <i class="fas fa-chevron-down profile-arrow"></i>
+                
+                <!-- Dropdown Menu -->
+                <div class="profile-dropdown">
+                    <div class="dropdown-header">
+                        <div class="user-avatar large">AD</div>
+                        <div class="user-info">
+                            <div class="user-name">Mekhaldi Mohamed</div>
+                            <div class="user-email">m.mekhaldi@edu.usthb.dz</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-user"></i>
+                        <span>Mon Profil</span>
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Paramètres</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="welcome_page.html" class="dropdown-item logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Déconnexion</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="requests-header">
+            <h2 class="section-title"><i class="fas fa-exchange-alt"></i> Liste des demandes</h2>
+            <div class="requests-filters">
+                <select id="filterType" class="form-control">
+                    <option value="">Tous les types</option>
+                    <option value="change">Changement de créneau</option>
+                    <option value="swap">Échange avec un collègue</option>
+                    <option value="cancel">Annulation</option>
+                </select>
+                <select id="filterStatus" class="form-control">
+                    <option value="">Tous les états</option>
+                    <option value="pending">Demandes en attente</option>
+                    <option value="accepted">Demandes acceptées</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date de la demande</th>
+                        <th>Surveillance</th>
+                        <th>Type</th>
+                        <th>Motif</th>
+                        <th>État</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsBody">
+                    <!-- Requests will be inserted here by JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script src="proctor_requests.js" defer></script>
+</body>
+</html>
