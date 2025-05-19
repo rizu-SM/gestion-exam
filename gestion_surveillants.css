@@ -624,10 +624,19 @@ thead tr:hover {
   color: #aaa;
   cursor: pointer;
   transition: 0.3s;
+
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  cursor: pointer;
+  color: #7f8c8d;
+  transition: color 0.2s ease;
+  padding: 0 0.5rem;
 }
 
 .close:hover {
   color: #333;
+  color: #e74c3c;
 }
 
 .close-btn {

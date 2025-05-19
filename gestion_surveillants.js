@@ -241,7 +241,7 @@ function initFilters() {
                 </td>
             </tr>
         `;
-    }
+      }
 
       data.forEach(enseignant => {
         const row = document.createElement('tr');
@@ -302,104 +302,9 @@ function initFilters() {
       
     }
 
-    // function afficherModalSurveillances(enseignantId, surveillances) {
-    //   const enseignant = enseignantsData.find(e => e.code_enseignant === enseignantId);
-    //   const nomComplet = enseignant ? `${enseignant.nom} ${enseignant.prenom}` : '';
-    
-    //   let htmlContent = `
-    //     <div class="modal-header">
-    //       <h5>Surveillances de ${nomComplet}</h5>
-    //       <span class="close-modal">&times;</span>
-    //     </div>
-    //     <div class="modal-body">
-    //       <table class="surveillance-table">
-    //         <thead>
-    //           <tr>
-    //             <th>Date</th>
-    //             <th>Horaire</th>
-    //             <th>Module</th>
-    //             <th>Salle</th>
-    //             <th>Spécialité</th>
-    //             <th>Actions</th>
-    //           </tr>
-    //         </thead>
-    //         <tbody>
-    //   `;
-    
-    //   if (surveillances.length === 0) {
-    //     htmlContent += `<p class="no-surveillance">Aucune surveillance enregistrée pour cet enseignant.</p>`;
-    //   } else {
-
-    
-    //     surveillances.forEach(surv => {
-    //       htmlContent += `
-    //         <tr data-id="${surv.id}">
-    //           <td>${new Date(surv.date_exam).toLocaleDateString()}</td>
-    //           <td>${surv.horaire}</td>
-    //           <td>${surv.module}</td>
-    //           <td>${surv.salle}</td>
-    //           <td>${surv.specialite}</td>
-    //           <td class="actions-cell">
-    //             <button class="action-btn modify-surveillance" title="Modifier">
-    //               <i class="fas fa-edit"></i>
-    //             </button>
-    //             <button class="action-btn delete-surveillance" title="Supprimer">
-    //               <i class="fas fa-trash"></i>
-    //             </button>
-    //           </td>
-    //         </tr>
-    //       `;
-    //     });
-    
-    //     htmlContent += `
-    //         </tbody>
-    //       </table>
-    //       <div class="total-surveillances">
-    //         Total: ${surveillances.length} surveillance(s)
-    //       </div>
-    //     `;
-    //   }
-    
-    //   htmlContent += `</div>`;
-    
-    //   const modal = document.createElement('div');
-    //   modal.className = 'custom-modal';
-    //   modal.innerHTML = htmlContent;
-    //   document.body.appendChild(modal);
-    
-    //   // Gestion des événements pour les boutons
-    //   modal.querySelectorAll('.modify-surveillance').forEach(btn => {
-    //     btn.addEventListener('click', (e) => {
-    //       const row = e.target.closest('tr');
-    //       const surveillanceId = row.getAttribute('data-id');
-    //       modifierSurveillance(surveillanceId);
-    //     });
-    //   });
-    
-    //   modal.querySelectorAll('.delete-surveillance').forEach(btn => {
-    //     btn.addEventListener('click', (e) => {
-    //       const row = e.target.closest('tr');
-    //       const surveillanceId = row.getAttribute('data-id');
-    //       supprimerSurveillance(surveillanceId, row);
-    //     });
-    //   });
-    
-    //   modal.querySelector('.close-modal').addEventListener('click', () => {
-    //     modal.remove();
-    //   });
-    
-    //   modal.addEventListener('click', (e) => {
-    //     if (e.target === modal) {
-    //       modal.remove();
-    //     }
-    //   });
-    // }
-
-
-
     function afficherModalSurveillances(enseignantId, surveillances) {
       const enseignant = enseignantsData.find(e => e.code_enseignant === enseignantId);
-      const nomComplet = enseignant ? `${enseignant.nom} ${enseignant.prenom}` : '';
+      const nomComplet = enseignant? `${enseignant.nom.charAt(0).toUpperCase()}${enseignant.nom.slice(1).toLowerCase()} ${enseignant.prenom.charAt(0).toUpperCase()}${enseignant.prenom.slice(1).toLowerCase()}`: '';
       const grade = enseignant?.grade || 'Non spécifié';
       const departement = enseignant?.departement || 'Non spécifié';
 
@@ -560,6 +465,20 @@ function initFilters() {
           
           .styled-table tr:hover td {
               background-color: #f8f9fa;
+          }
+
+          .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.75rem;
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: color 0.2s ease;
+            padding: 0 0.5rem;
+          } 
+
+          .close-modal:hover {
+            color: #e74c3c;
           }
       `;
       modal.appendChild(style);
@@ -908,9 +827,6 @@ function formatTime(timeString) {
   return timeString.substring(0, 5); // Takes first 5 characters (HH:MM)
 }
 
-
-
-    
     
     // Fonction pour modifier une surveillance
     async function modifierSurveillance(surveillanceId) {

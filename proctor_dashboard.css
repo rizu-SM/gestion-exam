@@ -323,7 +323,31 @@ body {
     color: var(--gray);
 }
 
-/* Upcoming Surveillances */
+/* Session Selector */
+.session-selector {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.session-btn {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    flex: 1;
+    text-align: center;
+}
+
+.session-btn.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+
 .section-title {
     font-size: 1.25rem;
     font-weight: 600;
@@ -518,6 +542,20 @@ tr:hover {
     font-weight: 500;
     cursor: pointer;
     font-size: 0.875rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: #7f8c8d;
+    transition: color 0.2s ease;
+    padding: 0 0.5rem;
+}
+
+.close-btn:hover {
+    color: #e74c3c;
 }
 
 .btn-outline {
@@ -818,13 +856,14 @@ tr:hover {
 }
 
 .autocomplete-list {
-    position: absolute;
+    position: relative;
     background: #fff;
     border: 1px solid #ddd;
     max-height: 180px;
     overflow-y: auto;
     width: 100%;
     z-index: 10;
+
 }
 .autocomplete-item {
     padding: 0.5rem 1rem;

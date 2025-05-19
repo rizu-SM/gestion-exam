@@ -1,3 +1,12 @@
+document.querySelectorAll('.session-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        // Ici vous pourriez charger les données de la session sélectionnée
+    });
+});
+
+
 document.addEventListener('DOMContentLoaded', function() {
   const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
   function capitalize(str) {
@@ -65,173 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cancelButton.addEventListener('click', function() {
                 requestForm.style.display = 'none';
             });
-        });
-
-//         document.addEventListener('DOMContentLoaded', function() {
-//     const requestType = document.getElementById('requestType');
-//     const preferredDateGroup = document.getElementById('preferredDateGroup');
-//     const colleagueSelectGroup = document.getElementById('colleagueSelectGroup');
-
-//     const colleagueSurveillanceGroup = document.getElementById('colleagueSurveillanceGroup');
-//     const colleagueSurveillanceSelect = document.getElementById('colleagueSurveillanceSelect');
-    
-//     // Dynamic form fields based on request type
-//     requestType.addEventListener('change', function() {
-//         preferredDateGroup.style.display = 'none';
-//         colleagueSelectGroup.style.display = 'none';
-
-//         colleagueSurveillanceGroup.style.display = 'none';
-        
-//         if (this.value === 'change') {
-//             preferredDateGroup.style.display = 'block';
-//         } else if (this.value === 'swap') {
-//             // preferredDateGroup.style.display = 'block';
-//             colleagueSelectGroup.style.display = 'block';
-
-//             colleagueSurveillanceGroup.style.display = 'block';
-//             if (colleagueSearch.dataset.code) {
-//             populateColleagueSurveillances(colleagueSearch.dataset.code);
-//             }
-//         }
-//     });
-
-//     colleagueResults.addEventListener('click', async function(e) {
-//     if (e.target.classList.contains('autocomplete-item')) {
-//         const colleagueCode = e.target.dataset.code;
-//         colleagueSearch.value = e.target.textContent;
-//         colleagueSearch.dataset.code = colleagueCode;
-//         colleagueResults.innerHTML = '';
-//         if (requestType.value === 'swap') {
-//             colleagueSurveillanceGroup.style.display = 'block';
-//             await populateColleagueSurveillances(colleagueCode);
-//         }
-//     }
-// });
-    
-//     const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
-//     const colleagueSearch = document.getElementById('colleagueSearch');
-//     const colleagueResults = document.getElementById('colleagueResults');
-//     let colleagues = [];
-
-//     // Fetch all colleagues (with nbrSS > 0, except self)
-//     async function fetchColleagues() {
-//         if (!enseignant.code_enseignant) return [];
-//         const res = await fetch(`http://localhost:3000/colleagues?exclude=${encodeURIComponent(enseignant.code_enseignant)}`);
-//         return res.ok ? await res.json() : [];
-//     }
-
-//     // On input, filter and show results
-//     colleagueSearch.addEventListener('input', async function() {
-//         const query = this.value.trim().toLowerCase();
-//         if (!colleagues.length) colleagues = await fetchColleagues();
-
-//         colleagueResults.innerHTML = '';
-//         if (query.length < 2) return; // Only search after 2 chars
-
-//         const filtered = colleagues.filter(c =>
-//             c.nom.toLowerCase().includes(query) ||
-//             c.prenom.toLowerCase().includes(query)
-//         );
-
-//         filtered.forEach(c => {
-//             const item = document.createElement('div');
-//             item.className = 'autocomplete-item';
-//             item.textContent = `Prof. ${capitalize(c.nom)} ${capitalize(c.prenom)}`;
-//             item.dataset.code = c.code_enseignant;
-//             item.addEventListener('click', function() {
-//                 colleagueSearch.value = item.textContent;
-//                 colleagueSearch.dataset.code = item.dataset.code;
-//                 colleagueResults.innerHTML = '';
-//             });
-//             colleagueResults.appendChild(item);
-//         });
-//     });
-
-//     // Helper to capitalize
-//     function capitalize(str) {
-//         return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : '';
-//     }
-
-//     // Form validation
-//     const changeForm = document.getElementById('surveillanceChangeForm');
-//     changeForm.addEventListener('submit', async function(e) {
-//     e.preventDefault();
-
-//     // Form validation (as you already have)
-//     const surveillanceSelect = document.getElementById('surveillanceSelect');
-//     const requestReason = document.getElementById('requestReason');
-//     const requestType = document.getElementById('requestType');
-//     const preferredDate = document.getElementById('preferredDate');
-//     const colleagueSelect = document.getElementById('colleagueSelect');
-//     const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
-
-//     if (!surveillanceSelect.value) {
-//         alert('Veuillez sélectionner une surveillance');
-//         surveillanceSelect.focus();
-//         return;
-//     }
-//     if (!requestType.value) {
-//         alert('Veuillez sélectionner un type de demande');
-//         requestType.focus();
-//         return;
-//     }
-//     if (!requestReason.value.trim()) {
-//         alert('Veuillez expliquer le motif de votre demande');
-//         requestReason.focus();
-//         return;
-//     }
-//     if (requestType.value === 'change' && !preferredDate.value) {
-//         alert('Veuillez sélectionner une date préférée');
-//         return;
-//     }
-//     // if (requestType.value === 'swap' && !colleagueSelect.value) {
-//     //     alert('Veuillez sélectionner un collègue');
-//     //     return;
-//     // }
-//     if (requestType.value === 'swap') {
-//             const code = colleagueSearch.dataset.code;
-//             if (!code) {
-//                 alert('Veuillez sélectionner un collègue dans la liste.');
-//                 e.preventDefault();
-//                 return;
-//             }
-//             if (!colleagueSurveillanceSelect.value) {
-//             alert('Veuillez sélectionner une surveillance du collègue');
-//             return;
-//             }
-//         }
-
-//     // Prepare data for backend
-//     const formData = {
-//         code_enseignant: enseignant.code_enseignant,
-//         surveillance_id: surveillanceSelect.value,
-//         type: requestType.value,
-//         motif: requestReason.value,
-//         preferred_date: (requestType.value === 'change' || requestType.value === 'swap') ? preferredDate.value : null,
-//         colleague_code: requestType.value === 'swap' ? colleagueSearch.dataset.code : null,
-//         preferred_surveillance_id: requestType.value === 'swap' ? colleagueSurveillanceSelect.value : null
-//     };
-
-//     try {
-//         const response = await fetch('http://localhost:3000/insert-demandes', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify(formData)
-//         });
-//         const result = await response.json();
-//         if (result.success) {
-//             alert('Votre demande a été envoyée avec succès aux administrateurs.');
-//             changeForm.reset();
-//             document.getElementById('requestForm').style.display = 'none';
-//         } else {
-//             alert(result.error || "Erreur lors de l'envoi de la demande.");
-//         }
-//     } catch (err) {
-//         alert("Erreur réseau ou serveur.");
-//         console.error(err);
-//     }
-// });
-// });
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     // === DOM ELEMENTS ===
@@ -275,48 +118,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     colleagueSearch.addEventListener('input', async function() {
-        const query = this.value.trim().toLowerCase();
-        if (!colleagues.length) colleagues = await fetchColleagues();
+    const query = this.value.trim().toLowerCase();
+    if (!colleagues.length) colleagues = await fetchColleagues();
 
-        colleagueResults.innerHTML = '';
-        if (query.length < 2) return; // Only search after 2 chars
+    colleagueResults.innerHTML = '';
+    if (query.length < 1) return;
 
-        const filtered = colleagues.filter(c =>
-            c.nom.toLowerCase().includes(query) ||
-            c.prenom.toLowerCase().includes(query)
-        );
+    const filtered = colleagues.filter(c =>
+        c.nom.toLowerCase().includes(query) ||
+        c.prenom.toLowerCase().includes(query)
+    );
 
-        filtered.forEach(c => {
-            const item = document.createElement('div');
-            item.className = 'autocomplete-item';
-            item.textContent = `Prof. ${capitalize(c.nom)} ${capitalize(c.prenom)}`;
-            item.dataset.code = c.code_enseignant;
-            item.addEventListener('click', function() {
-                colleagueSearch.value = item.textContent;
-                colleagueSearch.dataset.code = item.dataset.code;
-                colleagueResults.innerHTML = '';
-                if (requestType.value === 'swap') {
-                    colleagueSurveillanceGroup.style.display = 'block';
-                    populateColleagueSurveillances(item.dataset.code);
-                }
-            });
-            colleagueResults.appendChild(item);
-        });
+    filtered.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.textContent = `Prof. ${capitalize(c.nom)} ${capitalize(c.prenom)}`;
+        item.dataset.code = c.code_enseignant;
+        colleagueResults.appendChild(item);
     });
+});
 
-    // When a colleague is selected from autocomplete (for keyboard navigation)
-    colleagueResults.addEventListener('click', async function(e) {
-        if (e.target.classList.contains('autocomplete-item')) {
-            const colleagueCode = e.target.dataset.code;
-            colleagueSearch.value = e.target.textContent;
-            colleagueSearch.dataset.code = colleagueCode;
-            colleagueResults.innerHTML = '';
-            if (requestType.value === 'swap') {
-                colleagueSurveillanceGroup.style.display = 'block';
-                await populateColleagueSurveillances(colleagueCode);
-            }
-        }
-    });
+// Single handler for all autocomplete items (event delegation)
+colleagueResults.addEventListener('click', async function(e) {
+    if (!e.target.classList.contains('autocomplete-item')) return;
+    
+    const colleagueCode = e.target.dataset.code;
+    colleagueSearch.value = e.target.textContent;
+    colleagueSearch.dataset.code = colleagueCode;
+    colleagueResults.innerHTML = '';
+    
+    if (requestType.value === 'swap') {
+        colleagueSurveillanceGroup.style.display = 'block';
+        await populateColleagueSurveillances(colleagueCode);
+    }
+});
 
     // === POPULATE COLLEAGUE'S SURVEILLANCES ===
     async function populateColleagueSurveillances(colleagueCode) {
@@ -468,7 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    loadAndDisplayMySurveillances();
+    loadAllSurveillances();
     loadAndDisplayMyDemandesCount();
 });
 
@@ -498,18 +333,34 @@ async function loadAllSurveillances() {
     try {
         const response = await fetch('http://localhost:3000/surveillance');
         if (!response.ok) throw new Error('Erreur de récupération des surveillances');
-        return await response.json();
+        // return await response.json();
+        allSurveillances = await response.json();  // Récupère les données au format JSON
+        // Get the active session
+        const activeSessionBtn = document.querySelector('.session-btn.active');
+        if (activeSessionBtn) {
+            const activeSession = activeSessionBtn.dataset.semestre;
+            filterExamsBySession(activeSession); // Filter exams by the active session
+        } else {
+            loadAndDisplayMySurveillances(allSurveillances); // Display all exams if no session is selected
+        }
+        return await allSurveillances;
     } catch (error) {
         console.error('Erreur lors du chargement des surveillances:', error);
         return [];
     }
 }
 
-async function loadAndDisplayMySurveillances() {
+// Filter exams by session
+function filterExamsBySession(session) {
+    const filteredSurveillances = allSurveillances.filter(exam => exam.semestre === session);
+    loadAndDisplayMySurveillances(filteredSurveillances);
+}
+
+async function loadAndDisplayMySurveillances(surveillances) {
     const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
     if (!enseignant.code_enseignant) return;
 
-    const surveillances = await loadAllSurveillances();
+    // const surveillances = await loadAllSurveillances();
     const tbody = document.querySelector('#proctorAssignmentsTable tbody');
     if (!tbody) return;
 
@@ -551,12 +402,22 @@ async function loadAndDisplayMySurveillances() {
         const row = document.createElement('tr');
         row.setAttribute('data-exam-id', surv.id);
 
+        console.log("surv.date_exam", surv.date_exam);
+        console.log("surv.horaire", surv.horaire);
+
         // Determine status
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const examDate = new Date(surv.date_exam);
+        const now = new Date();
+        // Extract date and time parts
+        const [year, month, day] = surv.date_exam.slice(0, 10).split('-');
+        const [hour, minute, second] = surv.horaire.split(':');
+        // Construct local datetime
+        const examDateTime = new Date(
+            Number(year), Number(month) - 1, Number(day) + 1,
+            Number(hour), Number(minute), Number(second)
+        );
+        
         let status, statusClass;
-        if (examDate >= today) {
+        if (examDateTime >= now) {
         status = "À venir";
         statusClass = "status-badge confirmed"; // green
         } else {
@@ -588,6 +449,16 @@ async function loadAndDisplayMySurveillances() {
             });
     });
 }
+
+// Event listener for session buttons
+document.querySelectorAll('.session-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const session = this.dataset.semestre; // Get the session from the button's data attribute
+        filterExamsBySession(session); // Filter exams by the selected session
+    });
+});
 
 // Helper functions
 function formatDate(dateString) {
@@ -649,9 +520,10 @@ async function showExamDetails(examId) {
         // Populate basic info
         document.getElementById('exam-date').textContent = formattedDate;
         document.getElementById('exam-time').textContent = formattedTime;
-        document.getElementById('exam-room').textContent = clickedSurveillance.salle;
+        document.getElementById('exam-room').textContent = clickedSurveillance.salle.toUpperCase();
         document.getElementById('exam-module').textContent = clickedSurveillance.module;
         document.getElementById('exam-department').textContent = clickedSurveillance.specialite;
+        document.getElementById('exam-department').textContent = `${clickedSurveillance.specialite.toUpperCase()} - ${clickedSurveillance.section ? clickedSurveillance.section.toUpperCase() : ''}`;
         document.getElementById('exam-responsible').textContent = formatResponsableName(clickedSurveillance);
     
         // Optional fields with fallbacks

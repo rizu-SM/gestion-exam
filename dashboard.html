@@ -54,14 +54,6 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- <header class="header">
-            <h1>Aperçu du Dashboard</h1>
-            <div class="user-profile">
-                <div class="user-avatar">AD</div>
-                <span>Administrateur</span>
-            </div>
-        </header> -->
-
         <header class="header">
             <h1>Aperçu du Dashboard</h1>
             <div class="user-profile" id="userProfile">
@@ -75,7 +67,7 @@
                         <div class="user-avatar large">AD</div>
                         <div class="user-info">
                             <div class="user-name">Administrateur</div>
-                            <div class="user-email">admin@proctorassign.com</div>
+                            <div class="user-email">admin@gmail.com</div>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
@@ -105,7 +97,7 @@
                         <i class="fas fa-book"></i>
                     </div>
                 </div>
-                <div class="stat-value">0</div>
+                <div class="stat-value">--</div>
                 <span class="stat-change">Chargement...</span>
             </div>
             
@@ -116,9 +108,17 @@
                         <i class="fas fa-user-check"></i>
                     </div>
                 </div>
-                <div class="stat-value">0</div>
+                <div class="stat-value">--</div>
                 <span class="stat-change">Chargement...</span>
             </div>
+        </div>
+
+        <!-- Sélecteur de session -->
+        <div class="session-selector">
+            <button class="session-btn active" data-semestre="S1">Session S1</button>
+            <button class="session-btn" data-semestre="S2">Session S2</button>
+            <button class="session-btn" data-semestre="R1">Rattrapage S1</button>
+            <button class="session-btn" data-semestre="R2">Rattrapage S2</button>
         </div>
 
 

@@ -1,3 +1,11 @@
+document.querySelectorAll('.session-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        // Ici vous pourriez charger les données de la session sélectionnée
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Set active menu item
     const currentPage = window.location.pathname.split('/').pop();
@@ -13,12 +21,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     //loadAndDisplayUpcomingSurveillances
-    loadAndDisplayUpcomingSurveillances();
+    // loadAndDisplayUpcomingSurveillances();
+    loadUpcomingSurveillances();
 
     // Load statistics when page loads
     loadStatistics();
 
-    // Refresh every 5 minutes
+    // // Refresh every 5 minutes
     setInterval(loadStatistics, 300000);
 
     // View buttons - Exam Details Modal
@@ -47,48 +56,106 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // // Function to load and display statistics
+// async function loadStatistics() {
+//     try {
+//         // 1. Load Examens Programmés
+//         const examsResponse = await fetch('http://localhost:3000/Examens-Programmes');
+        
+//         if (!examsResponse.ok) {
+//             throw new Error(`HTTP error! status: ${examsResponse.status}`);
+//         }
+        
+//         const examsData = await examsResponse.json();
+        
+//         if (!examsData.success) {
+//             throw new Error(examsData.error || 'Failed to load exam data');
+//         }
+        
+//         updateCard(
+//             '.stat-card:nth-child(1)',
+//             examsData.total,
+//             examsData.weeklyChange,
+//             'semaine dernière'
+//         );
+
+//         // 2. Load Surveillances Assignées
+//         const surveillanceResponse = await fetch('http://localhost:3000//Surveillances-Assignees');
+        
+//         if (!surveillanceResponse.ok) {
+//             throw new Error(`HTTP error! status: ${surveillanceResponse.status}`);
+//         }
+        
+//         const surveillanceData = await surveillanceResponse.json();
+        
+//         if (!surveillanceData.success) {
+//             throw new Error(surveillanceData.error || 'Failed to load surveillance data');
+//         }
+        
+//         updateCard(
+//             '.stat-card:nth-child(2)',
+//             surveillanceData.total,
+//             surveillanceData.dailyChange,
+//             'hier'
+//         );
+
+//     } catch (error) {
+//         console.error('Error loading statistics:', error);
+//         showErrorState();
+//     }
+// }
+
+// Function to load and display statistics for the selected session
 async function loadStatistics() {
     try {
-        // 1. Load Examens Programmés
-        const examsResponse = await fetch('http://localhost:3000/exam-stats');
-        
-        if (!examsResponse.ok) {
-            throw new Error(`HTTP error! status: ${examsResponse.status}`);
+        // 1. Détermination automatique de l'année universitaire (même logique que le backend)
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+        let annee_universitaire;
+        if (currentMonth >= 9) {
+            annee_universitaire = `${currentYear}-${currentYear + 1}`;
+        } else {
+            annee_universitaire = `${currentYear - 1}-${currentYear}`;
         }
-        
+
+        // 2. Récupérer le semestre sélectionné
+        const activeSessionBtn = document.querySelector('.session-btn.active');
+        const selectedSemestre = activeSessionBtn ? activeSessionBtn.dataset.semestre : null;
+
+        // 3. Fetch stats
+        const examsResponse = await fetch('http://localhost:3000/Examens-Programmes');
+        if (!examsResponse.ok) throw new Error(`HTTP error! status: ${examsResponse.status}`);
         const examsData = await examsResponse.json();
-        
-        if (!examsData.success) {
-            throw new Error(examsData.error || 'Failed to load exam data');
-        }
-        
+        if (!examsData.success) throw new Error(examsData.error || 'Failed to load exam data');
+
+        const surveillanceResponse = await fetch('http://localhost:3000/Surveillances-Assignees');
+        if (!surveillanceResponse.ok) throw new Error(`HTTP error! status: ${surveillanceResponse.status}`);
+        const surveillanceData = await surveillanceResponse.json();
+        if (!surveillanceData.success) throw new Error(surveillanceData.error || 'Failed to load surveillance data');
+
+        // 4. Filtrer par semestre ET année universitaire
+        const examStat = examsData.data.find(stat =>
+            stat.semestre === selectedSemestre &&
+            stat.annee_universitaire === annee_universitaire
+        ) || { total: 0, weeklyChange: 0 };
+
+        const surveillanceStat = surveillanceData.data.find(stat =>
+            stat.semestre === selectedSemestre &&
+            stat.annee_universitaire === annee_universitaire
+        ) || { total: 0, dailyChange: 0 };
+
         updateCard(
             '.stat-card:nth-child(1)',
-            examsData.total,
-            examsData.weeklyChange,
+            examStat.total,
+            examStat.weeklyChange,
             'semaine dernière'
         );
-
-        // 2. Load Surveillances Assignées
-        const surveillanceResponse = await fetch('http://localhost:3000/surveillance-stats');
-        
-        if (!surveillanceResponse.ok) {
-            throw new Error(`HTTP error! status: ${surveillanceResponse.status}`);
-        }
-        
-        const surveillanceData = await surveillanceResponse.json();
-        
-        if (!surveillanceData.success) {
-            throw new Error(surveillanceData.error || 'Failed to load surveillance data');
-        }
-        
         updateCard(
             '.stat-card:nth-child(2)',
-            surveillanceData.total,
-            surveillanceData.dailyChange,
+            surveillanceStat.total,
+            surveillanceStat.dailyChange,
             'hier'
         );
-
     } catch (error) {
         console.error('Error loading statistics:', error);
         showErrorState();
@@ -125,6 +192,17 @@ function showErrorState() {
     });
 }
 
+// Rafraîchir les stats quand on change de session
+document.querySelectorAll('.session-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const session = this.dataset.semestre;
+        filterExamsBySession(session);
+        loadStatistics(); // <-- Ajout : recharge les stats pour la session sélectionnée
+    });
+});
+
 
 
 //loadAndDisplayUpcomingSurveillances
@@ -134,17 +212,42 @@ async function loadUpcomingSurveillances() {
         if (!response.ok) {
             throw new Error('Erreur de récupération des données');
         }
-        return await response.json();  // Récupère les données au format JSON
+        allSurveillances = await response.json();  // Récupère les données au format JSON
+        // Get the active session
+        const activeSessionBtn = document.querySelector('.session-btn.active');
+        if (activeSessionBtn) {
+            const activeSession = activeSessionBtn.dataset.semestre;
+            filterExamsBySession(activeSession); // Filter exams by the active session
+        } else {
+            loadAndDisplayUpcomingSurveillances(allSurveillances); // Display all exams if no session is selected
+        }
+        return await allSurveillances;  // Récupère les données au format JSON
     } catch (error) {
         console.error('Error loadUpcomingSurveillances:', error);
         throw error; // Lance une erreur si la récupération échoue
     }
 }
 
-async function loadAndDisplayUpcomingSurveillances() {
+// Filter exams by session
+function filterExamsBySession(session) {
+    const filteredSurveillances = allSurveillances.filter(exam => exam.semestre === session);
+
+    // Now filter by date_exam and horaire (upcoming only)
+    // const now = new Date();
+    // const upcomingSurveillances = filteredSurveillances.filter(surveillance => {
+    //     if (!surveillance.date_exam || !surveillance.horaire) return false;
+    //     // Combine date_exam and horaire
+    //     const examDateTime = new Date(`${surveillance.date_exam}T${surveillance.horaire}`);
+    //     return examDateTime >= now && surveillance.ordre === 1;
+    // });
+
+    loadAndDisplayUpcomingSurveillances(filteredSurveillances);
+}
+
+async function loadAndDisplayUpcomingSurveillances(surveillances) {
     try {
         // Fetch surveillances from your API endpoint
-        const surveillances = await loadUpcomingSurveillances();
+        // const surveillances = await loadUpcomingSurveillances();
         console.log("surveillances", surveillances);
         
         
@@ -154,18 +257,32 @@ async function loadAndDisplayUpcomingSurveillances() {
         
         // 1. Filter upcoming surveillances with ordre = 1
         // 2. Sort by date (nearest first)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Set to beginning of day
+        // const today = new Date();
+        // today.setHours(0, 0, 0, 0); // Set to beginning of day
+
+        // const upcomingSurveillances = surveillances.filter(surveillance => {
+        //     const examDate = new Date(surveillance.date_exam);
+        //     return examDate >= today && surveillance.ordre === 1;
+        // })
+
+        const now = new Date();
 
         const upcomingSurveillances = surveillances.filter(surveillance => {
-            const examDate = new Date(surveillance.date_exam);
-            return examDate >= today && surveillance.ordre === 1;
+            if (!surveillance.date_exam || !surveillance.horaire) return false;
+            // Extract date and time parts
+            const [year, month, day] = surveillance.date_exam.slice(0, 10).split('-');
+            const [hour, minute, second] = surveillance.horaire.split(':');
+            // Construct local datetime
+            const examDateTime = new Date(
+                Number(year), Number(month) - 1, Number(day) + 1,
+                Number(hour), Number(minute), Number(second)
+            );
+            // Debug
+            return examDateTime >= now && surveillance.ordre === 1;
         })
-        // .sort((a, b) => {
-        //     const dateA = new Date(a.date_exam + 'T' + a.horaire);
-        //     const dateB = new Date(b.date_exam + 'T' + b.horaire);
-        //     return dateA - dateB; // Sort ascending (earliest first)
-        // });
+
+
+        console.log("upcomingSurveillances", upcomingSurveillances);
 
 
         if (upcomingSurveillances.length === 0) {
@@ -236,6 +353,16 @@ async function loadAndDisplayUpcomingSurveillances() {
     }
 }
 
+// Event listener for session buttons
+document.querySelectorAll('.session-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const session = this.dataset.semestre; // Get the session from the button's data attribute
+        filterExamsBySession(session); // Filter exams by the selected session
+    });
+});
+
 // Helper function to format date as DD/MM/YYYY
 function formatDate(dateString) {
     const date = new Date(dateString);
@@ -296,9 +423,9 @@ async function showExamDetails(examId) {
         // Populate basic info
         document.getElementById('exam-date').textContent = formattedDate;
         document.getElementById('exam-time').textContent = formattedTime;
-        document.getElementById('exam-room').textContent = clickedSurveillance.salle;
+        document.getElementById('exam-room').textContent = clickedSurveillance.salle.toUpperCase();
         document.getElementById('exam-module').textContent = clickedSurveillance.module;
-        document.getElementById('exam-department').textContent = clickedSurveillance.specialite;
+        document.getElementById('exam-department').textContent = `${clickedSurveillance.specialite.toUpperCase()} - ${clickedSurveillance.section ? clickedSurveillance.section.toUpperCase() : ''}`;
         document.getElementById('exam-responsible').textContent = formatResponsableName(clickedSurveillance);
     
         // Optional fields with fallbacks
