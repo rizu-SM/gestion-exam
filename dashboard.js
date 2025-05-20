@@ -212,7 +212,9 @@ async function loadUpcomingSurveillances() {
         if (!response.ok) {
             throw new Error('Erreur de récupération des données');
         }
-        allSurveillances = await response.json();  // Récupère les données au format JSON
+        allSurveillances = await response.json(); 
+        // Récupère les données au format JSON
+        console.log('allSurveillances', allSurveillances); 
         // Get the active session
         const activeSessionBtn = document.querySelector('.session-btn.active');
         if (activeSessionBtn) {
@@ -231,6 +233,7 @@ async function loadUpcomingSurveillances() {
 // Filter exams by session
 function filterExamsBySession(session) {
     const filteredSurveillances = allSurveillances.filter(exam => exam.semestre === session);
+    console.log("filteredSurveillances", filteredSurveillances);
 
     // Now filter by date_exam and horaire (upcoming only)
     // const now = new Date();
@@ -519,4 +522,17 @@ document.addEventListener('DOMContentLoaded', function() {
     dropdown.addEventListener('click', function(e) {
         e.stopPropagation();
     });
+
+    // Détermination de l'année universitaire
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const annee_universitaire = currentMonth >= 9
+      ? `${currentYear}-${currentYear + 1}`
+      : `${currentYear - 1}-${currentYear}`;
+
+      console.log("Année universitaire actuelle:", annee_universitaire);
+      console.log("Date actuelle:", currentDate);
+      console.log("Mois actuel:", currentMonth);
+      console.log("Année actuelle:", currentYear);
 });

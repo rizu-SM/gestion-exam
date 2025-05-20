@@ -2170,11 +2170,29 @@ app.put('/surveillances/:id', async (req, res) => {
 });
 
 
+// Détermination de l'année universitaire
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const annee_universitaire = currentMonth >= 9
+      ? `${currentYear}-${currentYear + 1}`
+      : `${currentYear - 1}-${currentYear}`;
+
 
 
 app.get('/surveillance', async (req, res) => {
+
+    // Détermination de l'année universitaire
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const annee_universitaireA = currentMonth >= 9
+      ? `${currentYear}-${currentYear + 1}`
+      : `${currentYear - 1}-${currentYear}`;
+    
   try {
-    const [surveillance] = await pool.query("SELECT * FROM base_surveillance ORDER BY date_exam ASC, horaire ASC");
+    const [surveillance] = await pool.query("SELECT * FROM base_surveillance WHERE annee_universitaire = ? ORDER BY date_exam ASC, horaire ASC",
+      [annee_universitaireA]);
     res.json(surveillance);
   } catch (error) {
     console.error("Erreur récupération des surveillances:", error);

@@ -1,3 +1,15 @@
+document.querySelectorAll('.session-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        // Ici vous pourriez charger les données de la session sélectionnée
+    });
+});
+
+
+
+
+
 // Simple modal toggle functionality
 const addProctorBtn = document.getElementById('addProctorBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
