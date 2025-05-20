@@ -107,34 +107,168 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
     }
 
-    function renderRequests(typeFilter = '') {
-        notificationList.innerHTML = '';
-        let filtered = typeFilter ? allRequests.filter(r => r.type === typeFilter) : allRequests;
-        if (filtered.length === 0) {
-            emptyNotifications.style.display = '';
-            return;
-        }
-        emptyNotifications.style.display = 'none';
-        filtered.forEach(req => {
-            const iconClass = req.type === 'cancel' ? 'alert' : req.type === 'swap' ? 'info' : 'warning';
-            const icon = req.type === 'cancel' ? 'fa-exclamation' : req.type === 'swap' ? 'fa-user-friends' : 'fa-clock';
-            notificationList.innerHTML += `
-                <div class="notification-item unread" data-id="${req.id}" style="cursor:pointer;">
-                    <div class="notification-icon ${iconClass}">
-                        <i class="fas ${icon}"></i>
-                    </div>
-                    <div class="notification-content">
-                        <div class="notification-title">
-                            <span>${formatType(req.type)}</span>
-                            <span class="notification-time">${formatDate(req.date_demande)}</span>
-                        </div>
-                        <p class="notification-message">${req.motif}</p>
-                    </div>
-                    <span class="unread-badge"></span>
-                </div>
-            `;
-        });
+    // function renderRequests(typeFilter = '') {
+    //     notificationList.innerHTML = '';
+    //     let filtered = typeFilter ? allRequests.filter(r => r.type === typeFilter) : allRequests;
+    //     if (filtered.length === 0) {
+    //         emptyNotifications.style.display = '';
+    //         return;
+    //     }
+    //     emptyNotifications.style.display = 'none';
+    //     filtered.forEach(req => {
+    //         const iconClass = req.type === 'cancel' ? 'alert' : req.type === 'swap' ? 'info' : 'warning';
+    //         const icon = req.type === 'cancel' ? 'fa-exclamation' : req.type === 'swap' ? 'fa-user-friends' : 'fa-clock';
+    //         notificationList.innerHTML += `
+    //             <div class="notification-item unread" data-id="${req.id}" style="cursor:pointer;">
+    //                 <div class="notification-icon ${iconClass}">
+    //                     <i class="fas ${icon}"></i>
+    //                 </div>
+    //                 <div class="notification-content">
+    //                     <div class="notification-title">
+    //                         <span>${formatType(req.type)}</span>
+    //                         <span class="notification-time">${formatDate(req.date_demande)}</span>
+    //                     </div>
+    //                     <p class="notification-message">${req.motif}</p>
+    //                 </div>
+    //                 <span class="unread-badge"></span>
+    //             </div>
+    //         `;
+    //     });
+    // }
+
+//     let currentPage = 1;
+//     const pageSize = 8;
+
+// // Modifie renderRequests pour n'afficher que la page courante :
+// function renderRequests(typeFilter = '') {
+//     notificationList.innerHTML = '';
+//     let filtered = typeFilter ? allRequests.filter(r => r.type === typeFilter) : allRequests;
+//     const totalPages = Math.ceil(filtered.length / pageSize);
+//     if (filtered.length === 0) {
+//         emptyNotifications.style.display = '';
+//         document.getElementById('pagination').innerHTML = '';
+//         return;
+//     }
+//     emptyNotifications.style.display = 'none';
+
+//     // Découpe la page
+//     const start = (currentPage - 1) * pageSize;
+//     const end = start + pageSize;
+//     const pageItems = filtered.slice(start, end);
+
+//     pageItems.forEach(req => {
+//         const iconClass = req.type === 'cancel' ? 'alert' : req.type === 'swap' ? 'info' : 'warning';
+//         const icon = req.type === 'cancel' ? 'fa-exclamation' : req.type === 'swap' ? 'fa-user-friends' : 'fa-clock';
+//         notificationList.innerHTML += `
+//         <div class="notification-item unread" data-id="${req.id}" style="cursor:pointer;">
+//             <div class="notification-icon ${iconClass}">
+//                 <i class="fas ${icon}"></i>
+//             </div>
+//             <div class="notification-content">
+//                 <div class="notification-title">
+//                     <span>${formatType(req.type)}</span>
+//                     <span class="notification-time">${formatDate(req.date_demande)}</span>
+//                 </div>
+//                 <p class="notification-message">${req.motif}</p>
+//             </div>
+//             <span class="unread-badge"></span>
+//         </div>
+//         `;
+//     });
+
+//     // Pagination
+//     let pagHtml = '';
+//     if (totalPages > 1) {
+//         pagHtml += `<button ${currentPage === 1 ? 'disabled' : ''} id="prevPage">Précédent</button>`;
+//         for (let i = 1; i <= totalPages; i++) {
+//             pagHtml += `<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+//         }
+//         pagHtml += `<button ${currentPage === totalPages ? 'disabled' : ''} id="nextPage">Suivant</button>`;
+//     }
+//     document.getElementById('pagination').innerHTML = pagHtml;
+
+//     // Listeners pagination
+//     if (document.getElementById('prevPage')) {
+//         document.getElementById('prevPage').onclick = () => { currentPage--; renderRequests(typeFilter); };
+//     }
+//     if (document.getElementById('nextPage')) {
+//         document.getElementById('nextPage').onclick = () => { currentPage++; renderRequests(typeFilter); };
+//     }
+//     document.querySelectorAll('.page-btn').forEach(btn => {
+//         btn.onclick = function() {
+//             currentPage = Number(this.dataset.page);
+//             renderRequests(typeFilter);
+//         };
+//     });
+// }
+
+
+let currentPage = 1;
+const pageSize = 8;
+
+function renderRequests(typeFilter = '') {
+    notificationList.innerHTML = '';
+    let filtered = typeFilter ? allRequests.filter(r => r.type === typeFilter) : allRequests;
+    const totalPages = Math.ceil(filtered.length / pageSize);
+
+    if (filtered.length === 0) {
+        emptyNotifications.style.display = '';
+        document.getElementById('pagination').innerHTML = '';
+        return;
     }
+    emptyNotifications.style.display = 'none';
+
+    // Découpe la page
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    const pageItems = filtered.slice(start, end);
+
+    // Affiche les notifications de la page courante
+    pageItems.forEach(req => {
+        const iconClass = req.type === 'cancel' ? 'alert' : req.type === 'swap' ? 'info' : 'warning';
+        const icon = req.type === 'cancel' ? 'fa-exclamation' : req.type === 'swap' ? 'fa-user-friends' : 'fa-clock';
+        notificationList.innerHTML += `
+            <div class="notification-item unread" data-id="${req.id}" style="cursor:pointer;">
+                <div class="notification-icon ${iconClass}">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">
+                        <span>${formatType(req.type)}</span>
+                        <span class="notification-time">${formatDate(req.date_demande)}</span>
+                    </div>
+                    <p class="notification-message">${req.motif}</p>
+                </div>
+                <span class="unread-badge"></span>
+            </div>
+        `;
+    });
+
+    // Pagination
+    let pagHtml = '';
+    if (totalPages > 1) {
+        pagHtml += `<button ${currentPage === 1 ? 'disabled' : ''} id="prevPage">Précédent</button>`;
+        for (let i = 1; i <= totalPages; i++) {
+            pagHtml += `<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        pagHtml += `<button ${currentPage === totalPages ? 'disabled' : ''} id="nextPage">Suivant</button>`;
+    }
+    document.getElementById('pagination').innerHTML = pagHtml;
+
+    // Listeners pagination
+    if (document.getElementById('prevPage')) {
+        document.getElementById('prevPage').onclick = () => { if(currentPage > 1){ currentPage--; renderRequests(typeFilter); } };
+    }
+    if (document.getElementById('nextPage')) {
+        document.getElementById('nextPage').onclick = () => { if(currentPage < totalPages){ currentPage++; renderRequests(typeFilter); } };
+    }
+    document.querySelectorAll('.page-btn').forEach(btn => {
+        btn.onclick = function() {
+            currentPage = Number(this.dataset.page);
+            renderRequests(typeFilter);
+        };
+    });
+}
 
 
 //........................................................................................................................
@@ -544,4 +678,14 @@ function openModal(request) {
         allRequests = await fetchRequests();
         renderRequests();
     })();
+});
+
+// Quand tu changes de filtre, remets currentPage à 1 :
+document.querySelectorAll('.notification-filter').forEach(btn => {
+    btn.onclick = function() {
+        document.querySelectorAll('.notification-filter').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentPage = 1;
+        renderRequests(this.dataset.type);
+    };
 });

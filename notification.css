@@ -725,3 +725,24 @@ body {
     .exam-modal { max-width: 98vw; }
     .modal-header, .modal-footer, .modal-body { padding: 1rem; }
 }
+
+
+.pagination button {
+    margin: 0 2px;
+    padding: 0.4em 1em;
+    border-radius: 6px;
+    border: 1px solid var(--gray-light);
+    background: white;
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 500;
+}
+.pagination button.active,
+.pagination button:hover {
+    background: var(--primary);
+    color: white;
+}
+.pagination button[disabled] {
+    opacity: 0.5;
+    cursor: default;
+} 
