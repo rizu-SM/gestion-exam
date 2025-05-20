@@ -392,7 +392,7 @@ async function loadAndDisplayMySurveillances(surveillances) {
     if (mySurveillances.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align:center;">Aucune surveillance trouvée.</td>
+                <td colspan="8" style="text-align:center;">Pas de Surveillances Assignée.</td>
             </tr>
         `;
         return;

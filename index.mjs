@@ -2473,6 +2473,73 @@ app.post('/insert-demandes', async (req, res) => {
 });
 
 
+// 1. GET /demandes?status=pending
+app.get('/getdemandes', async (req, res) => {
+    const status = req.query.status;
+    try {
+        let sql = `
+            SELECT d.*, s.date_exam, s.horaire, s.module, s.salle
+            FROM demandes d
+            JOIN base_surveillance s ON d.surveillance_id = s.id
+        `;
+        const params = [];
+        if (status) {
+            sql += ' WHERE d.status = ?';
+            params.push(status);
+        }
+        sql += ' ORDER BY d.date_demande DESC';
+        const [rows] = await pool.query(sql, params);
+        const result = rows.map(r => ({
+            id: r.id,
+            type: r.type,
+            motif: r.motif,
+            status: r.status,
+            date_demande: r.date_demande,
+            code_enseignant: r.code_enseignant,
+            colleague_code: r.colleague_code,
+            preferred_date: r.preferred_date,
+            surveillance: {
+                date_exam: r.date_exam,
+                horaire: r.horaire,
+                module: r.module,
+                salle: r.salle
+            }
+        }));
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// 2. PATCH /demandes/:id
+app.patch('/demandeslist/:id', async (req, res) => {
+    const id = req.params.id;
+    const { status, motif_rejet } = req.body;
+    if (!status || !['accepted', 'rejected'].includes(status)) {
+        return res.status(400).json({ error: 'Status invalide' });
+    }
+    try {
+        let sql = 'UPDATE demandes SET status = ?';
+        const params = [status];
+        if (status === 'rejected') {
+            sql += ', motif_rejet = ?';
+            params.push(motif_rejet || '');
+        }
+        sql += ' WHERE id = ?';
+        params.push(id);
+        const [result] = await pool.query(sql, params);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Demande non trouvée' });
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+
 
 app.get('/colleagues', async (req, res) => {
     const exclude = req.query.exclude;
