@@ -122,7 +122,7 @@ async function loadFormations() {
 function initFilters() {
     const palierSelect = document.getElementById('palier');
     const specialiteSelect = document.getElementById('specialite');
-    const semestreSelect = document.getElementById('semestre');
+    const semestreSelect = document.getElementById('semestrex');
     const moduleSelect = document.getElementById('module');
 
     // Remplir le palier
@@ -942,6 +942,7 @@ async function supprimerSurveillance(surveillanceId, rowElement) {
     }
 
     activerRecherche();
+    initFilters();
 
 
     
