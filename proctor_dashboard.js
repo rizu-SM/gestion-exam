@@ -1,12 +1,3 @@
-document.querySelectorAll('.session-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        // Ici vous pourriez charger les données de la session sélectionnée
-    });
-});
-
-
 document.addEventListener('DOMContentLoaded', function() {
   const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
   function capitalize(str) {
@@ -153,13 +144,24 @@ colleagueResults.addEventListener('click', async function(e) {
     }
 });
 
-    // === POPULATE COLLEAGUE'S SURVEILLANCES ===
+    //=== POPULATE COLLEAGUE'S SURVEILLANCES ===
     async function populateColleagueSurveillances(colleagueCode) {
         colleagueSurveillanceSelect.innerHTML = '<option value="">Sélectionnez une surveillance du collègue</option>';
-        // Use the new backend route
+        
+        // Récupère la session sélectionnée
+        const activeBtn = document.querySelector('.session-btn.active');
+        const selectedSession = activeBtn ? activeBtn.dataset.semestre : '';
+
+        // Récupère toutes les surveillances du collègue
         const res = await fetch(`http://localhost:3000/colleagues-enseignant/${encodeURIComponent(colleagueCode)}`);
-        const surveillances = await res.json();
+        let surveillances = await res.json();
+
         console.log("colleugeues",surveillances);
+
+        if (selectedSession) {
+        surveillances = surveillances.filter(s => s.semestre === selectedSession);
+        }
+
         surveillances.forEach(surv => {
         const date = formatDate(surv.date_exam);
         const startTime = formatTime(surv.horaire);
@@ -174,6 +176,7 @@ colleagueResults.addEventListener('click', async function(e) {
         colleagueSurveillanceSelect.appendChild(option);
         });
     }
+
 
     // === FORM VALIDATION AND SUBMISSION ===
     changeForm.addEventListener('submit', async function(e) {
@@ -307,6 +310,34 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAndDisplayMyDemandesCount();
 });
 
+// async function loadAndDisplayMyDemandesCount() {
+//     const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
+//     if (!enseignant.code_enseignant) return;
+
+//     try {
+//         const response = await fetch(`http://localhost:3000/demandes?code_enseignant=${encodeURIComponent(enseignant.code_enseignant)}`);
+//         if (!response.ok) throw new Error('Erreur de récupération des demandes');
+//         const demandes = await response.json();
+
+//         // Récupère la session sélectionnée
+//         const activeBtn = document.querySelector('.session-btn.active');
+//         const selectedSession = activeBtn ? activeBtn.dataset.semestre : '';
+
+//         // Update the third stat card (demandes en attente)
+//         const statCards = document.querySelectorAll('.stat-card');
+//         if (statCards[2]) {
+//             // Count only pending demandes (if you want all, remove the filter)
+//             const pendingCount = demandes.filter(d => d.status === 'pending').length;
+//             statCards[2].querySelector('.stat-value').textContent = pendingCount;
+//             statCards[2].querySelector('.stat-change').textContent = pendingCount === 1 ? "1 nouvelle demande" : `${pendingCount} nouvelles demandes`;
+//         }
+//     } catch (error) {
+//         console.error('Erreur lors du chargement des demandes:', error);
+//     }
+// }
+
+
+
 async function loadAndDisplayMyDemandesCount() {
     const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
     if (!enseignant.code_enseignant) return;
@@ -316,11 +347,19 @@ async function loadAndDisplayMyDemandesCount() {
         if (!response.ok) throw new Error('Erreur de récupération des demandes');
         const demandes = await response.json();
 
+        // Récupère la session sélectionnée
+        const activeBtn = document.querySelector('.session-btn.active');
+        const selectedSession = activeBtn ? activeBtn.dataset.semestre : '';
+        console.log("selectedSession", selectedSession);
+
         // Update the third stat card (demandes en attente)
         const statCards = document.querySelectorAll('.stat-card');
         if (statCards[2]) {
-            // Count only pending demandes (if you want all, remove the filter)
-            const pendingCount = demandes.filter(d => d.status === 'pending').length;
+            // Filtre par status ET par session
+            const pendingCount = demandes.filter(d =>
+                d.status === 'pending' &&
+                (!selectedSession || (d.surveillance && d.surveillance.semestre === selectedSession))
+            ).length;
             statCards[2].querySelector('.stat-value').textContent = pendingCount;
             statCards[2].querySelector('.stat-change').textContent = pendingCount === 1 ? "1 nouvelle demande" : `${pendingCount} nouvelles demandes`;
         }
@@ -450,15 +489,7 @@ async function loadAndDisplayMySurveillances(surveillances) {
     });
 }
 
-// Event listener for session buttons
-document.querySelectorAll('.session-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        const session = this.dataset.semestre; // Get the session from the button's data attribute
-        filterExamsBySession(session); // Filter exams by the selected session
-    });
-});
+
 
 // Helper functions
 function formatDate(dateString) {
@@ -590,10 +621,24 @@ async function populateSurveillanceSelect() {
     const enseignant = JSON.parse(localStorage.getItem('enseignant') || '{}');
     if (!enseignant.code_enseignant) return;
 
+    const activeBtn = document.querySelector('.session-btn.active');
+    const selectedSession = activeBtn ? activeBtn.dataset.semestre : '';
+
+
     const surveillances = await loadAllSurveillances();
-    const mySurveillances = surveillances.filter(
+    // const mySurveillances = surveillances.filter(
+    //     s => s.code_enseignant === enseignant.code_enseignant
+    // );
+
+    let mySurveillances = surveillances.filter(
         s => s.code_enseignant === enseignant.code_enseignant
     );
+
+    // Filtre aussi par session sélectionnée
+    if (selectedSession) {
+        mySurveillances = mySurveillances.filter(s => s.semestre === selectedSession);
+        // Remarque : s.session doit exister dans tes objets surveillances
+    }
 
     const select = document.getElementById('surveillanceSelect');
     if (!select) return;
@@ -619,5 +664,69 @@ async function populateSurveillanceSelect() {
 // Call this after DOMContentLoaded and after surveillances are loaded
 document.addEventListener('DOMContentLoaded', function() {
     populateSurveillanceSelect();
-    //populateColleagueSelect();
+});
+
+// document.querySelectorAll('.session-btn').forEach(btn => {
+//     btn.addEventListener('click', function() {
+//         document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+//         this.classList.add('active');
+//         populateSurveillanceSelect();
+//         // const colleagueCode = document.getElementById('colleagueSearch').dataset.code;
+//         // if (colleagueCode) {
+//         //     populateColleagueSurveillances(colleagueCode);
+//         // }
+//         const form = document.getElementById('surveillanceChangeForm');
+//         if (form) {
+//             form.reset();
+//         }
+//         // Vider aussi les champs personnalisés/autocomplétion si besoin
+//         document.getElementById('colleagueResults')?.innerHTML = '';
+//         document.getElementById('colleagueSurveillanceSelect')?.innerHTML = '<option value="">Sélectionnez une surveillance du collègue</option>';
+        
+//     });
+// });
+
+
+
+document.querySelectorAll('.session-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const session = this.dataset.semestre; // Get the session from the button's data attribute
+
+        const colleagueSurveillanceGroup = document.getElementById('colleagueSurveillanceGroup');
+        const colleagueSelectGroup = document.getElementById('colleagueSelectGroup');
+        const preferredDateGroup = document.getElementById('preferredDateGroup');
+
+        preferredDateGroup.style.display = 'none';
+        colleagueSelectGroup.style.display = 'none';
+        colleagueSurveillanceGroup.style.display = 'none';
+
+        // // Vider tous les champs du formulaire de demande
+        // const form = document.getElementById('surveillanceChangeForm');
+        // if (form) form.reset();
+
+        // // Vider les champs personnalisés/autocomplétion
+        // const colleagueSearch = document.getElementById('colleagueSearch');
+        // if (colleagueSearch) {
+        //     colleagueSearch.value = '';
+        //     delete colleagueSearch.dataset.code;
+        // }
+        // const colleagueResults = document.getElementById('colleagueResults');
+        // if (colleagueResults) colleagueResults.innerHTML = '';
+        // const colleagueSurveillanceSelect = document.getElementById('colleagueSurveillanceSelect');
+        // if (colleagueSurveillanceSelect) {
+        //     colleagueSurveillanceSelect.innerHTML = '<option value="">Sélectionnez une surveillance du collègue</option>';
+        // }
+
+        // // Fermer le formulaire
+        const requestForm = document.getElementById('requestForm');
+        if (requestForm) requestForm.style.display = 'none';
+
+        filterExamsBySession(session); // Filter exams by the selected session
+
+        populateSurveillanceSelect();
+
+        loadAndDisplayMyDemandesCount();
+    });
 });

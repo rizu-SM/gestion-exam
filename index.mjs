@@ -2397,16 +2397,31 @@ app.get('/demandes', async (req, res) => {
     const code_enseignant = req.query.code_enseignant;
     if (!code_enseignant) return res.status(400).json({ error: 'code_enseignant requis' });
 
+    // Détermination de l'année universitaire
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const annee_universitaire = currentMonth >= 9
+      ? `${currentYear}-${currentYear + 1}`
+      : `${currentYear - 1}-${currentYear}`;
+
+    // Calcule les bornes de l'année universitaire
+    const startYear = parseInt(annee_universitaire.split('-')[0], 10);
+    const endYear = parseInt(annee_universitaire.split('-')[1], 10);
+    const dateStart = `${startYear}-09-01 00:00:00`;
+    const dateEnd = `${endYear}-08-31 23:59:59`;
+    
     try {
         // Join with base_surveillance to get surveillance details
         const [rows] = await pool.query(
             `SELECT d.*, 
-                    s.date_exam, s.horaire, s.module, s.salle 
+                    s.semestre, s.date_exam, s.horaire, s.module, s.salle, s.annee_universitaire
              FROM demandes d
              JOIN base_surveillance s ON d.surveillance_id = s.id
              WHERE d.code_enseignant = ?
+               AND d.date_demande >= ? AND d.date_demande <= ?
              ORDER BY d.date_demande DESC`,
-            [code_enseignant]
+            [code_enseignant, dateStart, dateEnd]
         );
         // Format for frontend: put surveillance details in a nested object
         const result = rows.map(r => ({
@@ -2416,10 +2431,12 @@ app.get('/demandes', async (req, res) => {
             status: r.status,
             date_demande: r.date_demande,
             surveillance: {
+                semestre: r.semestre,
                 date_exam: r.date_exam,
                 horaire: r.horaire,
                 module: r.module,
-                salle: r.salle
+                salle: r.salle,
+                annee_universitaire: r.annee_universitaire
             }
         }));
         res.json(result);
@@ -2492,17 +2509,85 @@ app.post('/insert-demandes', async (req, res) => {
 
 
 // 1. GET /demandes?status=pending
+// app.get('/getdemandes', async (req, res) => {
+//     // Détermination de l'année universitaire
+//     const currentDate = new Date();
+//     const currentMonth = currentDate.getMonth() + 1;
+//     const currentYear = currentDate.getFullYear();
+//     const annee_universitaire = currentMonth >= 9
+//       ? `${currentYear}-${currentYear + 1}`
+//       : `${currentYear - 1}-${currentYear}`;
+
+//     // Calcule les bornes de l'année universitaire
+//     const startYear = parseInt(annee_universitaire.split('-')[0], 10);
+//     const endYear = parseInt(annee_universitaire.split('-')[1], 10);
+//     const dateStart = `${startYear}-09-01 00:00:00`;
+//     const dateEnd = `${endYear}-08-31 23:59:59`;
+    
+//     const status = req.query.status;
+//     try {
+//         let sql = `
+//             SELECT d.*, s.date_exam, s.horaire, s.module, s.salle
+//             FROM demandes d
+//             JOIN base_surveillance s ON d.surveillance_id = s.id
+//             WHERE d.date_demande >= ? AND d.date_demande <= ?
+//         `;
+//         const params = [dateStart, dateEnd];
+//         if (status) {
+//             sql += ' WHERE d.status = ?';
+//             params.push(status);
+//         }
+//         sql += ' ORDER BY d.date_demande DESC';
+//         const [rows] = await pool.query(sql, params);
+//         const result = rows.map(r => ({
+//             id: r.id,
+//             type: r.type,
+//             motif: r.motif,
+//             status: r.status,
+//             date_demande: r.date_demande,
+//             code_enseignant: r.code_enseignant,
+//             colleague_code: r.colleague_code,
+//             preferred_date: r.preferred_date,
+//             surveillance: {
+//                 date_exam: r.date_exam,
+//                 horaire: r.horaire,
+//                 module: r.module,
+//                 salle: r.salle
+//             }
+//         }));
+//         res.json(result);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ error: 'Erreur serveur' });
+//     }
+// });
+
 app.get('/getdemandes', async (req, res) => {
+    // Détermination de l'année universitaire
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const annee_universitaire = currentMonth >= 9
+      ? `${currentYear}-${currentYear + 1}`
+      : `${currentYear - 1}-${currentYear}`;
+
+    // Calcule les bornes de l'année universitaire
+    const startYear = parseInt(annee_universitaire.split('-')[0], 10);
+    const endYear = parseInt(annee_universitaire.split('-')[1], 10);
+    const dateStart = `${startYear}-09-01 00:00:00`;
+    const dateEnd = `${endYear}-08-31 23:59:59`;
+
     const status = req.query.status;
     try {
         let sql = `
             SELECT d.*, s.date_exam, s.horaire, s.module, s.salle
             FROM demandes d
             JOIN base_surveillance s ON d.surveillance_id = s.id
+            WHERE d.date_demande >= ? AND d.date_demande <= ?
         `;
-        const params = [];
+        const params = [dateStart, dateEnd];
         if (status) {
-            sql += ' WHERE d.status = ?';
+            sql += ' AND d.status = ?';
             params.push(status);
         }
         sql += ' ORDER BY d.date_demande DESC';
@@ -2590,6 +2675,15 @@ app.get('/colleagues', async (req, res) => {
 // });
 
 app.get('/colleagues-enseignant/:id', async (req, res) => {
+  // Détermination de l'année universitaire
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
+  const currentYear = currentDate.getFullYear();
+  const annee_universitaire = currentMonth >= 9
+    ? `${currentYear}-${currentYear + 1}`
+    : `${currentYear - 1}-${currentYear}`;
+
+  
   try {
     const [surveillances] = await pool.query(`
       SELECT 
@@ -2598,12 +2692,14 @@ app.get('/colleagues-enseignant/:id', async (req, res) => {
         horaire, 
         module, 
         salle, 
-        specialite
+        specialite,
+        semestre
       FROM base_surveillance 
       WHERE code_enseignant = ?
-      GROUP BY date_exam, horaire, module, salle, specialite
+        AND annee_universitaire = ?
+      GROUP BY date_exam, horaire, module, salle, specialite, semestre
       ORDER BY date_exam DESC
-    `, [req.params.id]);
+    `, [req.params.id, annee_universitaire]);
 
     res.json(surveillances);
     console.log("Surveillances:", surveillances);
@@ -2612,6 +2708,66 @@ app.get('/colleagues-enseignant/:id', async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
   
+});
+
+
+app.get('/surveillancesxbase', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        e.*, 
+        b.id as surveillance_id,
+        b.semestre, 
+        b.annee_universitaire, 
+        b.date_exam, 
+        b.horaire, 
+        b.module, 
+        b.salle, 
+        b.specialite, 
+        b.section, 
+        b.palier
+      FROM enseignants e
+      LEFT JOIN base_surveillance b ON e.code_enseignant = b.code_enseignant
+      WHERE e.etat = 'admin'
+    `);
+
+    const result = {};
+
+    rows.forEach(row => {
+      const code = row.code_enseignant;
+      if (!result[code]) {
+        result[code] = {
+          code_enseignant: row.code_enseignant,
+          nom: row.nom,
+          prenom: row.prenom,
+          email1: row.email1,
+          departement: row.departement,
+          grade: row.grade,
+          surveillances: []
+        };
+      }
+
+      if (row.semestre && row.annee_universitaire) {
+        result[code].surveillances.push({
+          id: row.surveillance_id,
+          semestre: row.semestre,
+          annee_universitaire: row.annee_universitaire,
+          date_exam: row.date_exam,
+          horaire: row.horaire,
+          module: row.module,
+          salle: row.salle,
+          specialite: row.specialite,
+          section: row.section,
+          palier: row.palier
+        });
+      }
+    });
+
+    res.json(Object.values(result));
+  } catch (err) {
+    console.error("Erreur récupération jointure:", err);
+    res.status(500).send("Erreur serveur");
+  }
 });
 
 const PORT = 3000;
