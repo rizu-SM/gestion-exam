@@ -907,9 +907,14 @@ document.getElementById('verifyBtn').addEventListener('click', async function() 
     const verifyBtn = document.getElementById('verifyBtn');
     verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...';
     verifyBtn.disabled = true;
-    
+
+    // Get selected session
+    const activeSessionBtn = document.querySelector('.session-btn.active');
+    const session = activeSessionBtn ? activeSessionBtn.dataset.semestre : '';
+
     try {
-        const response = await fetch('http://localhost:3000/verifier-erreurs-examens');
+        // Pass session as query param
+        const response = await fetch(`http://localhost:3000/verifier-erreurs-examens?session=${encodeURIComponent(session)}`);
         const data = await response.json();
         
         const errorResults = document.getElementById('errorResults');
@@ -981,8 +986,12 @@ document.getElementById('verifyBtn').addEventListener('click', async function() 
 });
 
 function openSubmitModal() {
-    // 1. Vérification avant ouverture
-    fetch('http://localhost:3000/verifier-erreurs-examens')
+    // Get selected session
+    const activeSessionBtn = document.querySelector('.session-btn.active');
+    const session = activeSessionBtn ? activeSessionBtn.dataset.semestre : '';
+
+    // Vérification avant ouverture, filtrée par session
+    fetch(`http://localhost:3000/verifier-erreurs-examens?session=${encodeURIComponent(session)}`)
         .then(res => res.json())
         .then(data => {
             if (!data.success && data.erreurs && data.erreurs.length > 0) {
@@ -994,10 +1003,8 @@ function openSubmitModal() {
                 document.body.style.overflow = 'hidden';
             }
         })
-        .catch(() => alert("Erreur lors de la vérification.")
-        );
+        .catch(() => alert("Erreur lors de la vérification."));
 }
-
 function closeSubmitModal() {
     document.getElementById('submitModal').style.display = 'none';
     document.body.style.overflow = 'auto';
@@ -1195,3 +1202,4 @@ document.addEventListener('DOMContentLoaded', function() {
         e.stopPropagation();
     });
 });
+2
