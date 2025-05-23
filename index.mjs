@@ -969,7 +969,14 @@ app.post("/ajouter-examen", async (req, res) => {
 
 app.get('/verifier-erreurs-examens', async (req, res) => {
   try {
-      const [examens] = await pool.query("SELECT * FROM exam_temp");
+      const session = req.query.session; // Get session from query
+      let examensQuery = "SELECT * FROM exam_temp";
+      let queryParams = [];
+      if (session) {
+          examensQuery += " WHERE semestre = ?";
+          queryParams.push(session);
+      }
+      const [examens] = await pool.query(examensQuery, queryParams);
       const [planingV] = await pool.query("SELECT * FROM planingV");
 
       const erreurs = [];

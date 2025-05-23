@@ -182,7 +182,7 @@ function initFilters() {
   document.getElementById("ajouter").addEventListener("click", async () => {
     const palier = document.getElementById("palier").value;
     const specialite = document.getElementById("specialite").value;
-    const semestre = document.getElementById("semestre").value;
+    const semestre = document.getElementById("semestrex").value;
     const section = document.getElementById("section").value;
     const date_exam = document.getElementById("date").value;
     const horaire = document.getElementById("heure").value;
@@ -910,21 +910,84 @@ async function supprimerSurveillance(surveillanceId, rowElement) {
     ----------------------------------------------------------------------------------------------*/
   document.addEventListener('DOMContentLoaded', function() {
     let enseignantsData = [];
+    let currentSemester = 'S1'; // Semestre par défaut
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const annee_universitaire = currentMonth >= 9
+        ? `${currentYear}-${currentYear + 1}`
+        : `${currentYear - 1}-${currentYear}`;
 
     initializeAndUpdate();
 
-    fetch('http://localhost:3000/surveillancesxbase')
-      .then(response => response.json())
-      .then(data => {
-        enseignantsData = data;
-        afficherEnseignants(data);
+    // Fonction principale pour charger les données
+    function loadData() {
+        const loader = showLoader();
         
-        let totalSurveillances = data.reduce((acc, enseignant) => acc + (enseignant.nbrSS || 0), 0);
-        document.getElementById("total-surveillances").textContent = totalSurveillances;
-        document.getElementById("total-surveillants").textContent = data.length;
-      })
-      .catch(error => console.error('Erreur:', error));
+        fetch('http://localhost:3000/surveillancesxbase')
+            .then(response => response.json())
+            .then(data => {
+                enseignantsData = data;
+                afficherEnseignants(data);
+                updateStatsCards(data, currentSemester, annee_universitaire);
+                console.log("Données chargées:", data);
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showToast("Erreur lors du chargement des données", "error");
+            })
+            .finally(() => hideLoader());
+    }
 
+    // Fonction pour mettre à jour les cartes statistiques
+    function updateStatsCards(data, semester, academicYear) {
+        // Calculer le nombre total de surveillants (tous semestres confondus)
+        const totalSurveillants = data.length;
+        
+        // Filtrer les surveillances pour le semestre et année en cours
+        const surveillancesCurrentPeriod = data.flatMap(enseignant => 
+            enseignant.surveillances.filter(s => 
+                s.semestre === semester && 
+                s.annee_universitaire === academicYear
+            )
+        );
+        
+        // Calculer le nombre total de surveillances pour la période
+        const totalSurveillances = surveillancesCurrentPeriod.length;
+        
+        // Compter le nombre de surveillants ayant au moins une surveillance dans la période
+        const totalAssigne = data.filter(enseignant => 
+            enseignant.surveillances.some(s => 
+                s.semestre === semester && 
+                s.annee_universitaire === academicYear
+            )
+        ).length;
+
+        // Mettre à jour les cartes
+        document.getElementById("total-surveillants").textContent = totalSurveillants;
+        document.getElementById("total-surveillances").textContent = totalSurveillances;
+        document.getElementById("total_assigne").textContent = totalAssigne;
+    }
+
+    // Gestion des boutons de semestre
+    const semesterButtons = document.querySelectorAll('.session-btn');
+    semesterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Retirer la classe active de tous les boutons
+            semesterButtons.forEach(btn => btn.classList.remove('active'));
+            // Ajouter la classe active au bouton cliqué
+            this.classList.add('active');
+            // Mettre à jour le semestre courant
+            currentSemester = this.value;
+            // Mettre à jour les statistiques
+            updateStatsCards(enseignantsData, currentSemester, annee_universitaire);
+        });
+    });
+
+    // Chargement initial
+    loadData();
+
+    // Filtres
     document.getElementById('department-filter').addEventListener('change', applyFilters);
     document.getElementById('grade-filter').addEventListener('change', applyFilters);
 
@@ -935,10 +998,11 @@ async function supprimerSurveillance(surveillanceId, rowElement) {
         const filtered = enseignantsData.filter(enseignant => {
             const matchesDept = !selectedDept || (enseignant.departement && enseignant.departement.toLowerCase() === selectedDept);
             const matchesGrade = !selectedGrade || (enseignant.grade && enseignant.grade.toLowerCase().includes(selectedGrade));
-            return matchesDept && matchesGrade; // Both filters must match
+            return matchesDept && matchesGrade;
         });
 
         afficherEnseignants(filtered);
+        updateStatsCards(filtered, currentSemester, annee_universitaire);
     }
 
     activerRecherche();
