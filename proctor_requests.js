@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     function formatStatus(status) {
         if (status === 'pending') return '<span class="request-status-badge pending">En attente</span>';
         if (status === 'accepted') return '<span class="request-status-badge accepted">Acceptée</span>';
+        if (status === 'declined') return '<span class="request-status-badge rejected">Rejetée</span>';
         return '';
     }
     function formatSurveillance(s) {

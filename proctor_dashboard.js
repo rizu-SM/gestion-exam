@@ -55,11 +55,52 @@ document.addEventListener('DOMContentLoaded', function() {
             const cancelButton = document.getElementById('cancelRequest');
             
             showFormButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    requestForm.style.display = 'block';
-                    // Scroll to form
-                    requestForm.scrollIntoView({ behavior: 'smooth' });
-                });
+                // button.addEventListener('click', function() {
+                //     requestForm.style.display = 'block';
+                //     // Scroll to form
+                //     requestForm.scrollIntoView({ behavior: 'smooth' });
+                // });
+
+                button.addEventListener('click', async function () {
+            try {
+                // Récupère le semestre sélectionné
+                const activeBtn = document.querySelector('.session-btn.active');
+                const selectedSession = activeBtn ? activeBtn.dataset.semestre : null;
+
+                if (!selectedSession) {
+                    alert('Veuillez sélectionner un semestre avant de faire une demande.');
+                    return;
+                }
+
+                // Récupère la date du premier examen pour le semestre sélectionné
+                const response = await fetch(`http://localhost:3000/first-exam-date?semestre=${encodeURIComponent(selectedSession)}`);
+                if (!response.ok) throw new Error('Erreur lors de la récupération de la date du premier examen.');
+                const { firstExamDate } = await response.json();
+
+                if (!firstExamDate) {
+                    alert('Aucun examen trouvé pour le semestre sélectionné.');
+                    return;
+                }
+
+                // Vérifie si la demande est faite au moins 5 jours avant le premier examen
+                const today = new Date();
+                const firstExam = new Date(firstExamDate);
+                const diffInDays = Math.ceil((firstExam - today) / (1000 * 60 * 60 * 24));
+
+                if (diffInDays < 5) {
+                    alert('Les demandes doivent être faites au moins 5 jours avant le premier examen.');
+                    return;
+                }
+
+                // Si la condition est respectée, affiche le formulaire
+                requestForm.style.display = 'block';
+                requestForm.scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                console.error('Erreur lors de la vérification de la date du premier examen :', error);
+                alert('Erreur lors de la vérification de la date du premier examen.');
+            }
+        });
+    
             });
             
             cancelButton.addEventListener('click', function() {

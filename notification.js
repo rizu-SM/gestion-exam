@@ -531,6 +531,112 @@ function renderRequests(typeFilter = '') {
 //..................................................................................................................
 
 
+// function openModal(request) {
+//     function formatSurv(surv, id) {
+//         if (!surv) return `<span style="color:#aaa;">Aucune</span>`;
+//         return `<b>ID:</b> ${id} <br>
+//             ${surv.date_exam ? surv.date_exam : ''} - ${surv.module ? surv.module : ''} 
+//             (${surv.horaire ? surv.horaire : ''}${surv.salle ? ', ' + surv.salle : ''})`;
+//     }
+
+//     let html = `
+//         <div class="exam-section">
+//             <h3 class="section-title">
+//                 <i class="fas fa-info-circle"></i>
+//                 Informations de la demande
+//             </h3>
+//             <div class="details-grid">
+//                 <div class="detail-item">
+//                     <div class="detail-label">Demandeur</div>
+//                     <div class="detail-value">${request.code_enseignant}</div>
+//                 </div>
+//                 <div class="detail-item">
+//                     <div class="detail-label">Date de la demande</div>
+//                     <div class="detail-value">${formatDate(request.date_demande)}</div>
+//                 </div>
+//                 <div class="detail-item">
+//                     <div class="detail-label">Motif</div>
+//                     <div class="detail-value">${request.motif}</div>
+//                 </div>
+//             </div>
+//         </div>
+//         <div class="exam-section">
+//             <h3 class="section-title">
+//                 <i class="fas fa-clipboard-list"></i>
+//                 Surveillance concernée
+//             </h3>
+//             <div class="details-grid">
+//                 <div class="detail-item">
+//                     <div class="detail-label">Surveillance</div>
+//                     <div class="detail-value">${formatSurv(request.surveillance, request.surveillance_id)}</div>
+//                 </div>
+//             </div>
+//         </div>
+//     `;
+
+//     if (request.type === 'change') {
+//         html += `
+//         <div class="exam-section">
+//             <h3 class="section-title">
+//                 <i class="fas fa-calendar-alt"></i>
+//                 Changement de créneau
+//             </h3>
+//             <div class="details-grid">
+//                 <div class="detail-item">
+//                     <div class="detail-label">Date préférée</div>
+//                     <div class="detail-value">${request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>'}</div>
+//                 </div>
+//             </div>
+//         </div>
+//         `;
+//     }
+
+//     if (request.type === 'swap') {
+//         html += `
+//         <div class="exam-section">
+//             <h3 class="section-title">
+//                 <i class="fas fa-user-friends"></i>
+//                 Échange avec un collègue
+//             </h3>
+//             <div class="details-grid">
+//                 <div class="detail-item">
+//                     <div class="detail-label">Collègue</div>
+//                     <div class="detail-value">${request.colleague_code || '<span style="color:#aaa;">Non spécifié</span>'}</div>
+//                 </div>
+//                 <div class="detail-item">
+//                     <div class="detail-label">Surveillance préférée</div>
+//                     <div class="detail-value">
+//                         ${request.preferred_surveillance
+//                             ? formatSurv(request.preferred_surveillance, request.preferred_surveillance_id)
+//                             : (request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>')}
+//                     </div>
+//                 </div>
+//             </div>
+//         </div>
+//         `;
+//     }
+
+//     document.getElementById('modalDetails').innerHTML = html;
+//     document.getElementById('modalTitle').innerHTML = formatType(request.type);
+//     document.getElementById('modalMotif').value = '';
+//     document.getElementById('requestModal').style.display = 'flex';
+
+//     // Actions
+//     document.getElementById('acceptBtn').onclick = async function() {
+//         await handleAction(request.id, 'accepted', '');
+//     };
+//     document.getElementById('rejectBtn').onclick = async function() {
+//         const motif = document.getElementById('modalMotif').value.trim();
+//         if (!motif) {
+//             alert('Veuillez saisir un motif pour le rejet.');
+//             return;
+//         }
+//         await handleAction(request.id, 'rejected', motif);
+//     };
+// }
+
+
+
 function openModal(request) {
     function formatSurv(surv, id) {
         if (!surv) return `<span style="color:#aaa;">Aucune</span>`;
@@ -556,7 +662,7 @@ function openModal(request) {
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Motif</div>
-                    <div class="detail-value">${request.motif}</div>
+                    <div class="detail-value" id="motifValue">${request.motif}</div>
                 </div>
             </div>
         </div>
@@ -631,7 +737,16 @@ function openModal(request) {
             alert('Veuillez saisir un motif pour le rejet.');
             return;
         }
-        await handleAction(request.id, 'rejected', motif);
+        await handleAction(request.id, 'declined', motif);
+
+        // Mettre à jour le motif dans l'interface après rejet
+        document.getElementById('motifValue').innerText = motif;
+        request.motif = motif; // Mettre à jour localement
+    };
+
+    // Fermer le modal
+    document.getElementById('closeModal').onclick = function() {
+        document.getElementById('requestModal').style.display = 'none';
     };
 }
 
@@ -649,6 +764,7 @@ function openModal(request) {
             method: 'PATCH',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({status, motif_rejet: motif})
+            
         });
         document.getElementById('requestModal').style.display = 'none';
         // Rafraîchir la liste
