@@ -92,6 +92,13 @@
                 </div>
             </div>
         </header>
+                <!-- Sélecteur de session -->
+            <div class="session-selector">
+            <button class="session-btn active" data-semestre="S1">Session S1</button>
+            <button class="session-btn" data-semestre="S2">Session S2</button>
+            <button class="session-btn" data-semestre="R1">Rattrapage S1</button>
+            <button class="session-btn" data-semestre="R2">Rattrapage S2</button>
+        </div>
 
         <!-- Planifier un nouvel examen -->
         <div class="exam-form-section">
@@ -149,17 +156,38 @@
             </div>
         </div>
 
-        <!-- Sélecteur de session -->
-        <div class="session-selector">
-            <button class="session-btn active" data-semestre="S1">Session S1</button>
-            <button class="session-btn" data-semestre="S2">Session S2</button>
-            <button class="session-btn" data-semestre="R1">Rattrapage S1</button>
-            <button class="session-btn" data-semestre="R2">Rattrapage S2</button>
-        </div>
 
-        <!-- Dernière mise à jour -->
-        <div class="last-update">
-            <i class="fas fa-clock"></i> Dernière Mise à Jour: 05/05/2025 - 10:30
+
+
+
+
+        <!-- Filter Box -->
+        <div class="filter-box" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
+            <div>
+                <label for="filter-palier">Palier</label>
+                <select id="filter-palier" class="form-control">
+                    <option value="">Tous</option>
+                </select>
+            </div>
+            <div>
+                <label for="filter-specialite">Spécialité</label>
+                <select id="filter-specialite" class="form-control">
+                    <option value="">Toutes</option>
+                </select>
+            </div>
+            <div>
+                <label for="filter-module">Module</label>
+                <select id="filter-module" class="form-control">
+                    <option value="">Tous</option>
+                </select>
+            </div>
+            <div>
+                <label for="filter-section">Section</label>
+                <input type="text" id="filter-section" class="form-control" placeholder="Section">
+            </div>
+            <div>
+                <button id="filter-reset" class="btn btn-outline">Réinitialiser</button>
+            </div>
         </div>
 
         <!-- Tableau des examens -->
@@ -189,9 +217,29 @@
                 </tbody>
             </table>
         </div>
+        <div class="table-container" id="examensPlContainer" style="display: none;">
+            <table id="examensPlTable">
+                <thead>
+                    <tr>
+                        <th>Palier</th>
+                        <th>Spécialité</th>
+                        <th>Section</th>
+                        <th>Module</th>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Salle</th>
+                        <th>Semestre</th>
+                        <th>Année Univ.</th>
+                        <!-- PAS de colonne Action -->
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Vérification -->
-        <div class="verification-section">
+        <div class="verification-section" id="verificationBefore">
             <h2 class="section-title">
                 <i class="fas fa-check-circle"></i>
                 Vérification
@@ -208,9 +256,22 @@
             </div>
             
         </div>
-    </main>
 
-    <!-- Modal de modification -->
+        <div class="verification-section" id="verificationAfter" style="display:none;">
+            <h2 class="section-title">
+                <i class="fas fa-check-circle"></i>
+                Telechargement
+            </h2>
+            <p>si vous voulait telecharger l emploi du temps des exam click ici</p>
+            
+            <div class="verification-actions">
+                <button class="btn btn-primary" id="download">
+                    <i class="fas fa-check"></i> telecharger
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal de modification -->
     <div class="modal-overlay" id="editModal">
         <div class="exam-modal">
             <div class="modal-header">
