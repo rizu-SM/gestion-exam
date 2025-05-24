@@ -947,8 +947,8 @@ function displayExamensPl(examens) {
             examen.date_exam,
             examen.horaire,
             examen.salle,
-            examen.semestre,
-            examen.annee_universitaire
+            // examen.semestre,
+            // examen.annee_universitaire
         ];
         cells.forEach(text => {
             const cell = row.insertCell();

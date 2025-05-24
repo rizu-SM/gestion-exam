@@ -158,11 +158,32 @@
 
 
 
-
+        <div class="search-bar" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
+            <input type="text" id="filter-section" class="search-input" placeholder="Rechercher une Section...">
+            
+                <label for="filter-palier"></label>
+                <select id="filter-palier" class="form-control">
+                    <option value="">Toutes les Palier</option>
+                </select>
+            
+            
+                <label for="filter-specialite" class="sr-only"></label>
+                <select id="filter-specialite" class="filter-select">
+                    <option value="">Toutes les Spécialité</option>
+                </select>
+            
+            
+                <label for="filter-module" class="sr-only"></label>
+                <select id="filter-module" class="filter-select">
+                    <option value="">Tous les Module</option>
+                </select>
+            
+                <button id="filter-reset" class="btn btn-outline">Réinitialiser</button>
+        </div>
 
 
         <!-- Filter Box -->
-        <div class="filter-box" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
+        <!-- <div class="filter-box" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
             <div>
                 <label for="filter-palier">Palier</label>
                 <select id="filter-palier" class="form-control">
@@ -188,7 +209,7 @@
             <div>
                 <button id="filter-reset" class="btn btn-outline">Réinitialiser</button>
             </div>
-        </div>
+        </div> -->
 
         <!-- Tableau des examens -->
         <div class="table-container">
@@ -228,8 +249,8 @@
                         <th>Date</th>
                         <th>Heure</th>
                         <th>Salle</th>
-                        <th>Semestre</th>
-                        <th>Année Univ.</th>
+                        <!-- <th>Semestre</th>
+                        <th>Année Univ.</th> -->
                         <!-- PAS de colonne Action -->
                     </tr>
                 </thead>

@@ -1033,3 +1033,84 @@ tr:hover {
     color: #ff6347 !important;
     transform: translateX(5px);
 }
+
+
+/* Style pour la barre de filtres */
+.filter-box {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-box select,
+.filter-box input {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: white;
+    min-width: 180px;
+    transition: border-color 0.3s;
+}
+
+.filter-box input:focus,
+.filter-box select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.filter-box button {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: var(--primary);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.filter-box button:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+
+
+
+
+
+
+/* Search and Filter Bar */
+.search-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.filter-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background-color: white;
+    min-width: 180px;
+}

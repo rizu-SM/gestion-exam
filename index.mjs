@@ -41,7 +41,7 @@ app.use(session({
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "2005",
+  password: "root",
   database: "try",
   waitForConnections: true,
   connectionLimit: 10,
@@ -2795,6 +2795,287 @@ app.get('/surveillancesxbase', async (req, res) => {
     res.status(500).send("Erreur serveur");
   }
 });
+
+
+
+
+
+
+
+
+app.use(express.static(process.cwd()));
+app.get('/export-exams-pdf', async (req, res) => {
+  try {
+    // Get semestre from query params (e.g., /export-exams-pdf?semestre=S1)
+    const semestre = req.query.semestre;
+    // Compute current academic year
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const annee_universitaire = currentMonth >= 9
+      ? `${currentYear}-${currentYear + 1}`
+      : `${currentYear - 1}-${currentYear}`;
+
+    // Filter by current year and selected semestre
+    const [examens] = await pool.query(`
+      SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre, annee_universitaire
+      FROM exam
+      WHERE annee_universitaire = ? AND semestre = ?
+      ORDER BY specialite, section, date_exam, horaire
+    `, [annee_universitaire, semestre]);
+      
+    // Group by niveau, specialite, then section
+    const grouped = {};
+    for (const exam of examens) {
+      const specialiteParts = exam.specialite.trim().split(" ");
+      const niveau = specialiteParts[specialiteParts.length - 1];
+      const specialiteName = specialiteParts.slice(0, -1).join(" ");
+      if (!grouped[niveau]) grouped[niveau] = {};
+      if (!grouped[niveau][specialiteName]) grouped[niveau][specialiteName] = {};
+      if (!grouped[niveau][specialiteName][exam.section]) grouped[niveau][specialiteName][exam.section] = [];
+      grouped[niveau][specialiteName][exam.section].push(exam);
+    }
+
+    // Get session/année for the header (from the first exam)
+    const session = semestre ? `Semestre ${semestre} ` : '';
+    const annee = annee_universitaire ? `Année Universitaire ${annee_universitaire}` : '';
+
+    // HTML with header for every page
+    let html = `
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Planning des Examens</title>
+        <style>
+          @page {
+            margin: 30mm 15mm 15mm 15mm;
+          }
+          body { font-family: Arial, sans-serif; margin: 0; }
+          .pdf-header {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+          }
+          .pdf-header td {
+            vertical-align: middle;
+            text-align: center;
+            border: none;
+            padding: 0;
+          }
+          .pdf-header .logo-left {
+            width: 120px;
+            text-align: left;
+          }
+          .pdf-header .logo-right {
+            width: 180px;
+            text-align: right;
+          }
+          .pdf-header .title {
+            font-size: 2em;
+            font-weight: bold;
+            font-style: italic;
+            text-align: center;
+            letter-spacing: 1px;
+          }
+          .pdf-header .subtitle-row {
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+          }
+          .page-break { page-break-before: always; }
+          h2 { color: #2c3e50; margin-top: 30px; }
+          h3 { color: #4361ee; margin-top: 20px; }
+          table.exam-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          table.exam-table th, table.exam-table td { border: 1px solid #ccc; padding: 6px 10px; font-size: 0.95em; }
+          table.exam-table th { background: #f0f4fa; }
+          table.exam-table tr:nth-child(even) { background: #f9f9f9; }
+        </style>
+      </head>
+      <body>
+    `;
+
+    // Read and encode images as base64
+    const usthbLogoBase64 = fs.readFileSync(path.resolve('usthb.png')).toString('base64');
+    const faculteLogoBase64 = fs.readFileSync(path.resolve('faculte.png')).toString('base64');
+
+    // Helper: header HTML with base64 images
+    const headerHtml = `
+      <table class="pdf-header">
+        <tr>
+          <td class="logo-left"><img src="data:image/png;base64,${usthbLogoBase64}" alt="USTHB" style="height:60px;"></td>
+          <td class="title" colspan="2">Planning des Examens</td>
+          <td class="logo-right"><img src="data:image/png;base64,${faculteLogoBase64}" alt="Faculté" style="height:60px;"></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td class="subtitle-row" colspan="2">${session}</td>
+          <td class="subtitle-row">${annee}</td>
+        </tr>
+      </table>
+    `;
+
+    let firstNiveau = true;
+    for (const niveau in grouped) {
+      if (!firstNiveau) html += `<div class="page-break"></div>`;
+      firstNiveau = false;
+      html += headerHtml;
+      html += `<h2>${niveau}</h2>`;
+      for (const specialite in grouped[niveau]) {
+        html += `<h3>${specialite}</h3>`;
+        for (const section in grouped[niveau][specialite]) {
+          html += `<table class="exam-table">
+            <thead>
+              <tr>
+                <th>Section</th>
+                <th>Module</th>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Salle</th>
+                <th>Année Univ.</th>
+              </tr>
+            </thead>
+            <tbody>
+          `;
+          for (const exam of grouped[niveau][specialite][section]) {
+            html += `
+              <tr>
+                <td>${exam.section}</td>
+                <td>${exam.module}</td>
+                <td>${exam.date_exam ? new Date(exam.date_exam).toLocaleDateString('fr-FR') : ''}</td>
+                <td>${exam.horaire}</td>
+                <td>${exam.salle}</td>
+                <td>${exam.annee_universitaire}</td>
+              </tr>
+            `;
+          }
+          html += `</tbody></table>`;
+        }
+      }
+    }
+
+    html += `</body></html>`;
+    
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--allow-file-access-from-files'] });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfPath = path.join(process.cwd(), "Examens_Par_Niveau.pdf");
+    await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
+    await browser.close();
+
+    res.json({ success: true, message: "PDF généré", path: pdfPath });
+  } catch (error) {
+    console.error("Erreur PDF examens:", error);
+    res.status(500).json({ success: false, message: "Erreur lors de la génération du PDF." });
+  }
+});
+
+
+app.get("/examens-pl", async (req, res) => {
+  try {
+    const [examens] = await pool.query(`
+      SELECT 
+        e.id, 
+        e.palier, 
+        e.specialite, 
+        e.section, 
+        e.module, 
+        DATE_FORMAT(e.date_exam, '%Y-%m-%d') AS date_exam, 
+        e.horaire, 
+        e.salle, 
+        e.semestre, 
+        e.annee_universitaire,
+        bs.code_enseignant,
+        bs.ordre,
+        bs.nbrSE
+      FROM 
+        exam e
+      INNER JOIN 
+        base_surveillance bs ON 
+          e.module = bs.module AND 
+          e.date_exam = bs.date_exam AND 
+          e.horaire = bs.horaire AND 
+          e.salle = bs.salle AND 
+          e.section = bs.section AND 
+          e.semestre = bs.semestre AND 
+          e.annee_universitaire = bs.annee_universitaire
+    `);
+
+    // Ajouter le champ est_assigne qui sera toujours true pour ces résultats
+    const result = examens.map(exam => ({
+      ...exam,
+      est_assigne: true
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des examens:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Erreur serveur",
+      error: error.message 
+    });
+  }
+});
+
+app.get('/base-surveillance-check', async (req, res) => {
+    const { semestre, annee_universitaire } = req.query;
+    try {
+        const [rows] = await pool.query(
+            'SELECT id FROM base_surveillance WHERE semestre = ? AND annee_universitaire = ? LIMIT 1',
+            [semestre, annee_universitaire]
+        );
+        res.json(rows); // renvoie [] si rien trouvé
+    } catch (error) {
+        console.error('Erreur base-surveillance-check:', error);
+        res.status(500).json([]);
+    }
+});
+
+
+
+import cron from 'node-cron';
+
+// Planifie la suppression des demandes anciennes tous les jours à minuit
+cron.schedule('0 0 * * *', async () => {
+  try {
+    const [result] = await pool.query(`
+      DELETE FROM demandes
+      WHERE date_demande < DATE_SUB(NOW(), INTERVAL 15 DAY)
+    `);
+    console.log(`${result.affectedRows} demande(s) supprimée(s) automatiquement.`);
+  } catch (error) {
+    console.error("Erreur lors de la suppression automatique des demandes anciennes :", error);
+  }
+});
+
+app.get('/first-exam-date', async (req, res) => {
+    const { semestre } = req.query;
+    if (!semestre) {
+        return res.status(400).json({ error: 'Le semestre est requis.' });
+    }
+
+    try {
+        const [rows] = await pool.query(
+            `SELECT MIN(date_exam) AS firstExamDate
+             FROM base_surveillance
+             WHERE semestre = ?`,
+            [semestre]
+        );
+
+        if (rows.length === 0 || !rows[0].firstExamDate) {
+            return res.json({ firstExamDate: null });
+        }
+
+        res.json({ firstExamDate: rows[0].firstExamDate });
+    } catch (error) {
+        console.error('Erreur lors de la récupération de la date du premier examen :', error);
+        res.status(500).json({ error: 'Erreur serveur.' });
+    }
+});
+
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
