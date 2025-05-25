@@ -102,105 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (type === 'cancel') return '<span class="request-type-badge cancel">Annulation</span>';
         return '';
     }
-    // function formatDate(dateString) {
-    //     const date = new Date(dateString);
-    //     return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-    // }
-
-    // function renderRequests(typeFilter = '') {
-    //     notificationList.innerHTML = '';
-    //     let filtered = typeFilter ? allRequests.filter(r => r.type === typeFilter) : allRequests;
-    //     if (filtered.length === 0) {
-    //         emptyNotifications.style.display = '';
-    //         return;
-    //     }
-    //     emptyNotifications.style.display = 'none';
-    //     filtered.forEach(req => {
-    //         const iconClass = req.type === 'cancel' ? 'alert' : req.type === 'swap' ? 'info' : 'warning';
-    //         const icon = req.type === 'cancel' ? 'fa-exclamation' : req.type === 'swap' ? 'fa-user-friends' : 'fa-clock';
-    //         notificationList.innerHTML += `
-    //             <div class="notification-item unread" data-id="${req.id}" style="cursor:pointer;">
-    //                 <div class="notification-icon ${iconClass}">
-    //                     <i class="fas ${icon}"></i>
-    //                 </div>
-    //                 <div class="notification-content">
-    //                     <div class="notification-title">
-    //                         <span>${formatType(req.type)}</span>
-    //                         <span class="notification-time">${formatDate(req.date_demande)}</span>
-    //                     </div>
-    //                     <p class="notification-message">${req.motif}</p>
-    //                 </div>
-    //                 <span class="unread-badge"></span>
-    //             </div>
-    //         `;
-    //     });
-    // }
-
-//     let currentPage = 1;
-//     const pageSize = 8;
-
-// // Modifie renderRequests pour n'afficher que la page courante :
-// function renderRequests(typeFilter = '') {
-//     notificationList.innerHTML = '';
-//     let filtered = typeFilter ? allRequests.filter(r => r.type === typeFilter) : allRequests;
-//     const totalPages = Math.ceil(filtered.length / pageSize);
-//     if (filtered.length === 0) {
-//         emptyNotifications.style.display = '';
-//         document.getElementById('pagination').innerHTML = '';
-//         return;
-//     }
-//     emptyNotifications.style.display = 'none';
-
-//     // Découpe la page
-//     const start = (currentPage - 1) * pageSize;
-//     const end = start + pageSize;
-//     const pageItems = filtered.slice(start, end);
-
-//     pageItems.forEach(req => {
-//         const iconClass = req.type === 'cancel' ? 'alert' : req.type === 'swap' ? 'info' : 'warning';
-//         const icon = req.type === 'cancel' ? 'fa-exclamation' : req.type === 'swap' ? 'fa-user-friends' : 'fa-clock';
-//         notificationList.innerHTML += `
-//         <div class="notification-item unread" data-id="${req.id}" style="cursor:pointer;">
-//             <div class="notification-icon ${iconClass}">
-//                 <i class="fas ${icon}"></i>
-//             </div>
-//             <div class="notification-content">
-//                 <div class="notification-title">
-//                     <span>${formatType(req.type)}</span>
-//                     <span class="notification-time">${formatDate(req.date_demande)}</span>
-//                 </div>
-//                 <p class="notification-message">${req.motif}</p>
-//             </div>
-//             <span class="unread-badge"></span>
-//         </div>
-//         `;
-//     });
-
-//     // Pagination
-//     let pagHtml = '';
-//     if (totalPages > 1) {
-//         pagHtml += `<button ${currentPage === 1 ? 'disabled' : ''} id="prevPage">Précédent</button>`;
-//         for (let i = 1; i <= totalPages; i++) {
-//             pagHtml += `<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
-//         }
-//         pagHtml += `<button ${currentPage === totalPages ? 'disabled' : ''} id="nextPage">Suivant</button>`;
-//     }
-//     document.getElementById('pagination').innerHTML = pagHtml;
-
-//     // Listeners pagination
-//     if (document.getElementById('prevPage')) {
-//         document.getElementById('prevPage').onclick = () => { currentPage--; renderRequests(typeFilter); };
-//     }
-//     if (document.getElementById('nextPage')) {
-//         document.getElementById('nextPage').onclick = () => { currentPage++; renderRequests(typeFilter); };
-//     }
-//     document.querySelectorAll('.page-btn').forEach(btn => {
-//         btn.onclick = function() {
-//             currentPage = Number(this.dataset.page);
-//             renderRequests(typeFilter);
-//         };
-//     });
-// }
 
 
 let currentPage = 1;
@@ -271,387 +172,30 @@ function renderRequests(typeFilter = '') {
 }
 
 
-//........................................................................................................................
-
-    // Ouvre le modal avec détails et actions
-//     function openModal(request) {
-//         // ...dans openModal(request)...
-// document.getElementById('modalDetails').innerHTML = `
-//     <div class="details-grid">
-//         <div class="detail-item">
-//             <div class="detail-label">Type</div>
-//             <div class="detail-value">${formatType(request.type)}</div>
-//         </div>
-//         <div class="detail-item">
-//             <div class="detail-label">Demandeur</div>
-//             <div class="detail-value">${request.code_enseignant}</div>
-//         </div>
-//         <div class="detail-item">
-//             <div class="detail-label">Date de la demande</div>
-//             <div class="detail-value">${formatDate(request.date_demande)}</div>
-//         </div>
-//         <div class="detail-item">
-//             <div class="detail-label">Motif</div>
-//             <div class="detail-value">${request.motif}</div>
-//         </div>
-//         ${request.colleague_code ? `
-//         <div class="detail-item">
-//             <div class="detail-label">Collègue</div>
-//             <div class="detail-value">${request.colleague_code}</div>
-//         </div>` : ''}
-//         ${request.surveillance ? `
-//         <div class="detail-item">
-//             <div class="detail-label">Examen</div>
-//             <div class="detail-value">${request.surveillance.module || ''}</div>
-//         </div>
-//         <div class="detail-item">
-//             <div class="detail-label">Date Examen</div>
-//             <div class="detail-value">${formatDate(request.surveillance.date_exam)}</div>
-//         </div>
-//         <div class="detail-item">
-//             <div class="detail-label">Heure</div>
-//             <div class="detail-value">${request.surveillance.horaire}</div>
-//         </div>
-//         <div class="detail-item">
-//             <div class="detail-label">Salle</div>
-//             <div class="detail-value">${request.surveillance.salle}</div>
-//         </div>
-//         ` : ''}
-//     </div>
-// `;
-
-
-//         document.getElementById('modalTitle').innerHTML = formatType(request.type);
-//         document.getElementById('modalDetails').innerHTML = `
-//             <b>Demandeur :</b> ${request.code_enseignant}<br>
-//             <b>Date de la demande :</b> ${formatDate(request.date_demande)}<br>
-//             <b>Motif :</b> ${request.motif}<br>
-//             ${request.colleague_code ? `<b>Collègue :</b> ${request.colleague_code}<br>` : ''}
-//         `;
-//         document.getElementById('modalMotif').value = '';
-//         document.getElementById('requestModal').style.display = 'flex';
-
-//         // Actions
-//         document.getElementById('acceptBtn').onclick = async function() {
-//             await handleAction(request.id, 'accepted', '');
-//         };
-//         document.getElementById('rejectBtn').onclick = async function() {
-//             const motif = document.getElementById('modalMotif').value.trim();
-//             if (!motif) {
-//                 alert('Veuillez saisir un motif pour le rejet.');
-//                 return;
-//             }
-//             await handleAction(request.id, 'rejected', motif);
-//         };
-//     }
-
-//.......................................................................................................................
-// function openModal(request) {
-//     // Format la surveillance (affiche l'id et les infos principales)
-//     function formatSurv(surv, id) {
-//         if (!surv) return `<span style="color:#aaa;">Aucune</span>`;
-//         return `<b>ID:</b> ${id} <br>
-//             ${surv.date_exam ? surv.date_exam : ''} - ${surv.module ? surv.module : ''} 
-//             (${surv.horaire ? surv.horaire : ''}${surv.salle ? ', ' + surv.salle : ''})`;
-//     }
-
-//     let html = `
-//         <div class="details-grid">
-//             <div class="detail-item">
-//                 <div class="detail-label">Demandeur</div>
-//                 <div class="detail-value">${request.code_enseignant}</div>
-//             </div>
-//             <div class="detail-item">
-//                 <div class="detail-label">Date de la demande</div>
-//                 <div class="detail-value">${formatDate(request.date_demande)}</div>
-//             </div>
-//             <div class="detail-item">
-//                 <div class="detail-label">Surveillance</div>
-//                 <div class="detail-value">${formatSurv(request.surveillance, request.surveillance_id)}</div>
-//             </div>
-//             <div class="detail-item">
-//                 <div class="detail-label">Motif</div>
-//                 <div class="detail-value">${request.motif}</div>
-//             </div>
-//     `;
-
-//     if (request.type === 'change') {
-//         html += `
-//             <div class="detail-item">
-//                 <div class="detail-label">Date préférée</div>
-//                 <div class="detail-value">${request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>'}</div>
-//             </div>
-//         `;
-//     }
-
-//     if (request.type === 'swap') {
-//         html += `
-//             <div class="detail-item">
-//                 <div class="detail-label">Collègue</div>
-//                 <div class="detail-value">${request.colleague_code || '<span style="color:#aaa;">Non spécifié</span>'}</div>
-//             </div>
-//             <div class="detail-item">
-//                 <div class="detail-label">Surveillance préférée</div>
-//                 <div class="detail-value">
-//                     ${request.preferred_surveillance
-//                         ? formatSurv(request.preferred_surveillance, request.preferred_surveillance_id)
-//                         : (request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>')}
-//                 </div>
-//             </div>
-//         `;
-//     }
-
-//     html += `</div>`;
-
-//     document.getElementById('modalDetails').innerHTML = html;
-//     document.getElementById('modalTitle').innerHTML = formatType(request.type);
-//     document.getElementById('modalMotif').value = '';
-//     document.getElementById('requestModal').style.display = 'flex';
-
-//     // Actions
-//     document.getElementById('acceptBtn').onclick = async function() {
-//         await handleAction(request.id, 'accepted', '');
-//     };
-//     document.getElementById('rejectBtn').onclick = async function() {
-//         const motif = document.getElementById('modalMotif').value.trim();
-//         if (!motif) {
-//             alert('Veuillez saisir un motif pour le rejet.');
-//             return;
-//         }
-//         await handleAction(request.id, 'rejected', motif);
-//     };
-// }
-
-//..........................................................................................................
-
-// function openModal(request) {
-//     function formatSurv(surv, id) {
-//         if (!surv) return `<span style="color:#aaa;">Aucune</span>`;
-//         return `<b>ID:</b> ${id} <br>
-//             ${surv.date_exam ? surv.date_exam : ''} - ${surv.module ? surv.module : ''} 
-//             (${surv.horaire ? surv.horaire : ''}${surv.salle ? ', ' + surv.salle : ''})`;
-//     }
-
-//     let html = `
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-info-circle"></i>
-//                 Informations de la demande
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Demandeur</div>
-//                     <div class="detail-value">${request.code_enseignant}</div>
-//                 </div>
-//                 <div class="detail-item">
-//                     <div class="detail-label">Date de la demande</div>
-//                     <div class="detail-value">${formatDate(request.date_demande)}</div>
-//                 </div>
-//                 <div class="detail-item">
-//                     <div class="detail-label">Motif</div>
-//                     <div class="detail-value">${request.motif}</div>
-//                 </div>
-//             </div>
-//         </div>
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-clipboard-list"></i>
-//                 Surveillance concernée
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Surveillance</div>
-//                     <div class="detail-value">${formatSurv(request.surveillance, request.surveillance_id)}</div>
-//                 </div>
-//             </div>
-//         </div>
-//     `;
-
-//     if (request.type === 'change') {
-//         html += `
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-calendar-alt"></i>
-//                 Changement de créneau
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Date préférée</div>
-//                     <div class="detail-value">${request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>'}</div>
-//                 </div>
-//             </div>
-//         </div>
-//         `;
-//     }
-
-//     if (request.type === 'swap') {
-//         html += `
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-user-friends"></i>
-//                 Échange avec un collègue
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Collègue</div>
-//                     <div class="detail-value">${request.colleague_code || '<span style="color:#aaa;">Non spécifié</span>'}</div>
-//                 </div>
-//                 <div class="detail-item">
-//                     <div class="detail-label">Surveillance préférée</div>
-//                     <div class="detail-value">
-//                         ${request.preferred_surveillance
-//                             ? formatSurv(request.preferred_surveillance, request.preferred_surveillance_id)
-//                             : (request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>')}
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
-//         `;
-//     }
-
-//     document.getElementById('modalDetails').innerHTML = html;
-//     document.getElementById('modalTitle').innerHTML = formatType(request.type);
-//     document.getElementById('modalMotif').value = '';
-//     document.getElementById('requestModal').style.display = 'flex';
-
-//     // Actions
-//     document.getElementById('acceptBtn').onclick = async function() {
-//         await handleAction(request.id, 'accepted', '');
-//     };
-//     document.getElementById('rejectBtn').onclick = async function() {
-//         const motif = document.getElementById('modalMotif').value.trim();
-//         if (!motif) {
-//             alert('Veuillez saisir un motif pour le rejet.');
-//             return;
-//         }
-//         await handleAction(request.id, 'rejected', motif);
-//     };
-// }
-
-//..................................................................................................................
-
-
-// function openModal(request) {
-//     function formatSurv(surv, id) {
-//         if (!surv) return `<span style="color:#aaa;">Aucune</span>`;
-//         return `<b>ID:</b> ${id} <br>
-//             ${surv.date_exam ? surv.date_exam : ''} - ${surv.module ? surv.module : ''} 
-//             (${surv.horaire ? surv.horaire : ''}${surv.salle ? ', ' + surv.salle : ''})`;
-//     }
-
-//     let html = `
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-info-circle"></i>
-//                 Informations de la demande
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Demandeur</div>
-//                     <div class="detail-value">${request.code_enseignant}</div>
-//                 </div>
-//                 <div class="detail-item">
-//                     <div class="detail-label">Date de la demande</div>
-//                     <div class="detail-value">${formatDate(request.date_demande)}</div>
-//                 </div>
-//                 <div class="detail-item">
-//                     <div class="detail-label">Motif</div>
-//                     <div class="detail-value">${request.motif}</div>
-//                 </div>
-//             </div>
-//         </div>
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-clipboard-list"></i>
-//                 Surveillance concernée
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Surveillance</div>
-//                     <div class="detail-value">${formatSurv(request.surveillance, request.surveillance_id)}</div>
-//                 </div>
-//             </div>
-//         </div>
-//     `;
-
-//     if (request.type === 'change') {
-//         html += `
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-calendar-alt"></i>
-//                 Changement de créneau
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Date préférée</div>
-//                     <div class="detail-value">${request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>'}</div>
-//                 </div>
-//             </div>
-//         </div>
-//         `;
-//     }
-
-//     if (request.type === 'swap') {
-//         html += `
-//         <div class="exam-section">
-//             <h3 class="section-title">
-//                 <i class="fas fa-user-friends"></i>
-//                 Échange avec un collègue
-//             </h3>
-//             <div class="details-grid">
-//                 <div class="detail-item">
-//                     <div class="detail-label">Collègue</div>
-//                     <div class="detail-value">${request.colleague_code || '<span style="color:#aaa;">Non spécifié</span>'}</div>
-//                 </div>
-//                 <div class="detail-item">
-//                     <div class="detail-label">Surveillance préférée</div>
-//                     <div class="detail-value">
-//                         ${request.preferred_surveillance
-//                             ? formatSurv(request.preferred_surveillance, request.preferred_surveillance_id)
-//                             : (request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>')}
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
-//         `;
-//     }
-
-//     document.getElementById('modalDetails').innerHTML = html;
-//     document.getElementById('modalTitle').innerHTML = formatType(request.type);
-//     document.getElementById('modalMotif').value = '';
-//     document.getElementById('requestModal').style.display = 'flex';
-
-//     // Actions
-//     document.getElementById('acceptBtn').onclick = async function() {
-//         await handleAction(request.id, 'accepted', '');
-//     };
-//     document.getElementById('rejectBtn').onclick = async function() {
-//         const motif = document.getElementById('modalMotif').value.trim();
-//         if (!motif) {
-//             alert('Veuillez saisir un motif pour le rejet.');
-//             return;
-//         }
-//         await handleAction(request.id, 'rejected', motif);
-//     };
-// }
-
-
 
 function openModal(request) {
+    
+
     function formatSurv(surv, id) {
         if (!surv) return `<span style="color:#aaa;">Aucune</span>`;
-        return `<b>ID:</b> ${id} <br>
-            ${surv.date_exam ? surv.date_exam : ''} - ${surv.module ? surv.module : ''} 
-            (${surv.horaire ? surv.horaire : ''}${surv.salle ? ', ' + surv.salle : ''})`;
+
+        // Format the date
+        const date = new Date(surv.date_exam);
+        const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+
+        // Format the time range
+        const [hour, minute] = surv.horaire.split(':').map(Number);
+        const startTime = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        const endTime = new Date(0, 0, 0, hour, minute + 90); // Assuming 90 minutes duration
+        const formattedEndTime = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+
+        // Combine the formatted details without the colon
+        return `
+        ${formattedDate} - ${surv.code_module ? surv.code_module : ''} ${surv.module ? surv.module : ''} 
+        (${startTime}-${formattedEndTime}${surv.salle ? ', ' + surv.salle : ''})`;
     }
 
-    const date = formatDate(surv.date_exam);
-        const startTime = formatTime(surv.horaire);
-        // Assuming each exam is 1.5h (90min)
-        const [h, m] = startTime.split(':').map(Number);
-        const end = new Date(0, 0, 0, h, m + 90);
-        const endTime = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
-        const label = `${date} - ${surv.module} (${startTime}-${endTime}, ${surv.salle})`;
+    console.log(request);
 
     let html = `
         <div class="exam-section">
@@ -662,7 +206,7 @@ function openModal(request) {
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Demandeur</div>
-                    <div class="detail-value">${request.code_enseignant}</div>
+                    <div class="detail-value">${formatResponsableName(request)}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Date de la demande</div>
@@ -715,14 +259,14 @@ function openModal(request) {
             <div class="details-grid">
                 <div class="detail-item">
                     <div class="detail-label">Collègue</div>
-                    <div class="detail-value">${request.colleague_code || '<span style="color:#aaa;">Non spécifié</span>'}</div>
+                    <div class="detail-value">${formatColleaguesName(request) || '<span style="color:#aaa;">Non spécifié</span>'}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Surveillance préférée</div>
                     <div class="detail-value">
                         ${request.preferred_surveillance
-                            ? formatSurv(request.preferred_surveillance, request.preferred_surveillance_id)
-                            : (request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>')}
+                        ? formatSurv(request.preferred_surveillance, request.preferred_surveillance_id)
+                        : (request.preferred_date ? formatDate(request.preferred_date) : '<span style="color:#aaa;">Non spécifiée</span>')}
                     </div>
                 </div>
             </div>
@@ -814,6 +358,7 @@ document.querySelectorAll('.notification-filter').forEach(btn => {
     };
 });
 
+// Helper functions
 function formatDate(dateString) {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
@@ -821,17 +366,16 @@ function formatDate(dateString) {
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
 }
-
-
-// Format time as HH:MM (remove seconds)
 function formatTime(timeString) {
-    return timeString.substring(0, 5); // Takes first 5 characters (HH:MM)
+    return timeString.substring(0, 5);
+}
+function capitalize(str) {
+    return str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : '';
 }
 
-
-function formatResponsableName(surveillance) {
+function formatResponsableName(request) {
     // Split and format the code_enseignant
-    const nameParts = surveillance.code_enseignant.split('_')
+    const nameParts = request.code_enseignant.split('_')
         .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
     
     // Join with spaces
@@ -839,4 +383,29 @@ function formatResponsableName(surveillance) {
     let title = 'Prof. ';
 
     return `${title}${fullName}`.trim();
+}
+
+function formatColleaguesName(request) {
+    // Split and format the code_enseignant
+    const nameParts = request.colleague_code.split('_')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
+    
+    // Join with spaces
+    const fullName = nameParts.join(' ');
+    let title = 'Prof. ';
+
+    return `${title}${fullName}`.trim();
+}
+
+
+
+function formatType(request) {
+    const date = formatDate(request.date_exam);
+        const startTime = formatTime(request.horaire);
+        // Assuming each exam is 1.5h (90min)
+        const [h, m] = startTime.split(':').map(Number);
+        const end = new Date(0, 0, 0, h, m + 90);
+        const endTime = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
+        const label = `${date} - ${request.module} (${startTime}-${endTime}, ${request.salle})`;
+        return label;
 }

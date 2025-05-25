@@ -2906,14 +2906,69 @@ app.post('/insert-demandes', async (req, res) => {
 //     }
 // });
 
+// app.get('/getdemandes', async (req, res) => {
+//     // Détermination de l'année universitaire
+//     const currentDate = new Date();
+//     const currentMonth = currentDate.getMonth() + 1;
+//     const currentYear = currentDate.getFullYear();
+//     const annee_universitaire = currentMonth >= 9
+//       ? `${currentYear}-${currentYear + 1}`
+//       : `${currentYear - 1}-${currentYear}`;
+
+//     // Calcule les bornes de l'année universitaire
+//     const startYear = parseInt(annee_universitaire.split('-')[0], 10);
+//     const endYear = parseInt(annee_universitaire.split('-')[1], 10);
+//     const dateStart = `${startYear}-09-01 00:00:00`;
+//     const dateEnd = `${endYear}-08-31 23:59:59`;
+
+//     const status = req.query.status;
+//     try {
+//         let sql = `
+//             SELECT d.*, s.date_exam, s.horaire, s.module, s.salle
+//             FROM demandes d
+//             JOIN base_surveillance s ON d.surveillance_id = s.id
+//             WHERE d.date_demande >= ? AND d.date_demande <= ?
+//         `;
+//         const params = [dateStart, dateEnd];
+//         if (status) {
+//             sql += ' AND d.status = ?';
+//             params.push(status);
+//         }
+//         sql += ' ORDER BY d.date_demande DESC';
+//         const [rows] = await pool.query(sql, params);
+//         const result = rows.map(r => ({
+//             id: r.id,
+//             type: r.type,
+//             motif: r.motif,
+//             status: r.status,
+//             date_demande: r.date_demande,
+//             code_enseignant: r.code_enseignant,
+//             colleague_code: r.colleague_code,
+//             preferred_date: r.preferred_date,
+//             surveillance: {
+//                 date_exam: r.date_exam,
+//                 horaire: r.horaire,
+//                 module: r.module,
+//                 salle: r.salle
+//             }
+//         }));
+//         res.json(result);
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ error: 'Erreur serveur' });
+//     }
+// });
+
+
+
 app.get('/getdemandes', async (req, res) => {
     // Détermination de l'année universitaire
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
     const annee_universitaire = currentMonth >= 9
-      ? `${currentYear}-${currentYear + 1}`
-      : `${currentYear - 1}-${currentYear}`;
+        ? `${currentYear}-${currentYear + 1}`
+        : `${currentYear - 1}-${currentYear}`;
 
     // Calcule les bornes de l'année universitaire
     const startYear = parseInt(annee_universitaire.split('-')[0], 10);
@@ -2924,9 +2979,19 @@ app.get('/getdemandes', async (req, res) => {
     const status = req.query.status;
     try {
         let sql = `
-            SELECT d.*, s.date_exam, s.horaire, s.module, s.salle
+            SELECT 
+                d.*, 
+                s.date_exam AS surveillance_date_exam, 
+                s.horaire AS surveillance_horaire, 
+                s.module AS surveillance_module, 
+                s.salle AS surveillance_salle,
+                ps.date_exam AS preferred_date_exam, 
+                ps.horaire AS preferred_horaire, 
+                ps.module AS preferred_module, 
+                ps.salle AS preferred_salle
             FROM demandes d
             JOIN base_surveillance s ON d.surveillance_id = s.id
+            LEFT JOIN base_surveillance ps ON d.preferred_surveillance_id = ps.id
             WHERE d.date_demande >= ? AND d.date_demande <= ?
         `;
         const params = [dateStart, dateEnd];
@@ -2936,6 +3001,7 @@ app.get('/getdemandes', async (req, res) => {
         }
         sql += ' ORDER BY d.date_demande DESC';
         const [rows] = await pool.query(sql, params);
+
         const result = rows.map(r => ({
             id: r.id,
             type: r.type,
@@ -2946,18 +3012,28 @@ app.get('/getdemandes', async (req, res) => {
             colleague_code: r.colleague_code,
             preferred_date: r.preferred_date,
             surveillance: {
-                date_exam: r.date_exam,
-                horaire: r.horaire,
-                module: r.module,
-                salle: r.salle
-            }
+                date_exam: r.surveillance_date_exam,
+                horaire: r.surveillance_horaire,
+                module: r.surveillance_module,
+                salle: r.surveillance_salle
+            },
+            preferred_surveillance: r.preferred_surveillance_id ? {
+                date_exam: r.preferred_date_exam,
+                horaire: r.preferred_horaire,
+                module: r.preferred_module,
+                salle: r.preferred_salle
+            } : null
         }));
+
         res.json(result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
+
+
+
 
 // 2. PATCH /demandes/:id
 app.patch('/demandeslist/:id', async (req, res) => {
