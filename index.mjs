@@ -638,7 +638,7 @@ app.post("/gestion-surveillances", async (req, res) => {
        AND module IN (SELECT module FROM formation WHERE module_info = 'oui')`,
       [semestre, annee_universitaire]
     );
-
+    await pool.query('UPDATE enseignants SET surveillances = 0'); // Réinitialiser les surveillances
     // Récupérer enseignants
     const [permanents] = await pool.query(
       'SELECT * FROM enseignants WHERE type = "Permanant" AND etat = "admin"'
@@ -646,43 +646,78 @@ app.post("/gestion-surveillances", async (req, res) => {
     const [vacataires] = await pool.query(
       'SELECT * FROM enseignants WHERE type = "Vacataire" AND etat = "admin"'
     );
-    const allTeachers = [...permanents, ...vacataires];
+
+    // Get all enseignants in charge_enseignement
+    const [enseignantsCours] = await pool.query(
+      'SELECT DISTINCT code_enseignant FROM charge_enseignement WHERE type = "cours"'
+    );
+    const enseignantsCoursSet = new Set(enseignantsCours.map(e => e.code_enseignant));
+
+    // Sort permanents: those in charge_enseignement first
+    permanents.sort((a, b) => {
+      const aInCours = enseignantsCoursSet.has(a.code_enseignant) ? 0 : 1;
+      const bInCours = enseignantsCoursSet.has(b.code_enseignant) ? 0 : 1;
+      return aInCours - bInCours;
+    });
+
+    // Sort vacataires: those in charge_enseignement first
+    vacataires.sort((a, b) => {
+      const aInCours = enseignantsCoursSet.has(a.code_enseignant) ? 0 : 1;
+      const bInCours = enseignantsCoursSet.has(b.code_enseignant) ? 0 : 1;
+      return aInCours - bInCours;
+    });
 
     // Calcul du nombre total de surveillances
     let totalSalles = 0;
     for (const examen of examens) {
       totalSalles += examen.salle.split("+").filter(s => s.trim() !== "").length;
     }
-    const totalSurveillances = totalSalles * 2 + examens.length;
-
+    const totalSurveillants = totalSalles * 2 + examens.length;
+    console.log("total Surveillances:", totalSurveillants);  
     // Répartition quotas
     const surveillancesPermanent = Math.round(
-      (totalSurveillances * pourcentagePermanent) / 100
+      (totalSurveillants * pourcentagePermanent) / 100
     );
-    const surveillancesVacataire = totalSurveillances - surveillancesPermanent;
+    console.log("Surveillances permanents:", surveillancesPermanent);
+    const surveillancesVacataire = totalSurveillants - surveillancesPermanent;
+    console.log("Surveillances vacataires:", surveillancesVacataire);
 
-    // Trier enseignants par nbrSS croissant (ceux qui ont surveillé le moins)
-    permanents.sort((a, b) => (a.nbrSS || 0) - (b.nbrSS || 0));
-    vacataires.sort((a, b) => (a.nbrSS || 0) - (b.nbrSS || 0));
+  
 
-    // Répartir les quotas (ne pas donner 0)
-    let permQuota = surveillancesPermanent;
-    for (const p of permanents) {
-      const q = permQuota > 0 ? 1 : 0;
-      await pool.query(
-        "UPDATE enseignants SET surveillances = ? WHERE code_enseignant = ?",
-        [q, p.code_enseignant]
-      );
-      permQuota -= q;
+    // Répartition round-robin pour permanents
+    let surveillancesRestantes = surveillancesPermanent;
+    let i = 0;
+    permanents.forEach(p => p.quota = 0); // reset quotas
+    while (surveillancesRestantes > 0 && permanents.length > 0) {
+      permanents[i % permanents.length].quota += 1;
+      surveillancesRestantes--;
+      i++;
     }
-    let vacQuota = surveillancesVacataire;
-    for (const v of vacataires) {
-      const q = vacQuota > 0 ? 1 : 0;
+    console.log("Quotas permanents:", permanents.map(p => ({ code: p.code_enseignant, quota: p.quota })));
+
+    // Répartition round-robin pour vacataires
+    surveillancesRestantes = surveillancesVacataire;
+    i = 0;
+    vacataires.forEach(v => v.quota = 0); // reset quotas
+    while (surveillancesRestantes > 0 && vacataires.length > 0) {
+      vacataires[i % vacataires.length].quota += 1;
+      surveillancesRestantes--;
+      i++;
+    }
+    console.log("Quotas vacataires:", vacataires.map(v => ({ code: v.code_enseignant, quota: v.quota })));
+
+    // Mettre à jour la base de données
+    for (const p of permanents) {
       await pool.query(
         "UPDATE enseignants SET surveillances = ? WHERE code_enseignant = ?",
-        [q, v.code_enseignant]
+        [p.quota, p.code_enseignant]
       );
-      vacQuota -= q;
+    }
+    for (const v of vacataires) {
+      await pool.query(
+        "UPDATE enseignants SET surveillances = ? WHERE code_enseignant = ?",
+        [v.quota, v.code_enseignant]
+      );
     }
 
     // Réinitialiser les surveillances pour tous les enseignants non concernés
@@ -691,11 +726,13 @@ app.post("/gestion-surveillances", async (req, res) => {
     // 2. Assigner les principaux
     const resultatsAssignation = [];
     const erreursAssignation = [];
+    // 2. Assigner les principaux pour tous les examens
+    const principauxInfos = [];
     for (const examen of examens) {
       const [enseignants] = await pool.query(
         `SELECT code_enseignant FROM charge_enseignement 
-         WHERE palier = ? AND specialite = ? AND section = ? 
-         AND intitule_module = ? AND type = 'cours'`,
+        WHERE palier = ? AND specialite = ? AND section = ? 
+        AND intitule_module = ? AND type = 'cours'`,
         [examen.palier, examen.specialite, examen.section, examen.module]
       );
       if (enseignants.length === 0) {
@@ -709,8 +746,8 @@ app.post("/gestion-surveillances", async (req, res) => {
       await pool.query(
         `INSERT INTO base_surveillance 
           (palier, specialite, semestre, section, date_exam, horaire, 
-           module, salle, code_enseignant, ordre, nbrSE, annee_universitaire)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+          module, salle, code_enseignant, ordre, nbrSE, annee_universitaire)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
         [
           examen.palier,
           examen.specialite,
@@ -735,22 +772,29 @@ app.post("/gestion-surveillances", async (req, res) => {
         code_enseignant: codePrincipal,
         message: "Surveillant principal assigné",
       });
+      principauxInfos.push({
+        examen,
+        codePrincipal,
+        salles: examen.salle.split("+").map(s => s.trim()).filter(s => s !== "")
+      });
+    }
 
-      // 3. Assigner 2 secondaires par salle
-      const salles = examen.salle.split("+").map(s => s.trim()).filter(s => s !== "");
+    // 3. Après tous les principaux, assigner les secondaires
+    for (const info of principauxInfos) {
+      const { examen, codePrincipal, salles } = info;
       let ordre = 2;
       for (const salle of salles) {
         // Chercher 2 enseignants disponibles (pas principal, pas déjà assigné à ce créneau, surveillances > 0)
         const [secondaires] = await pool.query(
           `SELECT code_enseignant FROM enseignants
-           WHERE etat = 'admin' AND code_enseignant != ?
-           AND surveillances > 0
-           AND code_enseignant NOT IN (
-             SELECT code_enseignant FROM base_surveillance
-             WHERE date_exam = ? AND horaire = ? AND salle = ?
-           )
-           ORDER BY surveillances ASC, nbrSS ASC
-           LIMIT 2`,
+          WHERE etat = 'admin' AND code_enseignant != ?
+          AND surveillances > 0
+          AND code_enseignant NOT IN (
+            SELECT code_enseignant FROM base_surveillance
+            WHERE date_exam = ? AND horaire = ? AND salle = ?
+          )
+          ORDER BY surveillances ASC
+          LIMIT 2`,
           [codePrincipal, examen.date_exam, examen.horaire, salle]
         );
         if (secondaires.length < 2) {
@@ -765,8 +809,8 @@ app.post("/gestion-surveillances", async (req, res) => {
           await pool.query(
             `INSERT INTO base_surveillance 
               (palier, specialite, semestre, section, date_exam, horaire, 
-               module, salle, code_enseignant, ordre, nbrSE, annee_universitaire)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              module, salle, code_enseignant, ordre, nbrSE, annee_universitaire)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               examen.palier,
               examen.specialite,
@@ -775,7 +819,7 @@ app.post("/gestion-surveillances", async (req, res) => {
               examen.date_exam,
               examen.horaire,
               examen.module,
-              salle,
+              examen.salle,
               sec.code_enseignant,
               ordre,
               2,
@@ -784,7 +828,7 @@ app.post("/gestion-surveillances", async (req, res) => {
           );
           // Décrémenter leur quota
           await pool.query(
-            "UPDATE enseignants SET surveillances = surveillances - 1 WHERE code_enseignant = ? AND surveillances > 0",
+            "UPDATE enseignants SET surveillances = surveillances - 1 WHERE code_enseignant = ?",
             [sec.code_enseignant]
           );
           ordre++;
