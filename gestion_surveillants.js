@@ -558,6 +558,15 @@ console.log("Surveillances filtrées pour la modale :", surveillancesFiltrees);
         sendBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Envoi en cours...';
         sendBtn.disabled = true;
 
+        const activeBtn = document.querySelector('.session-btn.active');
+        const semestre = activeBtn ? activeBtn.value : '';
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+        const annee_universitaire = currentMonth >= 9
+          ? `${currentYear}-${currentYear + 1}`
+          : `${currentYear - 1}-${currentYear}`;
+
         // Envoyer la requête au serveur
         const response = await fetch('http://localhost:3000/envoyer-mail-enseignant', {
             method: 'POST',
@@ -565,10 +574,11 @@ console.log("Surveillances filtrées pour la modale :", surveillancesFiltrees);
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                code_enseignant: enseignantId // Assurez-vous d'avoir cette variable disponible
+                code_enseignant: enseignantId,
+                semestre,
+                annee_universitaire
             })
         });
-
         const result = await response.json();
 
           if (result.success) {
@@ -1181,7 +1191,18 @@ async function supprimerSurveillance(surveillanceId, rowElement) {
   document.getElementById('sendEmailsBtn').addEventListener('click', async function() {
     const sendBtn = document.getElementById('sendEmailsBtn');
     const originalContent = sendBtn.innerHTML;
-    
+
+    // Récupérer la session active
+    const activeBtn = document.querySelector('.session-btn.active');
+    const semestre = activeBtn ? activeBtn.value : '';
+    // Calculer l'année universitaire courante
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const annee_universitaire = currentMonth >= 9
+        ? `${currentYear}-${currentYear + 1}`
+        : `${currentYear - 1}-${currentYear}`;
+
     try {
         // Afficher la boîte de confirmation
         const confirmation = await Swal.fire({
@@ -1209,18 +1230,23 @@ async function supprimerSurveillance(surveillanceId, rowElement) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+                semestre,
+                annee_universitaire
+            })
         });
         
         // Envoyer la requête au serveur envoyer-PV
         const responsePV = await fetch('http://localhost:3000/envoyer-pv', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            code_enseignant: code_enseignant // Ajoutez ce paramètre à votre route /envoyer-pv
-          })
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                semestre,
+                annee_universitaire
+            })
         });
   
         const result = await response.json();
