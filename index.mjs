@@ -41,7 +41,7 @@ app.use(session({
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "root",
+  password: "supra_2006",
   database: "try",
   waitForConnections: true,
   connectionLimit: 10,

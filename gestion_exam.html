@@ -159,7 +159,7 @@
 
 
 
-        <div class="search-bar" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
+        <div id="mainFilters" class="search-bar" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
             <input type="text" id="filter-section" class="search-input" placeholder="Rechercher une Section...">
             
                 <label for="filter-palier"></label>
@@ -238,6 +238,19 @@
                     <!-- Rows will be dynamically inserted here -->
                 </tbody>
             </table>
+        </div>
+        <div id="examensPlFilters" style="display:none; margin-bottom: 20px; gap: 15px; align-items: flex-end;">
+            <input type="text" id="pl-filter-section" class="search-input" placeholder="Rechercher une Section...">
+            <select id="pl-filter-palier" class="form-control">
+                <option value="">Tous les Paliers</option>
+            </select>
+            <select id="pl-filter-specialite" class="filter-select">
+                <option value="">Toutes les Spécialités</option>
+            </select>
+            <select id="pl-filter-module" class="filter-select">
+                <option value="">Tous les Modules</option>
+            </select>
+            <button id="pl-filter-reset" class="btn btn-outline">Réinitialiser</button>
         </div>
         <div class="table-container" id="examensPlContainer" style="display: none;">
             <table id="examensPlTable">

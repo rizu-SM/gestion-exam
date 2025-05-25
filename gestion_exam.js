@@ -2,13 +2,17 @@ document.querySelectorAll('.session-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
+        // Vider les filtres
         document.getElementById('filter-palier').value = '';
         document.getElementById('filter-specialite').value = '';
         document.getElementById('filter-module').value = '';
         document.getElementById('filter-section').value = '';
+        // Recharger les valeurs possibles pour les filtres selon la nouvelle session
+        setupFilterDropdowns();
         filterExamsWithBox();
     });
 });
+let examensPlData = []; // à placer en haut du fichier
 
 function closeEditModal() {
     document.getElementById('editModal').style.display = 'none';
@@ -453,6 +457,9 @@ async function loadExamens() {
             examensPlContainer.style.display = '';
             verificationBefore.style.display = 'none';
             verificationAfter.style.display = '';
+            document.getElementById('mainFilters').style.display = 'none'; // <-- cache le filtre principal
+            document.getElementById('examensPlFilters').style.display = ''; // <-- affiche le filtre planifié
+    
             // Charger et afficher les examens planifiés
             const res = await fetch('http://localhost:3000/examens-pl');
             const examensPl = await res.json();
@@ -464,6 +471,9 @@ async function loadExamens() {
             tableContainer.style.display = '';
             examFormSection.style.display = '';
             examensPlContainer.style.display = 'none';
+            document.getElementById('mainFilters').style.display = ''; // <-- affiche le filtre principal
+            document.getElementById('examensPlFilters').style.display = 'none'; // <-- cache le filtre planifié
+    
             verificationBefore.style.display = '';
             verificationAfter.style.display = 'none';
         }
@@ -471,7 +481,8 @@ async function loadExamens() {
         // 4. Charger et afficher les examens normalement
         const response = await fetch('http://localhost:3000/examens');
         allExams = await response.json();
-
+        setupFilterDropdowns();
+        displayExamens(allExams);
         if (activeSessionBtn) {
             const activeSession = activeSessionBtn.dataset.semestre;
             filterExamsBySession(activeSession);
@@ -931,18 +942,42 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 function displayExamensPl(examens) {
+    examensPlData = examens;
     const tbody = document.querySelector('#examensPlTable tbody');
-    tbody.innerHTML = ''; // Vide le tableau
+    tbody.innerHTML = '';
+
+    // Affiche les filtres planifiés
+    document.getElementById('examensPlFilters').style.display = '';
+
+    // Remplir les dropdowns UNIQUEMENT si on affiche tous les examens (pas en filtré)
+    if (examens.length === examensPlData.length) {
+        const palierSelect = document.getElementById('pl-filter-palier');
+        const specialiteSelect = document.getElementById('pl-filter-specialite');
+        const moduleSelect = document.getElementById('pl-filter-module');
+
+        // Palier
+        const paliers = [...new Set(examens.map(e => e.palier))];
+        palierSelect.innerHTML = '<option value="">Tous les Paliers</option>';
+        paliers.forEach(p => palierSelect.add(new Option(p, p)));
+
+        // Specialite
+        const specialites = [...new Set(examens.map(e => e.specialite))];
+        specialiteSelect.innerHTML = '<option value="">Toutes les Spécialités</option>';
+        specialites.forEach(s => specialiteSelect.add(new Option(s, s)));
+
+        // Module
+        const modules = [...new Set(examens.map(e => e.module))];
+        moduleSelect.innerHTML = '<option value="">Tous les Modules</option>';
+        modules.forEach(m => moduleSelect.add(new Option(m, m)));
+    }
 
     if (examens.length === 0) {
         const row = tbody.insertRow();
         const cell = row.insertCell();
-        cell.colSpan = 9; // Nombre de colonnes sans "Action"
+        cell.colSpan = 7;
         cell.textContent = 'Aucun examen à afficher';
         return;
     }
-
-    console.log('Examens planifiés:', examens);
 
     examens.forEach(examen => {
         const row = tbody.insertRow();
@@ -954,8 +989,6 @@ function displayExamensPl(examens) {
             examen.date_exam,
             examen.horaire,
             examen.salle,
-            // examen.semestre,
-            // examen.annee_universitaire
         ];
         cells.forEach(text => {
             const cell = row.insertCell();
@@ -970,58 +1003,92 @@ function setupFilterDropdowns() {
     const specialiteSelect = document.getElementById('filter-specialite');
     const moduleSelect = document.getElementById('filter-module');
 
-    // Palier
-    const paliers = [...new Set(allExams.map(e => e.palier))];
+    // Filtrer les examens selon la session active
+    const activeSessionBtn = document.querySelector('.session-btn.active');
+    const session = activeSessionBtn ? activeSessionBtn.dataset.semestre : '';
+    
+    let examsForSession = allExams;
+    if (session) {
+        examsForSession = allExams.filter(exam => exam.semestre === session);
+    }
+
+    // Mettre à jour le dropdown des paliers
+    const paliers = [...new Set(examsForSession.map(exam => exam.palier))];
     palierSelect.innerHTML = '<option value="">Tous</option>';
     paliers.forEach(p => palierSelect.add(new Option(p, p)));
 
-    // Specialite
-    function updateSpecialites() {
+    // Fonction pour mettre à jour les spécialités
+    const updateSpecialites = () => {
         const selectedPalier = palierSelect.value;
-        const filtered = selectedPalier ? allExams.filter(e => e.palier === selectedPalier) : allExams;
-        const specialites = [...new Set(filtered.map(e => e.specialite))];
+        let filtered = examsForSession;
+        
+        if (selectedPalier) {
+            filtered = filtered.filter(exam => exam.palier === selectedPalier);
+        }
+        
+        const specialites = [...new Set(filtered.map(exam => exam.specialite))];
         specialiteSelect.innerHTML = '<option value="">Toutes</option>';
         specialites.forEach(s => specialiteSelect.add(new Option(s, s)));
+        
         updateModules();
-    }
+    };
 
-    // Module
-    function updateModules() {
+    // Fonction pour mettre à jour les modules
+    const updateModules = () => {
         const selectedPalier = palierSelect.value;
         const selectedSpecialite = specialiteSelect.value;
-        let filtered = allExams;
-        if (selectedPalier) filtered = filtered.filter(e => e.palier === selectedPalier);
-        if (selectedSpecialite) filtered = filtered.filter(e => e.specialite === selectedSpecialite);
-        const modules = [...new Set(filtered.map(e => e.module))];
+        let filtered = examsForSession;
+        
+        if (selectedPalier) {
+            filtered = filtered.filter(exam => exam.palier === selectedPalier);
+        }
+        if (selectedSpecialite) {
+            filtered = filtered.filter(exam => exam.specialite === selectedSpecialite);
+        }
+        
+        const modules = [...new Set(filtered.map(exam => exam.module))];
         moduleSelect.innerHTML = '<option value="">Tous</option>';
         modules.forEach(m => moduleSelect.add(new Option(m, m)));
-    }
+    };
 
-    palierSelect.onchange = updateSpecialites;
-    specialiteSelect.onchange = updateModules;
+    // Écouteurs d'événements
+    palierSelect.addEventListener('change', updateSpecialites);
+    specialiteSelect.addEventListener('change', updateModules);
 
-    // Initial fill
+    // Initialiser les dropdowns
     updateSpecialites();
 }
 
 // Filter exams based on filter box
 function filterExamsWithBox() {
+    // Récupérer les valeurs des filtres
     const palier = document.getElementById('filter-palier').value;
     const specialite = document.getElementById('filter-specialite').value;
     const module = document.getElementById('filter-module').value;
     const section = document.getElementById('filter-section').value.trim();
-
-    // Always filter by active session
+    
+    // Récupérer la session active
     const activeSessionBtn = document.querySelector('.session-btn.active');
     const session = activeSessionBtn ? activeSessionBtn.dataset.semestre : '';
-
-    let filtered = allExams;
-    if (session) filtered = filtered.filter(e => e.semestre === session);
-    if (palier) filtered = filtered.filter(e => e.palier === palier);
-    if (specialite) filtered = filtered.filter(e => e.specialite === specialite);
-    if (module) filtered = filtered.filter(e => e.module === module);
-    if (section) filtered = filtered.filter(e => e.section && e.section.toLowerCase().includes(section.toLowerCase()));
-
+    
+    // Filtrer d'abord par session
+    let filtered = allExams.filter(exam => {
+        // Si pas de session sélectionnée, on prend tous les examens
+        if (!session) return true;
+        return exam.semestre === session;
+    });
+    
+    // Appliquer les autres filtres
+    if (palier) filtered = filtered.filter(exam => exam.palier === palier);
+    if (specialite) filtered = filtered.filter(exam => exam.specialite === specialite);
+    if (module) filtered = filtered.filter(exam => exam.module === module);
+    if (section) {
+        filtered = filtered.filter(exam => 
+            exam.section && exam.section.toLowerCase().includes(section.toLowerCase())
+        );
+    }
+    
+    // Afficher les résultats filtrés
     displayExamens(filtered);
 }
 
@@ -1036,79 +1103,31 @@ document.getElementById('filter-reset').onclick = function() {
 
 // Listen to filter changes
 ['filter-palier', 'filter-specialite', 'filter-module', 'filter-section'].forEach(id => {
-    document.getElementById(id).addEventListener('change', filterExamsWithBox);
-    document.getElementById(id).addEventListener('input', filterExamsWithBox);
+    document.getElementById(id).addEventListener('change', function() {
+        // Si la table planifiée est visible, filtre dessus
+        if (document.getElementById('examensPlContainer').style.display !== 'none') {
+            filterExamensPlWithBox();
+        } else {
+            filterExamsWithBox();
+        }
+    });
+    document.getElementById(id).addEventListener('input', function() {
+        if (document.getElementById('examensPlContainer').style.display !== 'none') {
+            filterExamensPlWithBox();
+        } else {
+            filterExamsWithBox();
+        }
+    });
 });
 
 // Call setup after loading exams
-async function loadExamens() {
-    try {
-        const activeSessionBtn = document.querySelector('.session-btn.active');
-        const semestre = activeSessionBtn ? (activeSessionBtn.dataset.semestre || activeSessionBtn.value) : '';
 
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth() + 1;
-        const currentYear = currentDate.getFullYear();
-        const annee_universitaire = currentMonth >= 9
-            ? `${currentYear}-${currentYear + 1}`
-            : `${currentYear - 1}-${currentYear}`;
-
-        const checkRes = await fetch(`http://localhost:3000/base-surveillance-check?semestre=${encodeURIComponent(semestre)}&annee_universitaire=${encodeURIComponent(annee_universitaire)}`);
-        const checkData = await checkRes.json();
-
-        const tableContainer = document.querySelector('.table-container');
-        const examFormSection = document.querySelector('.exam-form-section');
-        const examensPlContainer = document.getElementById('examensPlContainer');
-        const verificationBefore = document.getElementById('verificationBefore');
-        const verificationAfter = document.getElementById('verificationAfter');
-
-        if (checkData && checkData.length > 0) {
-            // Cas 1 : Examens déjà planifiés
-            tableContainer.style.display = 'none';
-            examFormSection.style.display = 'none';
-            examensPlContainer.style.display = '';
-            verificationBefore.style.display = 'none';
-            verificationAfter.style.display = '';
-            // Charger et afficher les examens planifiés
-            const res = await fetch('http://localhost:3000/examens-pl');
-            const examensPl = await res.json();
-            console.log(' examensPl:', examensPl);
-            displayExamensPl(examensPl);
-            return;
-        } else {
-            // Cas 2 : Pas de surveillances
-            tableContainer.style.display = '';
-            examFormSection.style.display = '';
-            examensPlContainer.style.display = 'none';
-            verificationBefore.style.display = '';
-            verificationAfter.style.display = 'none';
-        }
-
-        // 4. Charger et afficher les examens normalement
-        const response = await fetch('http://localhost:3000/examens');
-        allExams = await response.json();
-        setupFilterDropdowns();
-        displayExamens(allExams);
-        if (activeSessionBtn) {
-            const activeSession = activeSessionBtn.dataset.semestre;
-            filterExamsBySession(activeSession);
-        } else {
-            displayExamens(allExams);
-        }
-    } catch (error) {
-        console.error('Erreur lors du chargement des examens:', error);
-        await Swal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: 'Erreur lors du chargement des examens',
-            confirmButtonText: 'OK'
-        });
-    }
-}
 
 
 function paginateTable(tableBodySelector, rowsPerPage) {
     const tbody = document.querySelector(tableBodySelector);
+    if (!tbody) return; // <-- Ajoute cette ligne pour éviter l'erreur si tbody n'existe pas
+
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const totalRows = rows.length;
     const totalPages = Math.ceil(totalRows / rowsPerPage);
@@ -1116,26 +1135,26 @@ function paginateTable(tableBodySelector, rowsPerPage) {
     let currentPage = 1;
 
     function renderPage(page) {
-        tbody.innerHTML = ''; // Effacer le contenu du tableau
+        tbody.innerHTML = '';
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
 
         rows.slice(start, end).forEach(row => tbody.appendChild(row));
 
-        // Mettre à jour les contrôles de pagination
         const paginationControls = document.querySelector('.pagination-controls');
-        paginationControls.innerHTML = '';
-
-        for (let i = 1; i <= totalPages; i++) {
-            const button = document.createElement('button');
-            button.className = 'pagination-btn';
-            button.textContent = i;
-            if (i === page) button.classList.add('active');
-            button.addEventListener('click', () => {
-                currentPage = i;
-                renderPage(currentPage);
-            });
-            paginationControls.appendChild(button);
+        if (paginationControls) {
+            paginationControls.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.className = 'pagination-btn';
+                button.textContent = i;
+                if (i === page) button.classList.add('active');
+                button.addEventListener('click', () => {
+                    currentPage = i;
+                    renderPage(currentPage);
+                });
+                paginationControls.appendChild(button);
+            }
         }
     }
 
@@ -1146,3 +1165,50 @@ function paginateTable(tableBodySelector, rowsPerPage) {
 document.addEventListener('DOMContentLoaded', () => {
     paginateTable('.table-container tbody', 10); // 10 lignes par page
 });
+setupFilterDropdowns();
+    
+    // Écouteurs pour les changements de filtre
+    ['filter-palier', 'filter-specialite', 'filter-module', 'filter-section'].forEach(id => {
+        document.getElementById(id).addEventListener('change', filterExamsWithBox);
+        document.getElementById(id).addEventListener('input', function() {
+            if (id === 'filter-section') {
+                filterExamsWithBox();
+            }
+        });
+    });
+    
+    // Bouton de réinitialisation
+    document.getElementById('filter-reset').addEventListener('click', function() {
+        document.getElementById('filter-palier').value = '';
+        document.getElementById('filter-specialite').value = '';
+        document.getElementById('filter-module').value = '';
+        document.getElementById('filter-section').value = '';
+        filterExamsWithBox();
+    });
+
+function filterExamensPlWithBox() {
+    const palier = document.getElementById('pl-filter-palier').value;
+    const specialite = document.getElementById('pl-filter-specialite').value;
+    const module = document.getElementById('pl-filter-module').value;
+    const section = document.getElementById('pl-filter-section').value.trim();
+
+    let filtered = examensPlData;
+    if (palier) filtered = filtered.filter(e => e.palier === palier);
+    if (specialite) filtered = filtered.filter(e => e.specialite === specialite);
+    if (module) filtered = filtered.filter(e => e.module === module);
+    if (section) filtered = filtered.filter(e => e.section && e.section.toLowerCase().includes(section.toLowerCase()));
+
+    displayExamensPl(filtered);
+}
+
+['pl-filter-palier', 'pl-filter-specialite', 'pl-filter-module', 'pl-filter-section'].forEach(id => {
+    document.getElementById(id).addEventListener('change', filterExamensPlWithBox);
+    document.getElementById(id).addEventListener('input', filterExamensPlWithBox);
+});
+document.getElementById('pl-filter-reset').onclick = function() {
+    document.getElementById('pl-filter-palier').value = '';
+    document.getElementById('pl-filter-specialite').value = '';
+    document.getElementById('pl-filter-module').value = '';
+    document.getElementById('pl-filter-section').value = '';
+    filterExamensPlWithBox();
+};
