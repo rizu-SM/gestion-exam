@@ -1141,3 +1141,91 @@ body.modal-open {
     transform: translateY(-1px); /* Slightly reduced hover effect */
     box-shadow: 0 1px 3px rgba(67, 97, 238, 0.2); /* Reduced shadow */
 }
+
+.search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+
+
+
+
+
+
+
+
+
+/* Outline button style */
+.btn-outline {
+    background-color: transparent;
+    border: 1.5px solid var(--gray-light); /* Slightly thicker border */
+    color: var(--dark);
+}
+
+.btn-outline:hover {
+    background-color: var(--gray-light);
+    color: var(--primary);
+}
+
+/* Primary button style */
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary);
+    transform: translateY(-2px); /* Slightly more pronounced hover effect */
+    box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3); /* Enhanced shadow */
+}
+
+#modalMotif {
+    flex: 1; /* Permet au textarea de prendre l'espace restant */
+    min-height: 60px; /* Hauteur minimale */
+    max-height: 100px; /* Hauteur maximale pour éviter qu'il devienne trop grand */
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: var(--dark);
+    resize: none; /* Désactive la redimension du textarea */
+    transition: border-color 0.3s ease;
+    margin-right: 1rem; /* Ajoute un espace entre le textarea et les boutons */
+    overflow-y: auto; /* Ajoute un défilement vertical si le contenu dépasse */
+}
+
+#modalMotif:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Style pour les boutons dans le modal footer */
+.modal-footer {
+    padding: 1rem 1.5rem; /* Espace autour des éléments */
+    border-top: 1px solid var(--gray-light);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center; /* Aligne les éléments verticalement */
+    gap: 1rem; /* Espace entre le textarea et les boutons */
+}
+
+.modal-btn {
+    padding: 0.75rem 1.5rem; /* Taille des boutons */
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}

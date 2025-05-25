@@ -49,7 +49,7 @@ const pool = mysql.createPool({
 });
 
 
-//app.post("/gestion-surveillances", async (req, res) => {
+// app.post("/gestion-surveillances", async (req, res) => {
 //   try {
 //     /*****************************************************************
 //      * ÉTAPE 1: Assignation des professeurs de cours comme surveillants principal
@@ -811,7 +811,6 @@ app.post("/gestion-surveillances", async (req, res) => {
 });
 
 
-
 app.get("/envoyer-formation", async (req, res) => {
   try {
     const [formations] = await pool.query("SELECT * FROM formation");
@@ -1088,22 +1087,163 @@ app.get('/verifier-erreurs-examens', async (req, res) => {
   }
 });
 
+// app.get('/verifier-erreurs-examens', async (req, res) => {
+//   try {
+//     const session = req.query.session;
+//     let examensQuery = "SELECT * FROM exam_temp";
+//     let queryParams = [];
+//     if (session) {
+//       examensQuery += " WHERE semestre = ?";
+//       queryParams.push(session);
+//     }
+
+//     const [examens] = await pool.query(examensQuery, queryParams);
+//     const [planingV] = await pool.query("SELECT * FROM planingV");
+    
+//     // Nouvelle requête pour les examens non assignés
+//     const [examensNonAssignes] = await pool.query(`
+//       SELECT 
+//         et.id AS exam_id,
+//         et.module,
+//         et.specialite,
+//         et.section,
+//         et.date_exam,
+//         et.horaire,
+//         'NON ASSIGNE' AS statut
+//       FROM 
+//         exam_temp et
+//       LEFT JOIN 
+//         charge_enseignement ce 
+//         ON et.module = ce.intitule_module 
+//         AND et.specialite = ce.specialite 
+//         AND et.section = ce.section
+//       WHERE 
+//         ce.id IS NULL
+//         AND et.annee_universitaire = '2024-2025'
+//       ORDER BY 
+//         et.date_exam, et.horaire
+//     `);
+
+//     const erreurs = [];
+
+//     for (let i = 0; i < examens.length; i++) {
+//       const exam = examens[i];
+
+//       for (let j = i + 1; j < examens.length; j++) {
+//         const exam2 = examens[j];
+
+//         const date1 = new Date(exam.date_exam).toISOString().split('T')[0];
+//         const date2 = new Date(exam2.date_exam).toISOString().split('T')[0];
+
+//         const heure1 = exam.horaire.toString().trim();
+//         const heure2 = exam2.horaire.toString().trim();
+
+//         const salle1 = exam.salle.toString().trim();
+//         const salle2 = exam2.salle.toString().trim();
+
+//         // 1. Conflit de salle
+//         if (
+//           date1 === date2 &&
+//           heure1 === heure2 &&
+//           salle1 === salle2 &&
+//           exam.section !== exam2.section
+//         ) {
+//           erreurs.push({
+//             type: "Conflit de salle",
+//             message: `Conflit entre les sections ${exam.section} et ${exam2.section} dans la salle ${salle1} à ${heure1} le ${date1}`,
+//             examens: [exam.id, exam2.id]
+//           });
+//         }
+
+//         // 2. Doublon exact
+//         if (
+//           exam.section === exam2.section &&
+//           exam.module === exam2.module &&
+//           date1 === date2 &&
+//           heure1 === heure2 &&
+//           salle1 === salle2
+//         ) {
+//           erreurs.push({
+//             type: "Doublon exact",
+//             message: `Le module ${exam.module} est dupliqué pour la section ${exam.section} à la même date, heure et salle.`,
+//             examens: [exam.id, exam2.id]
+//           });
+//         }
+
+//         // 3. Module incohérent
+//         if (
+//           exam.section === exam2.section &&
+//           exam.module === exam2.module &&
+//           (date1 !== date2 || heure1 !== heure2 || salle1 !== salle2)
+//         ) {
+//           erreurs.push({
+//             type: "Incohérence module",
+//             message: `Le module ${exam.module} pour la section ${exam.section} est planifié à des moments différents.`,
+//             examens: [exam.id, exam2.id]
+//           });
+//         }
+//       }
+
+//       // 4. Vérification de la disponibilité de la salle
+//       const isSalleDisponible = planingV.some(
+//         (plan) =>
+//           plan.salle === exam.salle &&
+//           plan.horaire === exam.horaire &&
+//           new Date(plan.date_exam).toISOString().split('T')[0] ===
+//             new Date(exam.date_exam).toISOString().split('T')[0]
+//       );
+
+//       if (!isSalleDisponible) {
+//         erreurs.push({
+//           type: "Salle indisponible",
+//           message: `La salle ${exam.salle} n'est pas disponible à ${exam.horaire} le ${exam.date_exam}.`,
+//           examen: exam.id
+//         });
+//       }
+
+//       // 5. Nouvelle vérification des examens non assignés
+//       const estNonAssigne = examensNonAssignes.some(e => e.exam_id === exam.id);
+//       if (estNonAssigne) {
+//         erreurs.push({
+//           type: "Examen non assigné",
+//           message: `Aucun professeur n'est assigné à l'examen du module ${exam.module} pour la section ${exam.section}.`,
+//           examen: exam.id
+//         });
+//       }
+//     }
+
+//     res.json({
+//       success: erreurs.length === 0,
+//       erreurs,
+//       message: erreurs.length > 0 ? `${erreurs.length} erreur(s) détectée(s).` : "Aucune erreur détectée."
+//     });
+
+//   } catch (error) {
+//     console.error("Erreur de vérification :", error);
+//     res.status(500).json({ message: "Erreur serveur", error: error.message });
+//   }
+// });
+
 app.post("/envoyer-mail", async (req, res) => {
   try {
-    // Create files directory if it doesn't exist
+    const { semestre, annee_universitaire } = req.body;
+    if (!semestre || !annee_universitaire) {
+      return res.status(400).json({ success: false, message: "Semestre et année universitaire requis." });
+    }
     const filesDir = path.join(process.cwd(), "files");
     if (!fs.existsSync(filesDir)) {
       fs.mkdirSync(filesDir, { recursive: true });
     }
 
     const [base_surveillance] = await pool.query(
-      "SELECT DISTINCT code_enseignant FROM base_surveillance"
+      "SELECT DISTINCT code_enseignant FROM base_surveillance WHERE semestre = ? AND annee_universitaire = ?",
+      [semestre, annee_universitaire]
     );
 
     if (base_surveillance.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Aucun enseignant trouvé dans base_surveillance.",
+        message: "Aucun enseignant trouvé dans base_surveillance pour ce semestre et cette année universitaire.",
       });
     }
 
@@ -1117,8 +1257,8 @@ app.post("/envoyer-mail", async (req, res) => {
       const [examens] = await pool.query(
         `SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre
          FROM base_surveillance
-         WHERE code_enseignant = ?`,
-        [code_enseignant]
+         WHERE code_enseignant = ? AND semestre = ? AND annee_universitaire = ?`,
+        [code_enseignant, semestre, annee_universitaire]
       );
 
       if (examens.length === 0) continue;
@@ -1389,13 +1529,22 @@ app.post("/envoyer-mail", async (req, res) => {
     });
   }
 });
+
+
 //PV 
 app.post("/envoyer-pv", async (req, res) => {
   try {
+    const { semestre, annee_universitaire } = req.body;
+    if (!semestre || !annee_universitaire) {
+      return res.status(400).json({ success: false, message: "Semestre et année universitaire requis." });
+    }
+
+    // 1. Récupérer les examens du semestre/année demandés
     const [examens] = await pool.query(`
       SELECT DISTINCT date_exam, horaire, salle, module 
       FROM base_surveillance
-    `);
+      WHERE semestre = ? AND annee_universitaire = ?
+    `, [semestre, annee_universitaire]);
 
     if (examens.length === 0) {
       return res.status(404).json({ success: false, message: "Aucun examen trouvé." });
@@ -1409,28 +1558,28 @@ app.post("/envoyer-pv", async (req, res) => {
     for (const examen of examens) {
       const { date_exam, horaire, salle, module } = examen;
 
+      // 2. Prof principal
       const [principaux] = await pool.query(`
         SELECT b.*, e.nom, e.prenom, e.email1 
         FROM base_surveillance b
         JOIN enseignants e ON b.code_enseignant = e.code_enseignant
         WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ? AND b.ordre = 1
+          AND b.semestre = ? AND b.annee_universitaire = ?
         LIMIT 1
-      `, [date_exam, horaire, salle, module]);
+      `, [date_exam, horaire, salle, module, semestre, annee_universitaire]);
 
-      if (principaux.length === 0) {
-        console.log(`Aucun professeur principal trouvé pour ${module} (${salle} ${horaire})`);
-        continue;
-      }
-
+      if (principaux.length === 0) continue;
       const professeurPrincipal = principaux[0];
 
+      // 3. Secondaires
       const [sec] = await pool.query(`
         SELECT b.code_enseignant, e.nom, e.prenom, e.email1, b.ordre
         FROM base_surveillance b
         JOIN enseignants e ON b.code_enseignant = e.code_enseignant
         WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ? AND b.ordre != 1
+          AND b.semestre = ? AND b.annee_universitaire = ?
         ORDER BY b.ordre
-      `, [date_exam, horaire, salle, module]);
+      `, [date_exam, horaire, salle, module, semestre, annee_universitaire]);
 
       const tousEnseignants = [professeurPrincipal, ...sec];
 
@@ -1716,14 +1865,15 @@ app.post("/envoyer-pv", async (req, res) => {
 });
 
 
+
 //email poue un seul enseignant
 
 app.post("/envoyer-mail-enseignant", async (req, res) => {
   try {
-    const { code_enseignant } = req.body;
+    const { code_enseignant, semestre, annee_universitaire } = req.body;
 
-    if (!code_enseignant) {
-      return res.status(400).json({ success: false, message: "Code enseignant requis." });
+    if (!code_enseignant || !semestre || !annee_universitaire) {
+      return res.status(400).json({ success: false, message: "Code enseignant, semestre et année universitaire requis." });
     }
 
     const filesDir = path.join(process.cwd(), "files");
@@ -1731,11 +1881,12 @@ app.post("/envoyer-mail-enseignant", async (req, res) => {
       fs.mkdirSync(filesDir, { recursive: true });
     }
 
+    // Filtrer aussi par semestre et année universitaire
     const [examens] = await pool.query(
       `SELECT palier, specialite, section, module, date_exam, horaire, salle, semestre
        FROM base_surveillance
-       WHERE code_enseignant = ?`,
-      [code_enseignant]
+       WHERE code_enseignant = ? AND semestre = ? AND annee_universitaire = ?`,
+      [code_enseignant, semestre, annee_universitaire]
     );
 
     if (examens.length === 0) {
@@ -1989,6 +2140,173 @@ app.post("/envoyer-mail-enseignant", async (req, res) => {
     res.status(500).json({ success: false, message: "Erreur serveur lors de l'envoi de l'email." });
   }
 });
+
+
+app.post("/envoyer-pv-enseignant", async (req, res) => {
+  try {
+    const { code_enseignant, semestre, annee_universitaire } = req.body;
+    if (!code_enseignant || !semestre || !annee_universitaire) {
+      return res.status(400).json({ success: false, message: "Code enseignant, semestre et année universitaire requis." });
+    }
+
+    // Récupérer tous les examens de cet enseignant pour ce semestre/année
+    const [examens] = await pool.query(`
+      SELECT DISTINCT date_exam, horaire, salle, module 
+      FROM base_surveillance
+      WHERE code_enseignant = ? AND semestre = ? AND annee_universitaire = ?
+    `, [code_enseignant, semestre, annee_universitaire]);
+
+    if (examens.length === 0) {
+      return res.status(404).json({ success: false, message: "Aucun examen trouvé pour cet enseignant." });
+    }
+
+    const [enseignantRows] = await pool.query(
+      `SELECT nom, prenom, email1 FROM enseignants WHERE code_enseignant = ?`,
+      [code_enseignant]
+    );
+    if (enseignantRows.length === 0 || !enseignantRows[0].email1) {
+      return res.status(404).json({ success: false, message: "Enseignant introuvable ou email manquant." });
+    }
+    const enseignant = enseignantRows[0];
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    for (const examen of examens) {
+      const { date_exam, horaire, salle, module } = examen;
+
+      // Récupérer tous les surveillants pour cet examen
+      const [proctors] = await pool.query(`
+        SELECT b.*, e.nom, e.prenom, e.email1, b.ordre
+        FROM base_surveillance b
+        JOIN enseignants e ON b.code_enseignant = e.code_enseignant
+        WHERE b.date_exam = ? AND b.horaire = ? AND b.salle = ? AND b.module = ? AND b.semestre = ? AND b.annee_universitaire = ?
+        ORDER BY b.ordre
+      `, [date_exam, horaire, salle, module, semestre, annee_universitaire]);
+
+      if (proctors.length === 0) continue;
+
+      // Générer le HTML du PV
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Procès-Verbal de Surveillance</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+        .print-header { text-align: center; margin-bottom: 20px; }
+        .print-title { color: #2c3e50; font-size: 1.5em; }
+        .print-section { margin-bottom: 25px; }
+        .section-title { color: #4361ee; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .info-item { margin-bottom: 10px; }
+        .info-label { font-weight: bold; color: #7f8c8d; font-size: 0.9em; }
+        .proctors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
+        .proctor-card { border: 1px solid #eee; border-radius: 5px; padding: 12px; display: flex; align-items: center; gap: 12px; }
+        .proctor-card.principal { border-left: 3px solid #4361ee; background-color: #f8f9fe; }
+        .proctor-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #e3e9fd; color: #4361ee; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
+        .proctor-info { flex-grow: 1; }
+        .proctor-name { font-weight: 500; margin-bottom: 2px; }
+        .proctor-role { font-size: 0.85em; color: #7f8c8d; }
+        .print-footer { margin-top: 30px; font-size: 0.8em; color: #7f8c8d; text-align: right; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1 class="print-title">Procès-Verbal de Surveillance</h1>
+        <p>${new Date(date_exam).toLocaleDateString('fr-FR')} - ${horaire} - Salle ${salle} - Module ${module}</p>
+    </div>
+    <div class="print-section">
+        <h2 class="section-title">Équipe de surveillance</h2>
+        <div class="proctors-grid">
+            ${proctors.map((p, idx) => `
+                <div class="proctor-card ${idx === 0 ? 'principal' : ''}">
+                    <div class="proctor-avatar">${p.nom.charAt(0)}${p.prenom.charAt(0)}</div>
+                    <div class="proctor-info">
+                        <div class="proctor-name">${p.nom} ${p.prenom}</div>
+                        <div class="proctor-role">${idx === 0 ? 'Professeur Principal' : 'Surveillant'} (Ordre: ${p.ordre})</div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    </div>
+    <div class="print-footer">
+        Généré le ${new Date().toLocaleDateString()} à ${new Date().toLocaleTimeString()}
+    </div>
+</body>
+</html>
+      `;
+
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+      const dateExamString = new Date(date_exam).toISOString().split('T')[0];
+      const pdfPath = path.join(
+        process.cwd(),
+        "files",
+        `PV_${module}_${dateExamString.replace(/-/g, '')}_${horaire.replace(/:/g, '')}_${code_enseignant}.pdf`
+      );
+
+      await page.pdf({
+        path: pdfPath,
+        format: "A4",
+        printBackground: true,
+        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' }
+      });
+      await page.close();
+
+      // Envoi du mail au professeur principal (ici, l'enseignant sélectionné)
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER || "departement.informatique.usthb@gmail.com",
+          pass: process.env.EMAIL_PASS || "pcvt nomo ocsf cows",
+        },
+      });
+
+      try {
+        await transporter.sendMail({
+          from: '"Administration des Examens" <departement.informatique.usthb@gmail.com>',
+          to: enseignant.email1,
+          subject: `Procès-Verbal - Module ${module}`,
+          html: `
+            <p>Cher professeur ${enseignant.nom} ${enseignant.prenom},</p>
+            <p>Voici le procès-verbal pour :</p>
+            <ul>
+              <li><strong>Module :</strong> ${module}</li>
+              <li><strong>Salle :</strong> ${salle}</li>
+              <li><strong>Date :</strong> ${new Date(date_exam).toLocaleDateString('fr-FR')}</li>
+              <li><strong>Horaire :</strong> ${horaire}</li>
+            </ul>
+            <p>Cordialement,<br>Administration des Examens</p>
+          `,
+          attachments: [{
+            filename: `PV_${module}_${dateExamString}.pdf`,
+            path: pdfPath,
+            contentType: 'application/pdf'
+          }],
+        });
+
+        console.log(`PV envoyé à ${enseignant.email1}`);
+        fs.unlinkSync(pdfPath);
+
+      } catch (emailError) {
+        console.error(`Erreur lors de l'envoi du PV :`, emailError);
+      }
+    }
+
+    await browser.close();
+    res.json({ success: true, message: "PV envoyé avec succès à l'enseignant." });
+
+  } catch (error) {
+    console.error("Erreur serveur:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 
 
@@ -2651,8 +2969,8 @@ app.patch('/demandeslist/:id', async (req, res) => {
     try {
         let sql = 'UPDATE demandes SET status = ?';
         const params = [status];
-        if (status === 'rejected') {
-            sql += ', motif_rejet = ?';
+        if (status === 'declined') {
+            sql += ', motif = ?';
             params.push(motif_rejet || '');
         }
         sql += ' WHERE id = ?';
@@ -2795,6 +3113,7 @@ app.get('/surveillancesxbase', async (req, res) => {
     res.status(500).send("Erreur serveur");
   }
 });
+
 
 
 
@@ -2972,50 +3291,44 @@ app.get('/export-exams-pdf', async (req, res) => {
 });
 
 
+
 app.get("/examens-pl", async (req, res) => {
   try {
+    // Récupérer tous les examens
     const [examens] = await pool.query(`
-      SELECT 
-        e.id, 
-        e.palier, 
-        e.specialite, 
-        e.section, 
-        e.module, 
-        DATE_FORMAT(e.date_exam, '%Y-%m-%d') AS date_exam, 
-        e.horaire, 
-        e.salle, 
-        e.semestre, 
-        e.annee_universitaire,
-        bs.code_enseignant,
-        bs.ordre,
-        bs.nbrSE
-      FROM 
-        exam e
-      INNER JOIN 
-        base_surveillance bs ON 
-          e.module = bs.module AND 
-          e.date_exam = bs.date_exam AND 
-          e.horaire = bs.horaire AND 
-          e.salle = bs.salle AND 
-          e.section = bs.section AND 
-          e.semestre = bs.semestre AND 
-          e.annee_universitaire = bs.annee_universitaire
+      SELECT id, palier, specialite, section, module, 
+             DATE_FORMAT(date_exam, '%Y-%m-%d') AS date_exam, 
+             horaire, salle, semestre, annee_universitaire 
+      FROM exam
     `);
 
-    // Ajouter le champ est_assigne qui sera toujours true pour ces résultats
-    const result = examens.map(exam => ({
-      ...exam,
-      est_assigne: true
+    // Pour chaque examen, vérifier s'il existe dans base_surveillance
+    const examensWithStatus = await Promise.all(examens.map(async (exam) => {
+      const [rows] = await pool.query(
+        `SELECT id FROM base_surveillance 
+         WHERE module = ? AND date_exam = ? AND horaire = ? AND salle = ? 
+           AND section = ? AND semestre = ? AND annee_universitaire = ? LIMIT 1`,
+        [
+          exam.module,
+          exam.date_exam,
+          exam.horaire,
+          exam.salle,
+          exam.section,
+          exam.semestre,
+          exam.annee_universitaire
+        ]
+      );
+      console.log(rows)
+      return {
+        ...exam,
+        est_assigne: rows.length > 0
+      };
     }));
 
-    res.json(result);
+    res.json(examensWithStatus);
   } catch (error) {
     console.error("Erreur lors de la récupération des examens:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Erreur serveur",
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: "Erreur serveur" });
   }
 });
 

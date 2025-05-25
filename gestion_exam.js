@@ -2,7 +2,11 @@ document.querySelectorAll('.session-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         document.querySelectorAll('.session-btn').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-        // Ici vous pourriez charger les données de la session sélectionnée
+        document.getElementById('filter-palier').value = '';
+        document.getElementById('filter-specialite').value = '';
+        document.getElementById('filter-module').value = '';
+        document.getElementById('filter-section').value = '';
+        filterExamsWithBox();
     });
 });
 
@@ -452,6 +456,7 @@ async function loadExamens() {
             // Charger et afficher les examens planifiés
             const res = await fetch('http://localhost:3000/examens-pl');
             const examensPl = await res.json();
+            console.log(' examensPl:', examensPl);
             displayExamensPl(examensPl);
             return;
         } else {
@@ -877,9 +882,9 @@ document.getElementById('download').addEventListener('click', async function () 
             // Download the generated PDF from the backend
             const pdfResponse = await fetch(`http://localhost:3000/Examens_Par_Niveau.pdf?ts=${Date.now()}`);
             if (!pdfResponse.ok) {
-    throw new Error("Erreur lors du téléchargement du PDF.");
-}
-const pdfBlob = await pdfResponse.blob();
+                throw new Error("Erreur lors du téléchargement du PDF.");
+            }
+            const pdfBlob = await pdfResponse.blob();
 
             await writableStream.write(pdfBlob);
             await writableStream.close();
@@ -936,6 +941,8 @@ function displayExamensPl(examens) {
         cell.textContent = 'Aucun examen à afficher';
         return;
     }
+
+    console.log('Examens planifiés:', examens);
 
     examens.forEach(examen => {
         const row = tbody.insertRow();
@@ -1065,6 +1072,7 @@ async function loadExamens() {
             // Charger et afficher les examens planifiés
             const res = await fetch('http://localhost:3000/examens-pl');
             const examensPl = await res.json();
+            console.log(' examensPl:', examensPl);
             displayExamensPl(examensPl);
             return;
         } else {

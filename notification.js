@@ -102,10 +102,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (type === 'cancel') return '<span class="request-type-badge cancel">Annulation</span>';
         return '';
     }
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-    }
+    // function formatDate(dateString) {
+    //     const date = new Date(dateString);
+    //     return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    // }
 
     // function renderRequests(typeFilter = '') {
     //     notificationList.innerHTML = '';
@@ -645,6 +645,14 @@ function openModal(request) {
             (${surv.horaire ? surv.horaire : ''}${surv.salle ? ', ' + surv.salle : ''})`;
     }
 
+    const date = formatDate(surv.date_exam);
+        const startTime = formatTime(surv.horaire);
+        // Assuming each exam is 1.5h (90min)
+        const [h, m] = startTime.split(':').map(Number);
+        const end = new Date(0, 0, 0, h, m + 90);
+        const endTime = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
+        const label = `${date} - ${surv.module} (${startTime}-${endTime}, ${surv.salle})`;
+
     let html = `
         <div class="exam-section">
             <h3 class="section-title">
@@ -805,3 +813,30 @@ document.querySelectorAll('.notification-filter').forEach(btn => {
         renderRequests(this.dataset.type);
     };
 });
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+
+// Format time as HH:MM (remove seconds)
+function formatTime(timeString) {
+    return timeString.substring(0, 5); // Takes first 5 characters (HH:MM)
+}
+
+
+function formatResponsableName(surveillance) {
+    // Split and format the code_enseignant
+    const nameParts = surveillance.code_enseignant.split('_')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
+    
+    // Join with spaces
+    const fullName = nameParts.join(' ');
+    let title = 'Prof. ';
+
+    return `${title}${fullName}`.trim();
+}

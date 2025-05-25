@@ -416,6 +416,7 @@ async function showExamDetails(examId) {
     
         // Separate principal and assistants
         const principal = examGroup.find(s => s.ordre === 1);
+        window.currentPrincipal = principal;
         const assistants = examGroup.filter(s => s.ordre > 1);
     
         // Format the time (08:00:00 → 08:00)
@@ -535,4 +536,77 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log("Date actuelle:", currentDate);
       console.log("Mois actuel:", currentMonth);
       console.log("Année actuelle:", currentYear);
+});
+
+document.getElementById('sendEmailBtn').addEventListener('click', async function () {
+    try {
+        // Récupérer le code enseignant du surveillant principal affiché dans le modal
+        // Supposons que tu as stocké l'objet principal lors de l'ouverture du modal
+        // Sinon, adapte pour récupérer le code_enseignant du principal du groupe affiché
+        if (!window.currentPrincipal) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: "Impossible de trouver le surveillant principal pour cet examen.",
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        const code_enseignant = window.currentPrincipal.code_enseignant;
+
+        // Récupérer le semestre sélectionné
+        const activeSessionBtn = document.querySelector('.session-btn.active');
+        const semestre = activeSessionBtn ? activeSessionBtn.dataset.semestre : '';
+
+        // Calculer l'année universitaire
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = currentDate.getFullYear();
+        const annee_universitaire = currentMonth >= 9
+            ? `${currentYear}-${currentYear + 1}`
+            : `${currentYear - 1}-${currentYear}`;
+
+        // Afficher un loader
+        const sendBtn = document.getElementById('sendEmailBtn');
+        const originalContent = sendBtn.innerHTML;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+        sendBtn.disabled = true;
+
+        // Appel API
+        const response = await fetch('http://localhost:3000/envoyer-pv-enseignant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code_enseignant, semestre, annee_universitaire })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Succès',
+                text: "Le PV a été envoyé avec succès à l'enseignant.",
+                confirmButtonText: 'OK'
+            });
+        } else {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Erreur',
+                text: result.message || "Erreur lors de l'envoi du PV.",
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: "Une erreur s'est produite lors de l'envoi du PV.",
+            confirmButtonText: 'OK'
+        });
+    } finally {
+        // Réinitialiser le bouton
+        const sendBtn = document.getElementById('sendEmailBtn');
+        sendBtn.innerHTML = '<i class="fas fa-envelope"></i> Envoyer';
+        sendBtn.disabled = false;
+    }
 });

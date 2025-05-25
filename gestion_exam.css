@@ -356,7 +356,7 @@ body {
 }
 
 .btn-outline {
-    background-color: transparent;
+    background-color: var(--gray-light);
     border: 1px solid var(--gray-light);
     color: var(--dark);
 }
