@@ -940,34 +940,57 @@ async function supprimerSurveillance(surveillanceId, rowElement) {
     }
 
     // Fonction pour mettre à jour les cartes statistiques
-    function updateStatsCards(data, semester, academicYear) {
-        // Calculer le nombre total de surveillants (tous semestres confondus)
-        const totalSurveillants = data.length;
+    // function updateStatsCards(data, semester, academicYear) {
+    //     // Calculer le nombre total de surveillants (tous semestres confondus)
+    //     const totalSurveillants = data.length;
         
-        // Filtrer les surveillances pour le semestre et année en cours
-        const surveillancesCurrentPeriod = data.flatMap(enseignant => 
-            enseignant.surveillances.filter(s => 
-                s.semestre === semester && 
-                s.annee_universitaire === academicYear
-            )
-        );
+    //     // Filtrer les surveillances pour le semestre et année en cours
+    //     const surveillancesCurrentPeriod = data.flatMap(enseignant => 
+    //         enseignant.surveillances.filter(s => 
+    //             s.semestre === semester && 
+    //             s.annee_universitaire === academicYear
+    //         )
+    //     );
         
-        // Calculer le nombre total de surveillances pour la période
-        const totalSurveillances = surveillancesCurrentPeriod.length;
+    //     // Calculer le nombre total de surveillances pour la période
+    //     const totalSurveillances = surveillancesCurrentPeriod.length;
         
-        // Compter le nombre de surveillants ayant au moins une surveillance dans la période
-        const totalAssigne = data.filter(enseignant => 
-            enseignant.surveillances.some(s => 
-                s.semestre === semester && 
-                s.annee_universitaire === academicYear
-            )
-        ).length;
+    //     // Compter le nombre de surveillants ayant au moins une surveillance dans la période
+    //     const totalAssigne = data.filter(enseignant => 
+    //         enseignant.surveillances.some(s => 
+    //             s.semestre === semester && 
+    //             s.annee_universitaire === academicYear
+    //         )
+    //     ).length;
 
-        // Mettre à jour les cartes
-        document.getElementById("total-surveillants").textContent = totalSurveillants;
-        document.getElementById("total-surveillances").textContent = totalSurveillances;
-        document.getElementById("total_assigne").textContent = totalAssigne;
-    }
+    //     // Mettre à jour les cartes
+    //     document.getElementById("total-surveillants").textContent = totalSurveillants;
+    //     document.getElementById("total-surveillances").textContent = totalSurveillances;
+    //     document.getElementById("total_assigne").textContent = totalAssigne;
+    // }
+
+    function updateStatsCards(data, selectedSession) {
+    // Calculer le nombre total de surveillants
+    const totalSurveillants = data.length;
+
+    // Filtrer les surveillances pour la session sélectionnée
+    const surveillancesForSession = data.flatMap(enseignant =>
+        enseignant.surveillances.filter(surv => surv.semestre === selectedSession)
+    );
+
+    // Calculer le nombre total de surveillances pour la session
+    const totalSurveillances = surveillancesForSession.length;
+
+    // Compter le nombre de surveillants ayant au moins une surveillance dans la session
+    const totalAssigned = data.filter(enseignant =>
+        enseignant.surveillances.some(surv => surv.semestre === selectedSession)
+    ).length;
+
+    // Mettre à jour les éléments HTML des stats cards
+    document.getElementById("total-surveillants").textContent = totalSurveillants;
+    document.getElementById("total-surveillances").textContent = totalSurveillances;
+    document.getElementById("total_assigne").textContent = totalAssigned;
+}
 
     // Gestion des boutons de semestre
     const semesterButtons = document.querySelectorAll('.session-btn');

@@ -392,6 +392,36 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     overflow: hidden;
+
+    max-height: 600px; /* Hauteur maximale pour la table */
+    overflow-y: auto; /* Activer le défilement vertical */
+    border: 1px solid #ddd; /* Optionnel : bordure pour la table */
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.pagination-btn {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    margin: 0 2px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.pagination-btn.active {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.pagination-btn:hover {
+    background-color: #e9ecef;
 }
 
 table {

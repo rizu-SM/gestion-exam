@@ -356,6 +356,8 @@ async function loadAndDisplayUpcomingSurveillances(surveillances) {
     }
 }
 
+
+
 // Event listener for session buttons
 document.querySelectorAll('.session-btn').forEach(btn => {
     btn.addEventListener('click', function () {
@@ -392,6 +394,47 @@ function formatResponsableName(surveillance) {
 
     return `${title}${fullName}`.trim();
 }
+
+
+function paginateTable(tableBodySelector, rowsPerPage) {
+    const tbody = document.querySelector(tableBodySelector);
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const totalRows = rows.length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+    let currentPage = 1;
+
+    function renderPage(page) {
+        tbody.innerHTML = ''; // Clear the table body
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        rows.slice(start, end).forEach(row => tbody.appendChild(row));
+
+        // Update pagination controls
+        const paginationControls = document.querySelector('.pagination-controls');
+        paginationControls.innerHTML = '';
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.className = 'pagination-btn';
+            button.textContent = i;
+            if (i === page) button.classList.add('active');
+            button.addEventListener('click', () => {
+                currentPage = i;
+                renderPage(currentPage);
+            });
+            paginationControls.appendChild(button);
+        }
+    }
+
+    renderPage(currentPage);
+}
+
+// Call the function after the table is populated
+document.addEventListener('DOMContentLoaded', () => {
+    paginateTable('#surveillancesBody', 5); // 5 rows per page
+});
 
 
 // Function to show exam details in modal

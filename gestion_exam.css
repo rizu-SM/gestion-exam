@@ -406,6 +406,39 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     margin-top: 2rem;
+
+    max-height: 600px; /* Augmentez la hauteur maximale ici */
+    overflow-y: auto; /* Activer le défilement vertical */
+    border: 1px solid var(--gray-light); /* Optionnel : bordure pour la table */
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.pagination-btn {
+    background-color: #f8f9fa;
+    border: 1px solid var(--gray-light);
+    padding: 5px 10px;
+    margin: 0 2px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.pagination-btn.active {
+    background-color: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.pagination-btn:hover {
+    background-color: #e9ecef;
 }
 
 table {

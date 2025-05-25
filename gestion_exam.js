@@ -1105,3 +1105,44 @@ async function loadExamens() {
         });
     }
 }
+
+
+function paginateTable(tableBodySelector, rowsPerPage) {
+    const tbody = document.querySelector(tableBodySelector);
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const totalRows = rows.length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+    let currentPage = 1;
+
+    function renderPage(page) {
+        tbody.innerHTML = ''; // Effacer le contenu du tableau
+        const start = (page - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        rows.slice(start, end).forEach(row => tbody.appendChild(row));
+
+        // Mettre à jour les contrôles de pagination
+        const paginationControls = document.querySelector('.pagination-controls');
+        paginationControls.innerHTML = '';
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.className = 'pagination-btn';
+            button.textContent = i;
+            if (i === page) button.classList.add('active');
+            button.addEventListener('click', () => {
+                currentPage = i;
+                renderPage(currentPage);
+            });
+            paginationControls.appendChild(button);
+        }
+    }
+
+    renderPage(currentPage);
+}
+
+// Appeler la fonction après le chargement des données
+document.addEventListener('DOMContentLoaded', () => {
+    paginateTable('.table-container tbody', 10); // 10 lignes par page
+});

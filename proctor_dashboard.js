@@ -454,8 +454,11 @@ async function loadAndDisplayMySurveillances(surveillances) {
     // 1. Total surveillances
     const totalSurveillances = mySurveillances.length;
     // 2. Total hours (1.5h per surveillance)
-    const totalHours = (totalSurveillances * 1.5).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
+    const totalHours = (totalSurveillances * 1.5).toLocaleString('fr-FR', { 
+        minimumFractionDigits: 1, 
+        maximumFractionDigits: 1 
+        }).replace(',0', ''); // Remove the comma for integer results
+        
     // Update the first stat card (total surveillances)
     const statCards = document.querySelectorAll('.stat-card');
     if (statCards[0]) {
