@@ -609,6 +609,17 @@ document.getElementById('sendEmailBtn').addEventListener('click', async function
             ? `${currentYear}-${currentYear + 1}`
             : `${currentYear - 1}-${currentYear}`;
 
+        // Récupérer les informations de l'examen depuis le modal
+        let date_exam = document.getElementById('exam-date').textContent;
+        const horaire = document.getElementById('exam-time').textContent;
+        const salle = document.getElementById('exam-room').textContent;
+        const module = document.getElementById('exam-module').textContent;
+
+        // Transformer la date au format '12/06/2025' vers '2025-06-12'
+        const [day, month, year] = date_exam.split('/');
+        date_exam = `${year}-${month}-${day}`;
+
+
         // Afficher un loader
         const sendBtn = document.getElementById('sendEmailBtn');
         const originalContent = sendBtn.innerHTML;
@@ -619,7 +630,17 @@ document.getElementById('sendEmailBtn').addEventListener('click', async function
         const response = await fetch('http://localhost:3000/envoyer-pv-enseignant', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code_enseignant, semestre, annee_universitaire })
+            // body: JSON.stringify({ code_enseignant, semestre, annee_universitaire })
+            body: JSON.stringify({ 
+                code_enseignant,  
+                date_exam, 
+                horaire, 
+                salle, 
+                module,
+                semestre, 
+                annee_universitaire
+            })
+            
         });
         const result = await response.json();
 
